@@ -1,0 +1,5 @@
+In order to compile this project, your system needs an installation of:
+- Qt6 base
+- Qt6 developer
+- CMake
+- A C++ compiler
