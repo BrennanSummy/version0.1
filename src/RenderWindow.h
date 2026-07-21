@@ -25,5 +25,6 @@ private:
     void updateVertices(std::vector<float> newVertices);
     Shader* m_shader1;
     Mesh* m_mesh1;
+    Texture* m_texture1;
     int m_indexCount;
 };

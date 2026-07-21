@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <QOpenGLFunctions_3_3_Core> // Update version if necessary
+#include <QOpenGLTexture>
 
 #include "external/stb_image.h"
 
@@ -10,17 +11,18 @@
 class Texture
 {
     private:
-
-        std::string m_filePath;
-        unsigned int m_texture_ID;
-        unsigned char* m_localBuffer;
+        std::unique_ptr<QOpenGLTexture> m_texture;
+        //std::string m_filePath;
+        //unsigned int m_texture_ID;
+        //unsigned char* m_localBuffer;
         int m_width, m_height, m_bytesPerPixel;
+        void configureSampling();
     
     public:
-    Texture(const std::string& path);
-    ~Texture();
+        Texture(const std::string& path);
+        ~Texture();
 
-    void bind(unsigned int slot = 0) const;
-    void unBind() const;
+        void bind(unsigned int slot = 0) const;
+        void release(unsigned int slot = 0) const;
 
 };

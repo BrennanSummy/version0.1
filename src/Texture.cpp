@@ -1,47 +1,70 @@
 #include "Texture.h"
+//debug
+#include <filesystem>
 // This is a C++ feature where you can define object values before even entering the constructor body
-Texture::Texture(const std::string& path): m_texture_ID(0), m_filePath(path),m_localBuffer(nullptr),m_width(0),m_height(0),m_bytesPerPixel(0)
+Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixel(0)
 {
+    std::cout << "Looking in: "<<std::filesystem::current_path().c_str()
+    << " looking for " << path.c_str()<< std::endl;
     stbi_set_flip_vertically_on_load(1);
     // Load the image assuming 4 channels (RGBA)
-    m_localBuffer = stbi_load(path.c_str(),&m_width,&m_height,&m_bytesPerPixel,4);
+    unsigned char* rawData = stbi_load(path.c_str(),&m_width,&m_height,&m_bytesPerPixel,4);
     // Only run the GL stuff if the texture actually loads
-    if (m_localBuffer)
+    if (rawData)
     {
-    // Prime GL for handling the texture
-    glGenTextures(1, &m_texture_ID);
-    glBindTexture(GL_TEXTURE_2D, m_texture_ID);
+    //// Prime GL for handling the texture
+    m_texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
+    m_texture->setSize(m_width,m_height);
+    m_texture->setFormat(QOpenGLTexture::RGBA8_UNorm);
+    m_texture->allocateStorage();
+    //glGenTextures(1, &m_texture_ID);
+    //glBindTexture(GL_TEXTURE_2D, m_texture_ID);
     
-    // Params for texture sampling
-    // Wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // Scaling
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //// Params for texture sampling
+    //// Wrapping
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //// Scaling
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    // Hand the image data to GL
-    int border = 0;
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_width,m_height,border,GL_RGBA,GL_UNSIGNED_BYTE,m_localBuffer);
+    //// Hand the image data to GL
+    m_texture->setData(QOpenGLTexture::RGBA,QOpenGLTexture::UInt8,rawData);
+    
+    configureSampling();
+    //int border = 0;
+    //glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_width,m_height,border,GL_RGBA,GL_UNSIGNED_BYTE,m_localBuffer);
 
-    // Free the image memory
-    stbi_image_free(m_localBuffer);
+    //// Free the image memory
+    //stbi_image_free(m_localBuffer);
     }
     else
     {
-        std::cout << "Texture failed to load" << std::endl;
+        const char* errorMsg = stbi_failure_reason();
+        std::cout << "Texture failed to load: "<< errorMsg << std::endl;
     }
 
+}
+
+void Texture::configureSampling()
+{
+    m_texture->setWrapMode(QOpenGLTexture::Repeat);
+    m_texture->setMagnificationFilter(QOpenGLTexture::Linear);
+    m_texture->setMinificationFilter(QOpenGLTexture::Linear);
+    m_texture->generateMipMaps(3);
 }
 
 Texture::~Texture()
 {
-    glDeleteTextures(1,&m_texture_ID);
+    if(m_texture){m_texture->destroy();}
 }
 
 void Texture::bind(unsigned int slot) const
 {
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, m_texture_ID);
+    m_texture->bind(slot);
+}
 
+void Texture::release(unsigned int slot) const
+{
+    m_texture->release(slot);
 }

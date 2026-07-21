@@ -8,6 +8,8 @@ Mesh::~Mesh(){destroy();}
 void Mesh::init(const std::vector<float>& vertData, const std::vector<unsigned int>& indices, QOpenGLShaderProgram* shader)
 {
     initializeOpenGLFunctions();
+    // Option to render lines instead of faces
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
     // Vertex Array Object
     m_vao.create();
@@ -31,7 +33,10 @@ void Mesh::init(const std::vector<float>& vertData, const std::vector<unsigned i
 
     // Tell the shader how to parse the data
     shader->enableAttributeArray(0);
-    shader->setAttributeBuffer(0,GL_FLOAT,0,3,3*sizeof(float));
+    shader->setAttributeBuffer(0,GL_FLOAT,0,3,5*sizeof(float));
+
+    shader->enableAttributeArray(1);
+    shader->setAttributeBuffer(1,GL_FLOAT,3*sizeof(float),2,5*sizeof(float));
 
     // Unbind everything, starting with the VAO to make sure it contains the EBO
     m_vao.release();
@@ -78,7 +83,6 @@ void Mesh::draw(GLenum mode, int indexCount)
     m_vao.bind();
     glDrawElements(mode,indexCount,GL_UNSIGNED_INT,nullptr);
     m_vao.release();
-    std::cout << "draw command completed" << std::endl;
 }
 
 void Mesh::destroy()
