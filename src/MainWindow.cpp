@@ -18,7 +18,7 @@ void MainWindow::setupWindow()
 {
     // Create main splitter
     QSplitter* splitter = new QSplitter(Qt::Horizontal);
-    //QOpenGLWidget* renderArea = new RenderWindow();
+
     RenderWindow* renderArea = new RenderWindow();
     QWidget* parameterArea = new QWidget();
 
@@ -46,6 +46,6 @@ void MainWindow::setupWindow()
 
     // Connect things
     connect(slider0,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateLVert);
-    connect(slider1,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTVert);
-    connect(slider2,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateRVert);
+
+    std::cout << "End of Main Window Setup" << std::endl;
 }

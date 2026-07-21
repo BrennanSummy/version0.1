@@ -1,26 +1,29 @@
 #pragma once
 
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions_3_3_Core> // Use the version you need
+#include <QOpenGLFunctions_3_3_Core> // Update version if necessary
 #include <QOpenGLShaderProgram>
 
-#include <GL/gl.h>
+#include "Shader.h"
+#include "Mesh.h"
 
 class RenderWindow : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
+public:
+    RenderWindow(QWidget* parent = nullptr);
+    ~RenderWindow();
+
 public slots:
     void sliderUpdateLVert(float sliderVal);
-    void sliderUpdateTVert(float sliderVal);
-    void sliderUpdateRVert(float sliderVal);
 
 protected:
-    void updateVerts(float* newVerts, int sizeInBytes);
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
 private:
-    QOpenGLShaderProgram *m_program = nullptr;
-    GLuint m_vao = 0;
-    GLuint m_vbo = 0;
+    void updateVertices(std::vector<float> newVertices);
+    Shader* m_shader1;
+    Mesh* m_mesh1;
+    int m_indexCount;
 };

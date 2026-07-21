@@ -1,16 +1,16 @@
 #include "Texture.h"
 // This is a C++ feature where you can define object values before even entering the constructor body
-Texture::Texture(const std::string& path): texture_ID(0), filePath(path),localBuffer(nullptr),width(0),height(0),bytesPerPixel(0)
+Texture::Texture(const std::string& path): m_texture_ID(0), m_filePath(path),m_localBuffer(nullptr),m_width(0),m_height(0),m_bytesPerPixel(0)
 {
     stbi_set_flip_vertically_on_load(1);
     // Load the image assuming 4 channels (RGBA)
-    localBuffer = stbi_load(path.c_str(),&width,&height,&bytesPerPixel,4);
+    m_localBuffer = stbi_load(path.c_str(),&m_width,&m_height,&m_bytesPerPixel,4);
     // Only run the GL stuff if the texture actually loads
-    if (localBuffer)
+    if (m_localBuffer)
     {
     // Prime GL for handling the texture
-    glGenTextures(1, &texture_ID);
-    glBindTexture(GL_TEXTURE_2D, texture_ID);
+    glGenTextures(1, &m_texture_ID);
+    glBindTexture(GL_TEXTURE_2D, m_texture_ID);
     
     // Params for texture sampling
     // Wrapping
@@ -22,10 +22,10 @@ Texture::Texture(const std::string& path): texture_ID(0), filePath(path),localBu
 
     // Hand the image data to GL
     int border = 0;
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,width,height,border,GL_RGBA,GL_UNSIGNED_BYTE,localBuffer);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_width,m_height,border,GL_RGBA,GL_UNSIGNED_BYTE,m_localBuffer);
 
     // Free the image memory
-    stbi_image_free(localBuffer);
+    stbi_image_free(m_localBuffer);
     }
     else
     {
@@ -36,12 +36,12 @@ Texture::Texture(const std::string& path): texture_ID(0), filePath(path),localBu
 
 Texture::~Texture()
 {
-    glDeleteTextures(1,&texture_ID);
+    glDeleteTextures(1,&m_texture_ID);
 }
 
 void Texture::bind(unsigned int slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, texture_ID);
+    glBindTexture(GL_TEXTURE_2D, m_texture_ID);
 
 }
