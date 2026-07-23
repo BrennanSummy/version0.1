@@ -32,9 +32,11 @@ void Mesh::init(const std::vector<float>& vertData, const std::vector<unsigned i
     m_ebo.allocate(indices.data(),indices.size()*sizeof(unsigned int));
 
     // Tell the shader how to parse the data
+    // Vertex positions
     shader->enableAttributeArray(0);
     shader->setAttributeBuffer(0,GL_FLOAT,0,3,5*sizeof(float));
 
+    // Texture
     shader->enableAttributeArray(1);
     shader->setAttributeBuffer(1,GL_FLOAT,3*sizeof(float),2,5*sizeof(float));
 

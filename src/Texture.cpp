@@ -49,8 +49,8 @@ Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixe
 void Texture::configureSampling()
 {
     m_texture->setWrapMode(QOpenGLTexture::Repeat);
-    m_texture->setMagnificationFilter(QOpenGLTexture::Linear);
-    m_texture->setMinificationFilter(QOpenGLTexture::Linear);
+    m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+    m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
     m_texture->generateMipMaps(3);
 }
 

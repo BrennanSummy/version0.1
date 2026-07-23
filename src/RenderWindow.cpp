@@ -38,9 +38,9 @@ void RenderWindow::initializeGL() {
 
     // 2. Set up vertex data with positions followed by texture coords
     std::vector<float> coolestVertices = {
-        -0.5f, -0.5f, 0.0f,         -1.0f,-1.0f, // BLeft
-         0.5f, -0.5f, 0.0f,          1.0f,-1.0f, // BRight
-        -0.5f,  0.5f, 0.0f,         -1.0f, 1.0f, // TLeft
+        -0.5f, -0.5f, 0.0f,          0.0f, 0.0f, // BLeft
+         0.5f, -0.5f, 0.0f,          1.0f, 0.0f, // BRight
+        -0.5f,  0.5f, 0.0f,          0.0f, 1.0f, // TLeft
          1.0f,  1.0f, 0.0f,          1.0f, 1.0f  // TRight
     };
 
@@ -63,7 +63,7 @@ void RenderWindow::initializeGL() {
 
 
     std::cout << "trying to init texture" << std::endl;
-    m_texture1 = new Texture("t1.png");
+    m_texture1 = new Texture("t2.png");
 
     //m_shader1->getShaderProgram()->enableAttributeArray(1);
     //m_shader1->getShaderProgram()->setAttributeBuffer(1,GL_FLOAT,3*sizeof(float),2,5*sizeof(float));
