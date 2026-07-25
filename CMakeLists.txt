@@ -31,6 +31,8 @@ add_library(${STATIC_LIB_NAME} STATIC
     src/Shader.cpp
     src/Mesh.h
     src/Mesh.cpp
+    src/Simulation.cpp
+    src/Simulation.h
 )
 
 # Link the Qt6 libraries to the static library that I am building. The access should be public so that the executable can see them as well.
