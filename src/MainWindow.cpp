@@ -48,17 +48,17 @@ void MainWindow::setupWindow()
     setCentralWidget(splitter);
 
     // Make a custom timer object
-    UpdateTimer* updateTimer = new UpdateTimer(this,1000);
+    UpdateTimer* updateTimer = new UpdateTimer(this,1000/60);
 
     // Connect things
     connect(slider0,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateLVert);
 
     // Connect the QTimer to the renderArea update step
-    //connect(updateTimer, &UpdateTimer::timeIsUp, renderArea, &RenderWindow::drawLastAndComputeNext);
-    connect(updateTimer, &UpdateTimer::timeIsUp, this,[this](){std::cout<<"o"<<std::endl;});
+    connect(updateTimer, &UpdateTimer::timeIsUp, renderArea, &RenderWindow::drawLastAndComputeNext);
 
     // debug: connect button to update
-    connect(startStopButton, &PushButton::buttonPressed, renderArea, &RenderWindow::drawLastAndComputeNext);
+    //connect(updateTimer, &UpdateTimer::timeIsUp, this,[this](){std::cout<<"o"<<std::endl;});
+    //connect(startStopButton, &PushButton::buttonPressed, renderArea, &RenderWindow::drawLastAndComputeNext);
 
     // Connect the start/stop button to the QTimer
     connect(startStopButton, &PushButton::buttonPressed, updateTimer, &UpdateTimer::toggle);

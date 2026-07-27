@@ -49,3 +49,31 @@ set(EXECUTABLE_NAME "runner")
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
 ## Link the executable to the static library
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${STATIC_LIB_NAME})
+
+### Debug build with everything
+##set(DEBUG "debug_build")
+##add_executable(${DEBUG} src/main.cpp
+##	src/external/stb_image.cpp
+##	src/external/stb_image.h
+##	src/ParameterSlider.cpp
+##	src/ParameterSlider.h
+##	src/RenderWindow.cpp
+##	src/RenderWindow.h
+##	src/Texture.cpp
+##	src/Texture.h
+##	src/MainWindow.cpp
+##	src/MainWindow.h
+##    src/Shader.h
+##    src/Shader.cpp
+##    src/Mesh.h
+##    src/Mesh.cpp
+##    src/Simulation.cpp
+##    src/Simulation.h
+##    src/PushButton.cpp
+##    src/PushButton.h
+##    src/UpdateTimer.cpp
+##    src/UpdateTimer.h
+##	)
+##
+##target_link_libraries(${DEBUG}
+##	PUBLIC  Qt6::Core Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::Widgets Qt6::Gui)

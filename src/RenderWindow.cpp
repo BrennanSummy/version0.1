@@ -75,10 +75,13 @@ void RenderWindow::drawLastAndComputeNext()
     // Load current texture
     char* texData = &m_sim->m_board[0][0];
     m_texture2->updateData(texData);
+
+    //std::cout << "texture updated to current board" << std::endl;
     // Draw
     update();
     // Compute next simulation state
     m_sim->step();
+    //std::cout << "simulation step completed" << std::endl;
 }
 
 void RenderWindow::paintGL()

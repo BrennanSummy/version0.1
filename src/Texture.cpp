@@ -54,7 +54,6 @@ Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(m
     std::cout << "Tex width: " << m_width << std::endl;
     std::cout << "Tex height: " << m_height << std::endl;
     m_texture->setSize(m_width,m_height);
-    //m_texture->setSize(m_height,m_width);
     m_texture->setFormat(QOpenGLTexture::R8U);
     m_texture->allocateStorage();
     m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
@@ -63,7 +62,9 @@ Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(m
 
 void Texture::updateData(char* matrixData)
 {
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
+    //m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
 }
 
 void Texture::configureSampling()

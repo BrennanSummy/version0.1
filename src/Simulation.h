@@ -6,8 +6,8 @@
 #include <memory>
 #include <random>
 
-const int width = 4;
-const int height = 7;
+const int width = 50;
+const int height = 30;
 struct ScreenPosition
 {
     const double x;
