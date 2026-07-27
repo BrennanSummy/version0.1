@@ -46,12 +46,34 @@ Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixe
 
 }
 
+//Texture::Texture(int matrixWidth, int matrixHeight, unsigned int* matrixData): m_width(matrixWidth), m_height(matrixHeight),m_bytesPerPixel(0)
+Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(matrixWidth), m_height(matrixHeight),m_bytesPerPixel(0)
+{
+    //// Prime GL for handling the texture
+    m_texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    std::cout << "Tex width: " << m_width << std::endl;
+    std::cout << "Tex height: " << m_height << std::endl;
+    m_texture->setSize(m_width,m_height,1);
+    //m_texture->setSize(m_height,m_width);
+    m_texture->setFormat(QOpenGLTexture::R8U);
+    m_texture->allocateStorage();
+    m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
+    configureSampling();
+}
+
+//void Texture::updateData(char* matrixData)
+void Texture::updateData(int* matrixData)
+{
+    m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
+}
+
 void Texture::configureSampling()
 {
     m_texture->setWrapMode(QOpenGLTexture::Repeat);
     m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
     m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
-    m_texture->generateMipMaps(3);
+    //m_texture->generateMipMaps(3);
 }
 
 Texture::~Texture()

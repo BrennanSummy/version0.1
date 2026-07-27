@@ -26,5 +26,6 @@ private:
     Shader* m_shader1;
     Mesh* m_mesh1;
     Texture* m_texture1;
+    Texture* m_texture2;
     int m_indexCount;
 };

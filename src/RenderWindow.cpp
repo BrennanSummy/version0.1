@@ -1,4 +1,5 @@
 #include "RenderWindow.h"
+#include "Simulation.h"
 
 RenderWindow::RenderWindow(QWidget* parent)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
@@ -22,19 +23,12 @@ void RenderWindow::initializeGL() {
 
     // 1. Initialize the Shader object and tell it which shaders to use
     QString mesh1VertShaderPath = "src/shaders/vertexShaderA.vert";
-    QString mesh1FragShaderPath = "src/shaders/fragShaderA.frag";
-   //FragColor = vec4(1.0f, 1.0f, 0.9f, 1.0f);
+    //QString mesh1FragShaderPath = "src/shaders/fragShaderA.frag";
+    QString mesh1FragShaderPath = "src/shaders/fragShaderDomainMapping.frag";
+
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
 
-
-    // 2. Set up vertex data (XYZ coordinates for 4 points)
-    std::vector<float> vertices = {
-        -0.5f, -0.5f, 0.0f, // BLeft
-         0.5f, -0.5f, 0.0f, // BRight
-        -0.5f,  0.5f, 0.0f, // TLeft
-         1.0f,  1.0f, 0.0f  // TRight
-    };
 
     // 2. Set up vertex data with positions followed by texture coords
     std::vector<float> coolestVertices = {
@@ -52,18 +46,28 @@ void RenderWindow::initializeGL() {
     m_indexCount = static_cast<int>(indices.size());
     std::cout << "index count is " << m_indexCount << std::endl;
 
-    // 3. Generate and bind VAO and VBO
-    // 4. Tell OpenGL how to interpret the vertex data
-    // Unbind to prevent accidental modifications
+    // Make a mesh object
     std::cout << "trying to init mesh" << std::endl;
     m_mesh1 = new Mesh();
-    //m_mesh1->init(vertices,indices,m_shader1->getShaderProgram());
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
 
+    // Initialize a simulation object
+    Simulation mySim = Simulation();
+    mySim.printBoard();
 
+    char first = mySim.m_board[0][0];
+    // I DON'T KNOW WHY I NEED TO ADD 1 TO THIS POINTER, BUT IT WORKS NOW
+    char* simData = &first + 1;
+    int width = mySim.m_width;
+    int height = mySim.m_height;
 
+    std::cout << "Sim width: " << width << std::endl;
+    std::cout << "Sim height: " << height << std::endl;
+
+    // Make a texture object
     std::cout << "trying to init texture" << std::endl;
-    m_texture1 = new Texture("t2.png");
+    //m_texture1 = new Texture("t2.png");
+    m_texture2 = new Texture(width,height,simData);
 
     //m_shader1->getShaderProgram()->enableAttributeArray(1);
     //m_shader1->getShaderProgram()->setAttributeBuffer(1,GL_FLOAT,3*sizeof(float),2,5*sizeof(float));
@@ -79,11 +83,12 @@ void RenderWindow::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw
+
+    // Bind the shader object
     m_shader1->bind();
 
-    //updateVertices();
-
-    m_texture1->bind(0);
+    // Bind the texture object
+    m_texture2->bind(0);
     m_shader1->getShaderProgram()->setUniformValue("texture",0);
 
     m_mesh1->draw(GL_TRIANGLES, m_indexCount);
@@ -102,8 +107,8 @@ void RenderWindow::sliderUpdateLVert(float sliderVal)
     //    };
     std::vector<float> newVertices = {
             -1.0f, sliderVal, 0.0f,  0.0f, 0.0f, // BLeft
-             1.0f, -1.0f, 0.0f,      1.0f, 0.0f, // BRight
-            -1.0f,  1.0f, 0.0f,      0.0f, 1.0f, // TLeft
+             0.0f, -1.0f, 0.0f,      1.0f, 0.0f, // BRight
+             0.0f,  1.0f, 0.0f,      0.0f, 1.0f, // TLeft
              1.0f,  1.0f, 0.0f,      1.0f, 1.0f  // TRight
         };
 

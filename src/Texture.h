@@ -19,7 +19,11 @@ class Texture
         void configureSampling();
     
     public:
+        //void updateData(char* matrixData);
+        void updateData(int* matrixData);
         Texture(const std::string& path);
+        Texture(int matrixWidth, int matrixHeight, char* matrixData);
+        //Texture(int matrixWidth, int matrixHeight, unsigned int* matrixData);
         ~Texture();
 
         void bind(unsigned int slot = 0) const;
