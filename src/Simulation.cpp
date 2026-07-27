@@ -120,7 +120,7 @@ void Simulation::updateNeighborVals(int i, int j)
 
 }
 
-void Simulation::updateBoardAndVertsWithBuffer()
+void Simulation::updateBoardWithBuffer()
 {
     //aVertices.clear();
     //bVertices.clear();
@@ -198,6 +198,7 @@ char Simulation::roll()
 
 void Simulation::step()
 {
+    std::cout << "Starting update step computation" << std::endl;
     for (int i = 0; i << m_width; i++)
     {
         for (int j = 0; j << m_height; j++)
@@ -205,5 +206,6 @@ void Simulation::step()
             updateBufferElement(i,j);
         }
     } 
-    //updateBoardWithBuffer();
+    updateBoardWithBuffer();
+    printBoard();
 }

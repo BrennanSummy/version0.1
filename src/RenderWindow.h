@@ -6,6 +6,7 @@
 
 #include "Shader.h"
 #include "Mesh.h"
+#include "Simulation.h"
 
 class RenderWindow : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
@@ -13,6 +14,7 @@ class RenderWindow : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 public:
     RenderWindow(QWidget* parent = nullptr);
     ~RenderWindow();
+    void drawLastAndComputeNext();
 
 public slots:
     void sliderUpdateLVert(float sliderVal);
@@ -28,4 +30,5 @@ private:
     Texture* m_texture1;
     Texture* m_texture2;
     int m_indexCount;
+    Simulation* m_sim;
 };

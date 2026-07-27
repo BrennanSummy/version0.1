@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -58,7 +60,7 @@ class Simulation
            (i is the first index of the board array).*/
         void updateBufferElement(int i,int j);
         // Writes the buffer to the state (done at the end of an update step)
-        void updateBoardAndVertsWithBuffer();
+        void updateBoardWithBuffer();
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j);
         // Uses the neighborVals array to update the probabilities array

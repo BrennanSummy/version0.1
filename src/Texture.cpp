@@ -46,7 +46,6 @@ Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixe
 
 }
 
-//Texture::Texture(int matrixWidth, int matrixHeight, unsigned int* matrixData): m_width(matrixWidth), m_height(matrixHeight),m_bytesPerPixel(0)
 Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(matrixWidth), m_height(matrixHeight),m_bytesPerPixel(0)
 {
     //// Prime GL for handling the texture
@@ -54,7 +53,7 @@ Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(m
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     std::cout << "Tex width: " << m_width << std::endl;
     std::cout << "Tex height: " << m_height << std::endl;
-    m_texture->setSize(m_width,m_height,1);
+    m_texture->setSize(m_width,m_height);
     //m_texture->setSize(m_height,m_width);
     m_texture->setFormat(QOpenGLTexture::R8U);
     m_texture->allocateStorage();
@@ -62,8 +61,7 @@ Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(m
     configureSampling();
 }
 
-//void Texture::updateData(char* matrixData)
-void Texture::updateData(int* matrixData)
+void Texture::updateData(char* matrixData)
 {
     m_texture->setData(QOpenGLTexture::Red_Integer,QOpenGLTexture::UInt8, matrixData);
 }

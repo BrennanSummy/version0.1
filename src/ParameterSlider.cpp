@@ -16,7 +16,7 @@ ParameterSlider::ParameterSlider(const QString& name, QWidget* parent)
     slider->setSingleStep(1);
     slider->setValue(value);
 
-    // Connect slider to value display
+    // Connect the default and custom slider functions
     connect(slider, &QSlider::valueChanged, this, &ParameterSlider::onSliderValueChanged);
 
     // Add widgets to layout

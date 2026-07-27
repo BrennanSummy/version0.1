@@ -3,7 +3,7 @@
 
 RenderWindow::RenderWindow(QWidget* parent)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
-            m_texture1(nullptr), m_indexCount(0){}
+            m_texture1(nullptr), m_indexCount(0)   {}
 
 RenderWindow::~RenderWindow()
 {
@@ -51,31 +51,34 @@ void RenderWindow::initializeGL() {
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
 
-    // Initialize a simulation object
-    Simulation mySim = Simulation();
-    mySim.printBoard();
+    // Ensure simulation object is initialized
+    //Simulation mySim = Simulation();
+    m_sim = new Simulation();
+    m_sim->printBoard();
 
-    char first = mySim.m_board[0][0];
-    // I DON'T KNOW WHY I NEED TO ADD 1 TO THIS POINTER, BUT IT WORKS NOW
-    char* simData = &first + 1;
-    int width = mySim.m_width;
-    int height = mySim.m_height;
-
-    std::cout << "Sim width: " << width << std::endl;
-    std::cout << "Sim height: " << height << std::endl;
+    char* simData = &m_sim->m_board[0][0];
 
     // Make a texture object
     std::cout << "trying to init texture" << std::endl;
     //m_texture1 = new Texture("t2.png");
-    m_texture2 = new Texture(width,height,simData);
+    m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
-    //m_shader1->getShaderProgram()->enableAttributeArray(1);
-    //m_shader1->getShaderProgram()->setAttributeBuffer(1,GL_FLOAT,3*sizeof(float),2,5*sizeof(float));
 }
 
 void RenderWindow::resizeGL(int w, int h)
 {
     glViewport(0, 0, w, h);
+}
+
+void RenderWindow::drawLastAndComputeNext()
+{
+    // Load current texture
+    char* texData = &m_sim->m_board[0][0];
+    m_texture2->updateData(texData);
+    // Draw
+    update();
+    // Compute next simulation state
+    m_sim->step();
 }
 
 void RenderWindow::paintGL()

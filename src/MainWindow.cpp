@@ -1,6 +1,5 @@
 #include "MainWindow.h"
 
-#include <QSplitter>
 
 // Constructor
 MainWindow::MainWindow(QWidget *parent):
@@ -34,7 +33,11 @@ void MainWindow::setupWindow()
     parameterLayout->addWidget(slider1);
     parameterLayout->addWidget(slider2);
 
-    // Add to splitter
+    // Add start/stop button
+    PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
+    parameterLayout->addWidget(startStopButton);
+
+    // Add areas to splitter
     splitter->addWidget(renderArea);
     splitter->addWidget(parameterArea);
 
@@ -44,8 +47,21 @@ void MainWindow::setupWindow()
     // Set central widget
     setCentralWidget(splitter);
 
+    // Make a custom timer object
+    UpdateTimer* updateTimer = new UpdateTimer(this,1000);
+
     // Connect things
     connect(slider0,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateLVert);
+
+    // Connect the QTimer to the renderArea update step
+    //connect(updateTimer, &UpdateTimer::timeIsUp, renderArea, &RenderWindow::drawLastAndComputeNext);
+    connect(updateTimer, &UpdateTimer::timeIsUp, this,[this](){std::cout<<"o"<<std::endl;});
+
+    // debug: connect button to update
+    connect(startStopButton, &PushButton::buttonPressed, renderArea, &RenderWindow::drawLastAndComputeNext);
+
+    // Connect the start/stop button to the QTimer
+    connect(startStopButton, &PushButton::buttonPressed, updateTimer, &UpdateTimer::toggle);
 
     std::cout << "End of Main Window Setup" << std::endl;
 }
