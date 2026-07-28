@@ -1,20 +1,23 @@
 #include "ParameterSlider.h"
-#include <QVBoxLayout>
-#include <QSlider>
 
-ParameterSlider::ParameterSlider(const QString& name, QWidget* parent)
-    : QWidget(parent)
+//ParameterSlider::ParameterSlider(const QString& name, QWidget* parent)
+ParameterSlider::ParameterSlider(   const QString& name,
+                                    float min,
+                                    float max,
+                                    float defaultVal,
+                                    int steps,
+                                    QWidget* parent)
+    : minimum(min), maximum(max), defaultValue(defaultVal), steps(steps), QWidget(parent)
 {
-    layout = new QVBoxLayout(this);
+    layout    = new QVBoxLayout(this);
     nameLabel = new QLabel(name);
-    slider = new QSlider(Qt::Horizontal);
-    valueLabel = new QLabel("initial value");
+    slider    = new QSlider(Qt::Horizontal);
+    valueLabel= new QLabel(QString::number(defaultValue,'f',2));
 
-    // Configure slider (1 to 100 for 0.1 to 10)
-    value = 1;
-    slider->setRange(1, 100);
+    // Configure slider (0 to steps)
+    slider->setRange(0, steps);
     slider->setSingleStep(1);
-    slider->setValue(value);
+    slider->setValue(defaultValue);
 
     // Connect the default and custom slider functions
     connect(slider, &QSlider::valueChanged, this, &ParameterSlider::onSliderValueChanged);
@@ -32,15 +35,28 @@ ParameterSlider::~ParameterSlider() {
 
 void ParameterSlider::onSliderValueChanged(int inValue) {
     // Convert from slider steps to float value.
-    float floatValue = inValue / 10.0f;
-    value = floatValue;
+    //float floatValue = inValue / 10.0f;
+    float floatValue = sliderStepToValue(inValue);
+
     valueLabel->setText(QString::number(floatValue, 'f', 2));
     // Send out a Qt signal
-    emit sliderHasChanged(value);
+    emit sliderHasChanged(floatValue);
 }
 
-void ParameterSlider::setValue(float inValue) {
-    int sliderValue = static_cast<int>(inValue);
+void ParameterSlider::setValue(float inFloatValue) {
+    int sliderValue = sliderFloatValueToStep(inFloatValue);
     slider->setValue(sliderValue);
     onSliderValueChanged(sliderValue);
+}
+
+float ParameterSlider::sliderStepToValue(int sliderStep)
+{
+    float value = minimum + (((float) sliderStep)/steps)*(maximum - minimum);
+    return value;
+}
+
+int ParameterSlider::sliderFloatValueToStep(float inFloatValue)
+{
+    int intValue = (inFloatValue - minimum) * (steps / (maximum - minimum));
+    return intValue;
 }

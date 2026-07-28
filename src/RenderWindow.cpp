@@ -130,12 +130,9 @@ void RenderWindow::wheelEvent(QWheelEvent* event)
     int wheelMove = event->angleDelta().y();
     if(wheelMove>0){zoomScale = 1.1;}
     else{zoomScale = 0.9;}
-    float sign = (wheelMove>0)-(wheelMove<0);
-    std::cout << wheelMove << std::endl;
     float normX = (event->position().x())/(((float)m_w)/2) - 1;
     float normY = -((event->position().y())/(((float)m_h)/2) - 1);
 
-    std::cout << normX << " : " << normY << std::endl;
     Position mousePos = {normX,normY};
 
     // Read current quad vertices
@@ -143,23 +140,19 @@ void RenderWindow::wheelEvent(QWheelEvent* event)
     // Transform those vertices into coordinates around the mouse
         // Scale those coordinates to zoom
         // Then Transform them out by adding mousePos back
-    //std::vector<Position> mouseCenteredVerts;
-    //std::vector<Position> mouseCenteredScaledVerts;
     std::vector<Position> globalScaledVerts;
     for(int i = 0; i < globalVerts.size(); i++)
     {
-        //mouseCenteredVerts.push_back(mousePos.subtract(globalVerts[i]));
-        //mouseCenteredScaledVerts.push_back( (mousePos.subtract(globalVerts[i])).scale(1.1) );
         globalScaledVerts.push_back(  ((globalVerts[i].subtract(mousePos)).scale(zoomScale)).add(mousePos)  );
     }
     m_mesh1->writeCurrentVertsWithPositions(globalScaledVerts);
     update();
-    std::cout<<"update called"<<std::endl;
 }
 
 void RenderWindow::mousePressEvent(QMouseEvent* event)
 {
-    mouseInitPosition = event->position();
+    //mouseInitPosition = event->position();
+    mouseInitPosition = {(float) event->position().x(),(float) -event->position().y()};
 }
 
 void RenderWindow::mouseReleaseEvent(QMouseEvent* event)
@@ -169,13 +162,13 @@ void RenderWindow::mouseReleaseEvent(QMouseEvent* event)
 
 void RenderWindow::mouseMoveEvent(QMouseEvent* event) 
 {
-    int mouseX = event->position().x();
-    int mouseY = event->position().y();
-    float dx = (mouseX - mouseInitPosition.x())/m_w;
     // For some reason the vertical axis is flipped, so take the negative
-    float dy = -(mouseY - mouseInitPosition.y())/m_h;
+    Position mousePos = {(float) event->position().x(),(float) -event->position().y()};
+    
+    Position delta = mousePos.subtract(mouseInitPosition);
 
+    delta = {delta.x * (2/(float)m_w), delta.y * (2/(float)m_h)};
     // move the quad vertices by that delta scaled by window resolution
-    m_mesh1->additiveUpdateVertData(dx,dy);
+    m_mesh1->additiveUpdateVertData(delta);
     update();
 }

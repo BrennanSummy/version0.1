@@ -64,12 +64,12 @@ void Mesh::updateVertData(const std::vector<float>& newVerts)
     m_vbo.release();
 }
 
-void Mesh::additiveUpdateVertData(float xToAdd, float yToAdd)
+void Mesh::additiveUpdateVertData(Position delta)
 {
     for(int i = 0; i<m_currentVertData.size(); i=i+5)
     {
-        m_bufferVertData[i]    = m_currentVertData[i]  + xToAdd;
-        m_bufferVertData[i+1]  = m_currentVertData[i+1]+ yToAdd;
+        m_bufferVertData[i]    = m_currentVertData[i]  + delta.x;
+        m_bufferVertData[i+1]  = m_currentVertData[i+1]+ delta.y;
     }
     updateVertData(m_bufferVertData);
 }
@@ -142,4 +142,5 @@ void Mesh::writeCurrentVertsWithPositions(std::vector<Position> inVerts)
         m_currentVertData[i+1]  = inVerts[vecIndex].y;
         vecIndex++;
     }
+    updateVertData(m_currentVertData);
 }

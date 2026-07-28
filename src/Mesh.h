@@ -24,7 +24,7 @@ class Mesh: protected QOpenGLFunctions_3_3_Core
         void init(const std::vector<float>& vertData, const std::vector<unsigned int>& indices, QOpenGLShaderProgram* shader);
         // Update VBO
         void updateVertData(const std::vector<float>& newVerts);
-        void additiveUpdateVertData(float xToAdd, float yToAdd);
+        void additiveUpdateVertData(Position delta);
         void loadBufferToVert();
         std::vector<Position> readCurrentVerts();
         void writeCurrentVertsWithPositions(std::vector<Position> verts);

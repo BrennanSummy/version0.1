@@ -38,7 +38,8 @@ private:
     int m_indexCount;
     Simulation* m_sim;
 
-    QPointF mouseInitPosition;
+    //QPointF mouseInitPosition;
+    Position mouseInitPosition;
     int m_w;
     int m_h;
 };

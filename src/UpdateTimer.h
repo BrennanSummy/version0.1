@@ -8,6 +8,7 @@ class UpdateTimer: public QWidget
 
     public:
         UpdateTimer(QWidget* parent = nullptr, int period=1000);
+        void changeInterval(float newFramerate);
     public slots:
         void toggle();
         
@@ -16,6 +17,7 @@ class UpdateTimer: public QWidget
     
     private:
         QTimer* timer;
+        int     millisecondPeriod;
 
         void tick();
 };
