@@ -26,7 +26,7 @@ set(SOURCE_CODE
     src/Simulation.cpp
     src/PushButton.cpp
     src/UpdateTimer.cpp
-    src/textBox.cpp
+    src/TextBox.cpp
 )
 set(SOURCE_HEADERS
 	src/external/stb_image.h
@@ -39,7 +39,7 @@ set(SOURCE_HEADERS
     src/Simulation.h
     src/PushButton.h
     src/UpdateTimer.h
-	src/textBox.h
+	src/TextBox.h
 )
 
 
