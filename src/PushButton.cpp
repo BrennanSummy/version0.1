@@ -27,6 +27,6 @@ PushButton::~PushButton()
 }
 void PushButton::onPress()
 {
-    std::cout << "button pressed" <<std::endl;
+    //std::cout << "button pressed" <<std::endl;
     emit buttonPressed();
 }

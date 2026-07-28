@@ -45,7 +45,7 @@ void Mesh::init(const std::vector<float>& vertData, const std::vector<unsigned i
     m_vao.release();
     m_vbo.release();
     m_ebo.release();
-    std::cout << "mesh init complete" << std::endl;
+    //std::cout << "mesh init complete" << std::endl;
 }
 
 void Mesh::updateVertData(const std::vector<float>& newVerts)

@@ -27,6 +27,9 @@ void UpdateTimer::tick()
 
 void UpdateTimer::changeInterval(float newFramerate)
 {
-    millisecondPeriod = 1000 / newFramerate;
+    int multiplier = 60/newFramerate;
+    float basePeriod = 1000/60;
+    //millisecondPeriod = 1000 / newFramerate;
+    millisecondPeriod = basePeriod*multiplier;
     timer->setInterval(millisecondPeriod);
 }

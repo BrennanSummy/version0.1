@@ -51,8 +51,8 @@ Texture::Texture(int matrixWidth, int matrixHeight, char* matrixData): m_width(m
     //// Prime GL for handling the texture
     m_texture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-    std::cout << "Tex width: " << m_width << std::endl;
-    std::cout << "Tex height: " << m_height << std::endl;
+    //std::cout << "Tex width: " << m_width << std::endl;
+    //std::cout << "Tex height: " << m_height << std::endl;
     m_texture->setSize(m_width,m_height);
     m_texture->setFormat(QOpenGLTexture::R8U);
     m_texture->allocateStorage();

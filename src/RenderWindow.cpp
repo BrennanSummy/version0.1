@@ -24,11 +24,13 @@ void RenderWindow::initializeGL() {
     // 1. Initialize the Shader object and tell it which shaders to use
     //QString mesh1VertShaderPath = "src/shaders/vertexShaderA.vert";
     std::string vPath = std::string(SHADER_PATH) + std::string("vertexShaderA.vert");
+    std::string fPath = std::string(SHADER_PATH) + std::string("fragShaderDomainMapping.frag");
     QString mesh1VertShaderPath = vPath.c_str();
+    QString mesh1FragShaderPath = fPath.c_str();
     //QString mesh1FragShaderPath = "src/shaders/fragShaderA.frag";
     //QString mesh1FragShaderPath = "src/shaders/fragShaderDomainMapping.frag";
-    std::string fPath = std::string(SHADER_PATH) + std::string("fragShaderDomainMapping.frag");
-    QString mesh1FragShaderPath = fPath.c_str();
+
+
 
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
@@ -40,7 +42,7 @@ void RenderWindow::initializeGL() {
     char* simData = &m_sim->m_board[0][0];
 
     // Make a texture object
-    std::cout << "trying to init texture" << std::endl;
+    //std::cout << "trying to init texture" << std::endl;
     //m_texture1 = new Texture("t2.png");
     m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
@@ -69,10 +71,10 @@ void RenderWindow::initializeGL() {
         1,2,3  // Second Triangle
     };
     m_indexCount = static_cast<int>(indices.size());
-    std::cout << "index count is " << m_indexCount << std::endl;
+    //std::cout << "index count is " << m_indexCount << std::endl;
 
     // Make a mesh object
-    std::cout << "trying to init mesh" << std::endl;
+    //std::cout << "trying to init mesh" << std::endl;
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
 }
@@ -82,7 +84,7 @@ void RenderWindow::resizeGL(int w, int h)
     glViewport(0, 0, w, h);
     m_w = w;
     m_h = h;
-    std::cout << "width is now " <<m_w<<" and height " << m_h<< std::endl;
+    //std::cout << "width is now " <<m_w<<" and height " << m_h<< std::endl;
 }
 
 void RenderWindow::drawLastAndComputeNext()

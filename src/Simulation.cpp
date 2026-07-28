@@ -4,7 +4,7 @@ Simulation::Simulation()
 :rand_device(), rand_generator(rand_device()), uniform(0,1)
 {
     initBoard();
-    std::cout << "board initialized" << std::endl;
+    //std::cout << "board initialized" << std::endl;
 }
 
 void Simulation::initBoard()

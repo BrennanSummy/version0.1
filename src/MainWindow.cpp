@@ -54,6 +54,7 @@ void MainWindow::setupWindow()
     // Connect things
     // Temperature slider
     connect(kTSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTemp);
+
     // Framerate slider
     connect(framerateSlider,&ParameterSlider::sliderHasChanged,updateTimer,&UpdateTimer::changeInterval);
 
@@ -63,5 +64,5 @@ void MainWindow::setupWindow()
     // Connect the start/stop button to the QTimer
     connect(startStopButton, &PushButton::buttonPressed, updateTimer, &UpdateTimer::toggle);
 
-    std::cout << "End of Main Window Setup" << std::endl;
+    //std::cout << "End of Main Window Setup" << std::endl;
 }

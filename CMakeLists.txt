@@ -68,6 +68,8 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${STATIC_LIB_NAME})
 target_compile_definitions(${STATIC_LIB_NAME} PRIVATE 
 	SHADER_PATH="${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/shaders/"
 )
+message("Using CMake Install Prefix")
+message("${CMAKE_INSTALL_PREFIX}")
 
 # INSTALL LIBRARY
 install(TARGETS ${STATIC_LIB_NAME} DESTINATION lib)
@@ -82,13 +84,25 @@ DESTINATION share/${PROJECT_NAME}/shaders)
 
 # INSTALL EXECUTABLE
 install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+#install(TARGETS ${EXECUTABLE_NAME}
+#	BUNDLE DESTINATION .
+#	RUNTIME DESTINATION .
+#)
 
-# CPACK
-include(InstallRequiredSystemLibraries)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
-set(CPACK_PACKAGE_VERSION_MAJOR "0")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
-include(CPack)
+# Qt dependency management?
+#qt_generate_deploy_app_script(
+#	TARGET ${EXECUTABLE_NAME}
+#	OUTPUT_SCRIPT deploy_script
+#	NO_TRANSLATIONS
+#)
+#install(SCRIPT ${deploy_script})
+
+## CPACK
+#include(InstallRequiredSystemLibraries)
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+#set(CPACK_PACKAGE_VERSION_MAJOR "0")
+#set(CPACK_PACKAGE_VERSION_MINOR "1")
+#include(CPack)
 
 
 
