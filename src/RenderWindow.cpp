@@ -29,13 +29,34 @@ void RenderWindow::initializeGL() {
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
 
+    // Ensure simulation object is initialized
+    m_sim = new Simulation();
+    m_sim->printBoard();
 
-    // 2. Set up vertex data with positions followed by texture coords
+    char* simData = &m_sim->m_board[0][0];
+
+    // Make a texture object
+    std::cout << "trying to init texture" << std::endl;
+    //m_texture1 = new Texture("t2.png");
+    m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
+
+    // Do a bit of math to figure out where to put the vertices
+    float w = (float) m_sim->m_width;
+    float h = (float) m_sim->m_height;
+
+    float vertexWidth = 2/(1 + (h/(2*w)));
+    float vertexHeight = (sqrt(3) * h) / (w + (h/2));
+
+    float topY = -1 + vertexHeight;
+    float bottomRightX = -1 + vertexWidth;
+    float topLeftX = 1 - vertexWidth;
+
+    // Set up vertex data with positions followed by texture coords
     std::vector<float> coolestVertices = {
-        -0.5f, -0.5f, 0.0f,          0.0f, 0.0f, // BLeft
-         0.5f, -0.5f, 0.0f,          1.0f, 0.0f, // BRight
-        -0.5f,  0.5f, 0.0f,          0.0f, 1.0f, // TLeft
-         1.0f,  1.0f, 0.0f,          1.0f, 1.0f  // TRight
+        -1.0f           , -1.0f, 0.0f,          0.0f, 0.0f, // BLeft
+         bottomRightX   , -1.0f, 0.0f,          1.0f, 0.0f, // BRight
+         topLeftX       ,  topY, 0.0f,          0.0f, 1.0f, // TLeft
+         1.0f           ,  topY, 0.0f,          1.0f, 1.0f  // TRight
     };
 
     std::vector<unsigned int> indices =
@@ -50,24 +71,14 @@ void RenderWindow::initializeGL() {
     std::cout << "trying to init mesh" << std::endl;
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
-
-    // Ensure simulation object is initialized
-    //Simulation mySim = Simulation();
-    m_sim = new Simulation();
-    m_sim->printBoard();
-
-    char* simData = &m_sim->m_board[0][0];
-
-    // Make a texture object
-    std::cout << "trying to init texture" << std::endl;
-    //m_texture1 = new Texture("t2.png");
-    m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
-
 }
 
 void RenderWindow::resizeGL(int w, int h)
 {
     glViewport(0, 0, w, h);
+    m_w = w;
+    m_h = h;
+    std::cout << "width is now " <<m_w<<" and height " << m_h<< std::endl;
 }
 
 void RenderWindow::drawLastAndComputeNext()
@@ -102,33 +113,69 @@ void RenderWindow::paintGL()
     m_shader1->release();
 }
 
-void RenderWindow::sliderUpdateLVert(float sliderVal)
+
+void RenderWindow::sliderUpdateTemp(float sliderVal)
 {
-
-    //std::vector<float> newVertices = {
-    //        -1.0f, sliderVal, 0.0f, -1.0f,-1.0f, // BLeft
-    //         1.0f, -1.0f, 0.0f,      1.0f,-1.0f, // BRight
-    //        -1.0f,  1.0f, 0.0f,     -1.0f, 1.0f, // TLeft
-    //         1.0f,  1.0f, 0.0f,      1.0f, 1.0f  // TRight
-    //    };
-    std::vector<float> newVertices = {
-            -1.0f, sliderVal, 0.0f,  0.0f, 0.0f, // BLeft
-             0.0f, -1.0f, 0.0f,      1.0f, 0.0f, // BRight
-             0.0f,  1.0f, 0.0f,      0.0f, 1.0f, // TLeft
-             1.0f,  1.0f, 0.0f,      1.0f, 1.0f  // TRight
-        };
-
-   // std::vector<float> newVertices = {
-   //     -0.5f, sliderVal, 0.0f,     // BLeft
-   //      0.5f, -0.5f,     0.0f,     // BRight
-   //     -0.5f,  0.5f,     0.0f,     // TLeft
-   //      0.5f,  0.5f,     0.0f      // TRight
-   // };
-    updateVertices(newVertices);
-    update();
+    m_sim->updateTemp(sliderVal);
 }
 
 void RenderWindow::updateVertices(std::vector<float> newVertices)
 {
     m_mesh1->updateVertData(newVertices);
+}
+
+void RenderWindow::wheelEvent(QWheelEvent* event) 
+{
+    float zoomScale;
+    int wheelMove = event->angleDelta().y();
+    if(wheelMove>0){zoomScale = 1.1;}
+    else{zoomScale = 0.9;}
+    float sign = (wheelMove>0)-(wheelMove<0);
+    std::cout << wheelMove << std::endl;
+    float normX = (event->position().x())/(((float)m_w)/2) - 1;
+    float normY = -((event->position().y())/(((float)m_h)/2) - 1);
+
+    std::cout << normX << " : " << normY << std::endl;
+    Position mousePos = {normX,normY};
+
+    // Read current quad vertices
+    std::vector<Position> globalVerts = m_mesh1->readCurrentVerts();
+    // Transform those vertices into coordinates around the mouse
+        // Scale those coordinates to zoom
+        // Then Transform them out by adding mousePos back
+    //std::vector<Position> mouseCenteredVerts;
+    //std::vector<Position> mouseCenteredScaledVerts;
+    std::vector<Position> globalScaledVerts;
+    for(int i = 0; i < globalVerts.size(); i++)
+    {
+        //mouseCenteredVerts.push_back(mousePos.subtract(globalVerts[i]));
+        //mouseCenteredScaledVerts.push_back( (mousePos.subtract(globalVerts[i])).scale(1.1) );
+        globalScaledVerts.push_back(  ((globalVerts[i].subtract(mousePos)).scale(zoomScale)).add(mousePos)  );
+    }
+    m_mesh1->writeCurrentVertsWithPositions(globalScaledVerts);
+    update();
+    std::cout<<"update called"<<std::endl;
+}
+
+void RenderWindow::mousePressEvent(QMouseEvent* event)
+{
+    mouseInitPosition = event->position();
+}
+
+void RenderWindow::mouseReleaseEvent(QMouseEvent* event)
+{
+    m_mesh1->loadBufferToVert();
+}
+
+void RenderWindow::mouseMoveEvent(QMouseEvent* event) 
+{
+    int mouseX = event->position().x();
+    int mouseY = event->position().y();
+    float dx = (mouseX - mouseInitPosition.x())/m_w;
+    // For some reason the vertical axis is flipped, so take the negative
+    float dy = -(mouseY - mouseInitPosition.y())/m_h;
+
+    // move the quad vertices by that delta scaled by window resolution
+    m_mesh1->additiveUpdateVertData(dx,dy);
+    update();
 }

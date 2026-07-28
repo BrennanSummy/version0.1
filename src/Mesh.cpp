@@ -10,6 +10,7 @@ void Mesh::init(const std::vector<float>& vertData, const std::vector<unsigned i
     initializeOpenGLFunctions();
     // Option to render lines instead of faces
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    loadVertData(vertData);
 
     // Vertex Array Object
     m_vao.create();
@@ -63,6 +64,16 @@ void Mesh::updateVertData(const std::vector<float>& newVerts)
     m_vbo.release();
 }
 
+void Mesh::additiveUpdateVertData(float xToAdd, float yToAdd)
+{
+    for(int i = 0; i<m_currentVertData.size(); i=i+5)
+    {
+        m_bufferVertData[i]    = m_currentVertData[i]  + xToAdd;
+        m_bufferVertData[i+1]  = m_currentVertData[i+1]+ yToAdd;
+    }
+    updateVertData(m_bufferVertData);
+}
+
 void Mesh::updateIndexData(const std::vector<unsigned int>& newIndices)
 {   
     m_ebo.bind();
@@ -92,4 +103,43 @@ void Mesh::destroy()
     if (m_vbo.isCreated()) {m_vbo.destroy();}
     if (m_ebo.isCreated()) {m_ebo.destroy();}
     if (m_vao.isCreated()) {m_vao.destroy();}
+}
+
+void Mesh::loadVertData(const std::vector<float> inputVector)
+{
+    for(int i = 0; i<inputVector.size(); i++)
+    {
+        m_currentVertData.push_back(inputVector[i]);
+        m_bufferVertData.push_back(inputVector[i]);
+    }
+}
+
+void Mesh::loadBufferToVert()
+{
+    for(int i = 0; i<m_currentVertData.size(); i++)
+    {
+        m_currentVertData[i] = m_bufferVertData[i];
+    }
+}
+
+std::vector<Position> Mesh::readCurrentVerts()
+{
+    std::vector<Position> verts;
+    for(int i = 0; i<m_currentVertData.size(); i=i+5)
+    {
+        Position pos = {m_currentVertData[i],m_currentVertData[i+1]};
+        verts.push_back(pos);
+    }
+    return verts;
+}
+
+void Mesh::writeCurrentVertsWithPositions(std::vector<Position> inVerts)
+{
+    int vecIndex = 0;
+    for(int i = 0; i<m_currentVertData.size(); i=i+5)
+    {
+        m_currentVertData[i]    = inVerts[vecIndex].x;
+        m_currentVertData[i+1]  = inVerts[vecIndex].y;
+        vecIndex++;
+    }
 }

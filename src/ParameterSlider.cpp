@@ -10,9 +10,9 @@ ParameterSlider::ParameterSlider(const QString& name, QWidget* parent)
     slider = new QSlider(Qt::Horizontal);
     valueLabel = new QLabel("initial value");
 
-    // Configure slider (-100 to 100 for -1.0 to 1.0)
-    value = 0;
-    slider->setRange(-100, 100);
+    // Configure slider (1 to 100 for 0.1 to 10)
+    value = 1;
+    slider->setRange(1, 100);
     slider->setSingleStep(1);
     slider->setValue(value);
 
@@ -32,7 +32,7 @@ ParameterSlider::~ParameterSlider() {
 
 void ParameterSlider::onSliderValueChanged(int inValue) {
     // Convert from slider steps to float value.
-    float floatValue = inValue / 100.0f;
+    float floatValue = inValue / 10.0f;
     value = floatValue;
     valueLabel->setText(QString::number(floatValue, 'f', 2));
     // Send out a Qt signal
@@ -40,7 +40,7 @@ void ParameterSlider::onSliderValueChanged(int inValue) {
 }
 
 void ParameterSlider::setValue(float inValue) {
-    int sliderValue = static_cast<int>(inValue * 100.0f);
+    int sliderValue = static_cast<int>(inValue);
     slider->setValue(sliderValue);
     onSliderValueChanged(sliderValue);
 }

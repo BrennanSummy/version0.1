@@ -7,7 +7,7 @@ QMainWindow(parent){
     // Basic settings
     setWindowTitle("Brennan's Window");
     // Window size
-    resize(1200,600);
+    resize(900,800);
 
     setupWindow();
 }
@@ -16,20 +16,20 @@ QMainWindow(parent){
 void MainWindow::setupWindow()
 {
     // Create main splitter
-    QSplitter* splitter = new QSplitter(Qt::Horizontal);
+    QSplitter*      splitter        = new QSplitter(Qt::Horizontal);
 
-    RenderWindow* renderArea = new RenderWindow();
-    QWidget* parameterArea = new QWidget();
+    RenderWindow*   renderArea      = new RenderWindow();
+    QWidget*        parameterArea   = new QWidget();
 
     // Configure parameter area
-    QVBoxLayout* parameterLayout = new QVBoxLayout(parameterArea);
+    QVBoxLayout*    parameterLayout = new QVBoxLayout(parameterArea);
     parameterLayout->setContentsMargins(0, 0, 0, 0);
 
     // Add parameter sliders
-    ParameterSlider* slider0 = new ParameterSlider("Param0", parameterArea);
+    ParameterSlider* kTSlider = new ParameterSlider("kT", parameterArea);
     ParameterSlider* slider1 = new ParameterSlider("Param1", parameterArea);
     ParameterSlider* slider2 = new ParameterSlider("Param2", parameterArea);
-    parameterLayout->addWidget(slider0);
+    parameterLayout->addWidget(kTSlider);
     parameterLayout->addWidget(slider1);
     parameterLayout->addWidget(slider2);
 
@@ -42,7 +42,7 @@ void MainWindow::setupWindow()
     splitter->addWidget(parameterArea);
 
     // Set initial sizes
-    splitter->setSizes({600, 100});
+    splitter->setSizes({800, 100});
 
     // Set central widget
     setCentralWidget(splitter);
@@ -51,7 +51,8 @@ void MainWindow::setupWindow()
     UpdateTimer* updateTimer = new UpdateTimer(this,1000/60);
 
     // Connect things
-    connect(slider0,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateLVert);
+    //connect(slider0,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateLVert);
+    connect(kTSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTemp);
 
     // Connect the QTimer to the renderArea update step
     connect(updateTimer, &UpdateTimer::timeIsUp, renderArea, &RenderWindow::drawLastAndComputeNext);

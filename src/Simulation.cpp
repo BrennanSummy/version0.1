@@ -121,25 +121,6 @@ void Simulation::updateBoardWithBuffer()
     //std::cout << "Board has been updated" << std::endl;
 }
 
-//void Simulation::updateVerticeVectors(int i, int j, char value)
-//{
-//    double x = iToScreenCoord(i,j);
-//    double y = jToScreenCoord(j);
-//    ScreenPosition p{x,y};
-//    switch (value)
-//    {
-//        case 'A':
-//            aVertices.push_back(p);
-//            break;
-//        case 'B':
-//            bVertices.push_back(p);
-//            break;
-//        case 'C':
-//            cVertices.push_back(p);
-//            break;
-//    }
-//        
-//}
 
 void Simulation::updateProbabilities()
 {
@@ -160,8 +141,6 @@ void Simulation::updateProbabilities()
     m_probabilities[1] = boltzmann_B / Z;
     m_probabilities[2] = boltzmann_C / Z;
     //std::cout << "P_A " << m_probabilities[0] << std::endl;
-    //std::cout << "P_B " << m_probabilities[1] << std::endl;
-    //std::cout << "P_C " << m_probabilities[2] << std::endl;
 
     // Reset neighborVals
     for (int i=0;i<3;i++){m_neighborVals[i]=0;}
@@ -191,7 +170,6 @@ char Simulation::roll()
 
 void Simulation::step()
 {
-    //std::cout << "Starting update step computation" << std::endl;
     for (int i = 0; i < m_width; i++)
     {
         for (int j = 0; j < m_height; j++)
@@ -202,4 +180,9 @@ void Simulation::step()
     //std::cout << "Buffer fully updated" << std::endl;
     updateBoardWithBuffer();
     //printBoard();
+}
+
+void Simulation::updateTemp(float value)
+{
+    m_kT = value;
 }
