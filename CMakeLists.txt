@@ -14,65 +14,89 @@ set(CMAKE_AUTOMOC ON)
 # Find Qt6 installation on this device
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGLWidgets OpenGL Gui)
 
-# Put the non-main source code into a static library
-set(STATIC_LIB_NAME my_code)
-add_library(${STATIC_LIB_NAME} STATIC
+# Put source code and source headers into variables
+set(SOURCE_CODE
 	src/external/stb_image.cpp
-	src/external/stb_image.h
 	src/ParameterSlider.cpp
-	src/ParameterSlider.h
 	src/RenderWindow.cpp
-	src/RenderWindow.h
 	src/Texture.cpp
-	src/Texture.h
 	src/MainWindow.cpp
-	src/MainWindow.h
-    src/Shader.h
     src/Shader.cpp
-    src/Mesh.h
     src/Mesh.cpp
     src/Simulation.cpp
-    src/Simulation.h
     src/PushButton.cpp
-    src/PushButton.h
     src/UpdateTimer.cpp
+    src/textBox.cpp
+)
+set(SOURCE_HEADERS
+	src/external/stb_image.h
+	src/ParameterSlider.h
+	src/RenderWindow.h
+	src/Texture.h
+	src/MainWindow.h
+    src/Shader.h
+    src/Mesh.h
+    src/Simulation.h
+    src/PushButton.h
     src/UpdateTimer.h
+	src/textBox.h
 )
 
-# Link the Qt6 libraries to the static library that I am building. The access should be public so that the executable can see them as well.
+
+# Put the non-main source code into a static library
+set(STATIC_LIB_NAME my_code)
+
+add_library(${STATIC_LIB_NAME} STATIC
+	${SOURCE_CODE}
+	${SOURCE_HEADERS}
+)
+
+# Link the Qt6 libraries to the static library. The access should be public so that the executable can see them as well.
 target_link_libraries(${STATIC_LIB_NAME}
 	PUBLIC  Qt6::Core Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::Widgets Qt6::Gui)
 
 # Make a variable for the output executable name
-set(EXECUTABLE_NAME "runner")
+set(EXECUTABLE_NAME "simProgram")
 
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
+
 ## Link the executable to the static library
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${STATIC_LIB_NAME})
+
+
+# Define macros for file directories
+target_compile_definitions(${STATIC_LIB_NAME} PRIVATE 
+	SHADER_PATH="${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/shaders/"
+)
+
+# INSTALL LIBRARY
+install(TARGETS ${STATIC_LIB_NAME} DESTINATION lib)
+install(FILES 
+	${SOURCE_HEADERS}
+DESTINATION include)
+
+install(FILES
+	src/shaders/fragShaderDomainMapping.frag
+	src/shaders/vertexShaderA.vert
+DESTINATION share/${PROJECT_NAME}/shaders)
+
+# INSTALL EXECUTABLE
+install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+
+# CPACK
+include(InstallRequiredSystemLibraries)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+include(CPack)
+
+
 
 ### Debug build with everything
 ##set(DEBUG "debug_build")
 ##add_executable(${DEBUG} src/main.cpp
-##	src/external/stb_image.cpp
-##	src/external/stb_image.h
-##	src/ParameterSlider.cpp
-##	src/ParameterSlider.h
-##	src/RenderWindow.cpp
-##	src/RenderWindow.h
-##	src/Texture.cpp
-##	src/Texture.h
-##	src/MainWindow.cpp
-##	src/MainWindow.h
-##    src/Shader.h
-##    src/Shader.cpp
-##    src/Mesh.h
-##    src/Mesh.cpp
-##    src/Simulation.cpp
-##    src/Simulation.h
-##    src/PushButton.cpp
-##    src/PushButton.h
-##    src/UpdateTimer.cpp
-##    src/UpdateTimer.h
+## 	${SOURCE_CODE}
+##  ${SOURCE_HEADERS}
 ##	)
 ##
 ##target_link_libraries(${DEBUG}

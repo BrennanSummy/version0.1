@@ -22,9 +22,13 @@ void RenderWindow::initializeGL() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Dark teal background
 
     // 1. Initialize the Shader object and tell it which shaders to use
-    QString mesh1VertShaderPath = "src/shaders/vertexShaderA.vert";
+    //QString mesh1VertShaderPath = "src/shaders/vertexShaderA.vert";
+    std::string vPath = std::string(SHADER_PATH) + std::string("vertexShaderA.vert");
+    QString mesh1VertShaderPath = vPath.c_str();
     //QString mesh1FragShaderPath = "src/shaders/fragShaderA.frag";
-    QString mesh1FragShaderPath = "src/shaders/fragShaderDomainMapping.frag";
+    //QString mesh1FragShaderPath = "src/shaders/fragShaderDomainMapping.frag";
+    std::string fPath = std::string(SHADER_PATH) + std::string("fragShaderDomainMapping.frag");
+    QString mesh1FragShaderPath = fPath.c_str();
 
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
