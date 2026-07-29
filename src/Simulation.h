@@ -6,8 +6,8 @@
 #include <memory>
 #include <random>
 
-const int width = 50;
-const int height = 70;
+const int width = 200;
+const int height = 150;
 struct ScreenPosition
 {
     const double x;
@@ -21,6 +21,7 @@ class Simulation
         Simulation();
         // Prints the board to the console.
         void printBoard();
+        void printDisplayBoard();
         // The step function calculates the board state for the next timestep.
         void step();
 
@@ -30,6 +31,9 @@ class Simulation
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
         char m_board[height][width];
+        
+        // This is a larger display board for rendering
+        char m_displayBoard[height][2*width + height -1];
 
         /* The width and height of the board. The char matrix
             dimensions must be known at compile time. */
@@ -59,11 +63,15 @@ class Simulation
         // Private methods
         // Initialize the board to some arbitrary state
         void initBoard();
+        // Initialize the display board
+        void initDisplayBoard();
         /* Updates the state of the board element buffer at the given coordinates
            (i is the first index of the board array).*/
         void updateBufferElement(int i,int j);
         // Writes the buffer to the state (done at the end of an update step)
         void updateBoardWithBuffer();
+        // update the display board with the data board
+        void updateDisplayBoardElement(int i, int j, char value);
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j);
         // Uses the neighborVals array to update the probabilities array

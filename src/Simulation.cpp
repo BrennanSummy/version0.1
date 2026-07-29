@@ -3,7 +3,9 @@
 Simulation::Simulation()
 :rand_device(), rand_generator(rand_device()), uniform(0,1)
 {
+    initDisplayBoard();
     initBoard();
+    printDisplayBoard();
     //std::cout << "board initialized" << std::endl;
 }
 
@@ -19,15 +21,18 @@ void Simulation::initBoard()
                 if(i>=(int) (m_width / 2))
                 {
                 m_board[j][i] = 'C';
+                updateDisplayBoardElement(i,j,'C');
                 }
                 else
                 {
                 m_board[j][i] = 'B';
+                updateDisplayBoardElement(i,j,'B');
                 }
             }
             else
             {
                 m_board[j][i] = 'A';
+                updateDisplayBoardElement(i,j,'A');
             }
         }
     } 
@@ -48,7 +53,29 @@ void Simulation::printBoard()
         std::cout << space;
         for (int i = 0; i < m_width; i++)
         {
-            std::cout <<m_board[j][i] <<  " ";
+            //std::cout <<m_board[j][i] <<  " ";
+            //std::cout <<m_displayBoard[j][i] <<  " ";
+        }
+        std::cout << "\n";
+    } 
+    
+}
+
+void Simulation::printDisplayBoard()
+{
+    std::string space = " ";
+    space.append(" ");
+    for (int j = m_height-1; j >= 0; j--)
+    {
+        //std::string space = "";
+        //for (int spaces = j; spaces >= 0; spaces--)
+        //{
+        //    space.append(" ");
+        //}
+        //std::cout << space;
+        for (int i = 0; i < 2*m_width+m_height-1; i++)
+        {
+            std::cout <<m_displayBoard[j][i] <<  " ";
         }
         std::cout << "\n";
     } 
@@ -116,6 +143,7 @@ void Simulation::updateBoardWithBuffer()
         {
             char val        = m_board_buffer[j][i];
             m_board[j][i]   = val;
+            updateDisplayBoardElement(i,j, val);
         }
     }
     //std::cout << "Board has been updated" << std::endl;
@@ -180,6 +208,25 @@ void Simulation::step()
     //std::cout << "Buffer fully updated" << std::endl;
     updateBoardWithBuffer();
     //printBoard();
+}
+
+void Simulation::updateDisplayBoardElement(int i, int j, char value)
+{
+    m_displayBoard[j][2*i+j] = value;
+    m_displayBoard[j][2*i+1+j] = value;
+}
+
+void Simulation::initDisplayBoard()
+{
+    for (int i = 0; i < 2*m_width+m_height-1; i++)
+    {
+        for (int j = 0; j < m_height; j++)
+        {
+            // Corresponding integer is 46
+            m_displayBoard[j][i] = '.';
+        }
+    } 
+
 }
 
 void Simulation::updateTemp(float value)

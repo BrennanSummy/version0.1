@@ -10,6 +10,8 @@ const vec3 domainAColor = vec3(0.0,0.0,0.8);
 const vec3 domainBColor = vec3(0.0,0.8,0.0);
 const vec3 domainCColor = vec3(0.8,0.0,0.0);
 
+const vec3 backgroundColor = vec3(0.0,0.0,0.0);
+
 void main() 
 {
    vec3 color;
@@ -26,9 +28,13 @@ void main()
    {
       color = domainCColor;
    }
+   else if(domainValue ==46u)
+   {
+      color = backgroundColor;
+   }
    else
    {
-      color = vec3(0.1,0.1,0.0);
+      color = vec3(0.8,0.0,0.3);
    }
    //FragColor = texture(ourTexture, TexCoord);
    FragColor = vec4(color, 1.0);
