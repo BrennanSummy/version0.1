@@ -29,10 +29,10 @@ void MainWindow::setupWindow()
     //////////////////////////////////////////////////////  Title       Min  Max Default Steps
     ParameterSlider* kTSlider       = new ParameterSlider("kT"        , 0.01,  4,   1,    100, parameterArea);
     ParameterSlider* framerateSlider= new ParameterSlider("Framerate" ,  0.5, 60,  30,    120, parameterArea);
-    ParameterSlider* slider2        = new ParameterSlider("Param2"    ,   -7, -2,  -3,      3, parameterArea);
+    //ParameterSlider* slider2        = new ParameterSlider("Param2"    ,   -7, -2,  -3,      3, parameterArea);
     parameterLayout->addWidget(kTSlider);
     parameterLayout->addWidget(framerateSlider);
-    parameterLayout->addWidget(slider2);
+    //parameterLayout->addWidget(slider2);
 
     // Add start/stop button
     PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
