@@ -15,6 +15,8 @@ PushButton::PushButton(
     connect(button, &QPushButton::clicked, this, &PushButton::onPress);
 
     // Add to layout
+    layout->setSpacing(5);
+    layout->setContentsMargins(0,0,0,0);
     layout->addWidget(nameLabel);
     layout->addWidget(button);
 }

@@ -27,16 +27,21 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////  Title       Min  Max Default Steps
-    ParameterSlider* kTSlider       = new ParameterSlider("kT"        , 0.01,  4,   1,    100, parameterArea);
+    ParameterSlider* kTSlider       = new ParameterSlider("kT"        , 0.01, 10,   1,    100, parameterArea);
     ParameterSlider* framerateSlider= new ParameterSlider("Framerate" ,  0.5, 60,  30,    120, parameterArea);
     //ParameterSlider* slider2        = new ParameterSlider("Param2"    ,   -7, -2,  -3,      3, parameterArea);
+    parameterLayout->setSpacing(30);
+    // left, top, right, bottom margins
+    parameterLayout->setContentsMargins(0,20,0,20);
     parameterLayout->addWidget(kTSlider);
     parameterLayout->addWidget(framerateSlider);
     //parameterLayout->addWidget(slider2);
 
     // Add start/stop button
     PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
-    parameterLayout->addWidget(startStopButton);
+    parameterLayout->insertWidget(0,startStopButton);
+    // Add a stretch item to push other widgets up
+    parameterLayout->addStretch(1);
 
     // Add areas to splitter
     splitter->addWidget(renderArea);

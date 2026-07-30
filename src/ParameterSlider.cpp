@@ -23,6 +23,8 @@ ParameterSlider::ParameterSlider(   const QString& name,
     connect(slider, &QSlider::valueChanged, this, &ParameterSlider::onSliderValueChanged);
 
     // Add widgets to layout
+    layout->setSpacing(5);
+    layout->setContentsMargins(0,0,0,0);
     layout->addWidget(nameLabel);
     layout->addWidget(slider);
     layout->addWidget(valueLabel);
