@@ -6,8 +6,8 @@
 #include <memory>
 #include <random>
 
-const int width = 200;
-const int height = 150;
+const int width = 100;
+const int height = 100;
 struct ScreenPosition
 {
     const double x;
@@ -31,9 +31,12 @@ class Simulation
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
         char m_board[height][width];
+
+        /* char matrix used for keeping track of boundaries*/
+        char m_boundary_board[2*height-1][2*width-1];
         
         // This is a larger display board for rendering
-        char m_displayBoard[height][2*width + height -1];
+        //char m_displayBoard[height][2*width + height -1];
 
         /* The width and height of the board. The char matrix
             dimensions must be known at compile time. */
@@ -78,5 +81,4 @@ class Simulation
         void updateProbabilities();
         // Uses the probabilties array and the uniform distribution to pick a domain for the current element
         char roll();
-
 };

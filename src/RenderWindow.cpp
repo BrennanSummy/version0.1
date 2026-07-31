@@ -39,15 +39,16 @@ void RenderWindow::initializeGL() {
     m_sim = new Simulation();
     m_sim->printBoard();
 
-    //char* simData = &m_sim->m_board[0][0];
-    char* simData = &m_sim->m_displayBoard[0][0];
+    char* simData = &m_sim->m_board[0][0];
+    //char* simData = &m_sim->m_displayBoard[0][0];
 
     // Make a texture object
     //std::cout << "trying to init texture" << std::endl;
     //m_texture1 = new Texture("t2.png");
-    int displayWidth = 2*m_sim->m_width + m_sim->m_height-1;
-    int displayHeight = m_sim->m_height;
-    m_texture2 = new Texture(displayWidth,displayHeight,simData);
+    // FOR DISPLAYBOARD int displayWidth = 2*m_sim->m_width + m_sim->m_height-1;
+    // FOR DISPLAYBOARD int displayHeight = m_sim->m_height;
+    // FOR DISPLAYBOARD m_texture2 = new Texture(displayWidth,displayHeight,simData);
+    m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
     // Do a bit of math to figure out where to put the vertices
     float w = (float) m_sim->m_width;
@@ -59,6 +60,9 @@ void RenderWindow::initializeGL() {
     float topY = -1 + vertexHeight;
     float bottomRightX = -1 + vertexWidth;
     float topLeftX = 1 - vertexWidth;
+    m_shader1->getShaderProgram()->setUniformValue("texWidth", m_sim->m_width);
+    m_shader1->getShaderProgram()->setUniformValue("texHeight", m_sim->m_height);
+
 
     // Set up vertex data with positions followed by texture coords
     //std::vector<float> coolestVertices = {
@@ -68,12 +72,17 @@ void RenderWindow::initializeGL() {
     //     1.0f           ,  topY, 0.0f,          1.0f, 1.0f  // TRight
     //};
 
+    // TRY MAPPING X Texture coordinate off to the right to allow parallelogram shape 
+    //float texOffset = 1.0/(4.0);
+    float texOffset = (1.0 / (float) m_sim->m_width) * (floor(m_sim->m_height/2));
+    //float texOffset = 1.0/3.0;
     std::vector<float> coolestVertices = {
-        -1.0f           , -1.0f, 0.0f,          0.0f, 0.0f, // BLeft
-         1.0f           , -1.0f, 0.0f,          1.0f, 0.0f, // BRight
-        -1.0f           ,  1.0f, 0.0f,          0.0f, 1.0f, // TLeft
-         1.0f           ,  1.0f, 0.0f,          1.0f, 1.0f  // TRight
+        -1.0f           , -1.0f, 0.0f,              0.0f, 0.0f, // BLeft
+         1.0f           , -1.0f, 0.0f,  1.0f + texOffset, 0.0f, // BRight
+        -1.0f           ,  1.0f, 0.0f,              0.0f, 1.0f, // TLeft
+         1.0f           ,  1.0f, 0.0f,  1.0f + texOffset, 1.0f  // TRight
     };
+
     std::vector<unsigned int> indices =
     {
         0,1,2, // First Triangle
@@ -99,8 +108,8 @@ void RenderWindow::resizeGL(int w, int h)
 void RenderWindow::drawLastAndComputeNext()
 {
     // Load current texture
-    //char* texData = &m_sim->m_board[0][0];
-    char* texData = &m_sim->m_displayBoard[0][0];
+    char* texData = &m_sim->m_board[0][0];
+    //char* texData = &m_sim->m_displayBoard[0][0];
     m_texture2->updateData(texData);
 
     //std::cout << "texture updated to current board" << std::endl;

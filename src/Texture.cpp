@@ -69,7 +69,9 @@ void Texture::updateData(char* matrixData)
 
 void Texture::configureSampling()
 {
-    m_texture->setWrapMode(QOpenGLTexture::Repeat);
+    //m_texture->setWrapMode(QOpenGLTexture::Repeat);
+    m_texture->setWrapMode(QOpenGLTexture::ClampToBorder);
+    m_texture->setBorderColor(0,0,0,0);
     m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
     m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
     //m_texture->generateMipMaps(3);

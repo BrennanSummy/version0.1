@@ -53,7 +53,7 @@ void Simulation::printBoard()
         std::cout << space;
         for (int i = 0; i < m_width; i++)
         {
-            //std::cout <<m_board[j][i] <<  " ";
+            std::cout <<m_board[j][i] <<  " ";
             //std::cout <<m_displayBoard[j][i] <<  " ";
         }
         std::cout << "\n";
@@ -75,7 +75,7 @@ void Simulation::printDisplayBoard()
         //std::cout << space;
         for (int i = 0; i < 2*m_width+m_height-1; i++)
         {
-            std::cout <<m_displayBoard[j][i] <<  " ";
+            //std::cout <<m_displayBoard[j][i] <<  " ";
         }
         std::cout << "\n";
     } 
@@ -212,8 +212,8 @@ void Simulation::step()
 
 void Simulation::updateDisplayBoardElement(int i, int j, char value)
 {
-    m_displayBoard[j][2*i+j] = value;
-    m_displayBoard[j][2*i+1+j] = value;
+    //m_displayBoard[j][2*i+j] = value;
+    //m_displayBoard[j][2*i+1+j] = value;
 }
 
 void Simulation::initDisplayBoard()
@@ -223,7 +223,7 @@ void Simulation::initDisplayBoard()
         for (int j = 0; j < m_height; j++)
         {
             // Corresponding integer is 46
-            m_displayBoard[j][i] = '.';
+            //m_displayBoard[j][i] = '.';
         }
     } 
 
