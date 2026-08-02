@@ -1,0 +1,68 @@
+This is a place to keep track of performance (time taken per simulation step) with various configurations.
+
+August 1:
+300 by 300 grid
+Calculated average over 1000 steps.
+Average step took 12.8285 milliseconds to calculate.
+Calculated average over 1000 steps.
+Average step took 12.8006 milliseconds to calculate.
+Calculated average over 1000 steps.
+Average step took 12.7281 milliseconds to calculate.
+Calculated average over 1000 steps.
+// Changed kT to 10.
+Average step took 17.4511 milliseconds to calculate.
+Calculated average over 1000 steps.
+Average step took 17.707 milliseconds to calculate.
+
+300x300 AFTER REMOVING THE DISPLAYBOARD UPDATES:
+Calculated average over 1000 steps:
+Average step took 12.4677 milliseconds to calculate.
+Average update time per triplet/pixel: 0.00013853 ms
+Calculated average over 1000 steps:
+Average step took 11.9814 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000133127 ms
+Calculated average over 1000 steps:
+Average step took 12.3685 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000137428 ms
+// Changed kT to 10.
+Calculated average over 1000 steps:
+Average step took 16.8236 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000186929 ms
+Calculated average over 1000 steps:
+Average step took 17.1302 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000190336 ms
+
+100 x 100 After adding boundary tracking (unvisualized) and a quadratic line tension term in the energy
+Calculated average over 1000 steps:
+Average step took 10.6475 milliseconds to calculate.
+Average update time per triplet/pixel: 0.00106475 ms
+Calculated average over 1000 steps:
+Average step took 7.29913 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000729913 ms
+Calculated average over 1000 steps:
+Average step took 7.25036 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000725036 ms
+Calculated average over 1000 steps:
+Average step took 7.21949 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000721949 ms
+Calculated average over 1000 steps:
+Average step took 7.30766 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000730766 ms
+Calculated average over 1000 steps:
+Average step took 7.21683 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000721683 ms
+Calculated average over 1000 steps:
+Average step took 7.2152 milliseconds to calculate.
+Average update time per triplet/pixel: 0.00072152 ms
+Calculated average over 1000 steps:
+Average step took 7.29741 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000729741 ms
+Calculated average over 1000 steps:
+Average step took 7.22342 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000722342 ms
+Calculated average over 1000 steps:
+Average step took 7.27449 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000727449 ms
+Calculated average over 1000 steps:
+Average step took 7.26221 milliseconds to calculate.
+Average update time per triplet/pixel: 0.000726221 ms
