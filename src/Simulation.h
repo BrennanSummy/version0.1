@@ -2,14 +2,16 @@
 
 // chrono library is only used here for calculating the execution time for simulation stepping.
 #include <chrono>
+#include <unordered_map>
+#include <array>
 #include <iostream>
 #include <cmath>
 #include <vector>
 #include <memory>
 #include <random>
 
-const int width = 10;
-const int height = 10;
+const int width = 60;
+const int height = 50;
 struct ScreenPosition
 {
     const double x;
@@ -31,6 +33,12 @@ class Simulation
         // This updates the value of kT to the given value.
         void updateTemp(float value);
 
+        // This updates the value of tensionFactor to the given value.
+        void updateTension(float value);
+
+        // This updates the value of nearestNeighborFactor to the given value.
+        void updateNearestNeighbor(float value);
+
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
         char m_board[height][width];
@@ -48,7 +56,16 @@ class Simulation
         double m_kT=1;
 
         // Line tension factor for probability calculation
-        double m_tensionFactor;
+        double m_tensionFactor=1;
+
+        // Line tension factor for probability calculation
+        double m_nearestNeighborFactor=1;
+
+        // Unordered map to associate 'A' with D or E, etc
+        const std::unordered_map<char, std::array<char,2>> domainToBoundaryMap = {{'A',{'D','E'}}, {'B', {'D', 'F'}}, {'C', {'E', 'F'}}};
+
+        // Unordered map to associate 'A' with 0, etc
+        const std::unordered_map<char, int> domainToIntMap = {{'A',0}, {'B', 1}, {'C', 2}};
 
         /* A buffer is used to hold the new element values to avoid influencing dynamics
             with arbitrary sweeping of element updates */
@@ -63,7 +80,11 @@ class Simulation
 
         /* Array that stores the total lengths of the boundaries associated with A,B, or C.
             0 <-> A, 1 <-> B, 2 <-> C */
-        short m_prospectiveBoundaryLengths[3];
+        int m_prospectiveBoundaryLengths[3]={0,0,0};
+
+        /* Array that stores the total lengths of the boundaries associated with A,B, or C.
+            0 <-> A, 1 <-> B, 2 <-> C */
+        std::vector<std::array<int,2>> m_visitedEdgePositions;
 
         // an accompanying array that stores probabilities of switching to each domain
         double m_probabilities[3];
@@ -91,6 +112,18 @@ class Simulation
         void updateBoardWithBuffer();
         // Writes the boundary board buffer to the boundary board state
         void updateBoundaryBoardWithBuffer();
+        // Modifies boundaryBoard as if the element at i,j was instead value. Used for prospective boundary length finding
+        void pointModifyBoundaryBoard(char prospectiveValue, int i, int j);
+        /* Check which type of boundary is at a certain neighbor index, where the index is 0 at the top leftmost neighbor
+            with top having priority over leftmost, and goes clockwise from there with a max of 3.
+            Note that edgePosition is a length two int array that has j in the first and i in the second element*/
+        void getAdjacentEdgePosition(int* edgePosition, int neighborIndex);
+        // Recursive function that explores contiguous edges. Used for boundary length finding
+        void exploreLine(int* startingEdgePosition, int* position, bool direction, char boundaryType);
+        // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction
+        bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
+        // Check if an edge position is valid
+        bool edgePositionCheck(int* position);
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j);
         // Uses the neighborVals array to update the probabilities array

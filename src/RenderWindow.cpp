@@ -144,6 +144,16 @@ void RenderWindow::sliderUpdateTemp(float sliderVal)
     m_sim->updateTemp(sliderVal);
 }
 
+void RenderWindow::sliderUpdateTension(float sliderVal)
+{
+    m_sim->updateTension(sliderVal);
+}
+
+void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
+{
+    m_sim->updateNearestNeighbor(sliderVal);
+}
+
 void RenderWindow::updateVertices(std::vector<float> newVertices)
 {
     m_mesh1->updateVertData(newVertices);

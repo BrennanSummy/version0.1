@@ -26,14 +26,18 @@ void MainWindow::setupWindow()
     parameterLayout->setContentsMargins(0, 0, 0, 0);
 
     // Add parameter sliders
-    //////////////////////////////////////////////////////  Title       Min  Max Default Steps
-    ParameterSlider* kTSlider       = new ParameterSlider("kT"        , 0.01, 10,   1,    100, parameterArea);
-    ParameterSlider* framerateSlider= new ParameterSlider("Framerate" ,  0.5, 60,  30,    120, parameterArea);
+    //////////////////////////////////////////////////////  Title              Min  Max Default Steps
+    ParameterSlider* kTSlider       = new ParameterSlider("kT"               , 0.01, 10,   1,    100, parameterArea);
+    ParameterSlider* tensionSlider  = new ParameterSlider("Tension factor"   ,  0.0,0.1, 0.1,    100, parameterArea);
+    ParameterSlider* neighborSlider = new ParameterSlider("N-Neighbor factor",  0.0,100,   1,    100, parameterArea);
+    ParameterSlider* framerateSlider= new ParameterSlider("Framerate"        ,  0.5, 60,  30,    120, parameterArea);
     //ParameterSlider* slider2        = new ParameterSlider("Param2"    ,   -7, -2,  -3,      3, parameterArea);
     parameterLayout->setSpacing(30);
     // left, top, right, bottom margins
     parameterLayout->setContentsMargins(0,20,0,20);
     parameterLayout->addWidget(kTSlider);
+    parameterLayout->addWidget(neighborSlider);
+    parameterLayout->addWidget(tensionSlider);
     parameterLayout->addWidget(framerateSlider);
     //parameterLayout->addWidget(slider2);
 
@@ -59,6 +63,12 @@ void MainWindow::setupWindow()
     // Connect things
     // Temperature slider
     connect(kTSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTemp);
+
+    // Tension slider
+    connect(tensionSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTension);
+
+    // Nearest neighbor slider
+    connect(neighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateNearestNeighbor);
 
     // Framerate slider
     connect(framerateSlider,&ParameterSlider::sliderHasChanged,updateTimer,&UpdateTimer::changeInterval);

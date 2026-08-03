@@ -20,6 +20,8 @@ public:
 
 public slots:
     void sliderUpdateTemp(float sliderVal);
+    void sliderUpdateTension(float sliderVal);
+    void sliderUpdateNearestNeighbor(float sliderVal);
 
 protected:
     void initializeGL() override;

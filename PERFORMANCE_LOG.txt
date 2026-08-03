@@ -32,7 +32,7 @@ Calculated average over 1000 steps:
 Average step took 17.1302 milliseconds to calculate.
 Average update time per triplet/pixel: 0.000190336 ms
 
-100 x 100 After adding boundary tracking (unvisualized) and a quadratic line tension term in the energy
+100 x 100 After adding boundary tracking (unvisualized) and a quadratic local line tension term in the energy
 Calculated average over 1000 steps:
 Average step took 10.6475 milliseconds to calculate.
 Average update time per triplet/pixel: 0.00106475 ms
@@ -66,3 +66,17 @@ Average update time per triplet/pixel: 0.000727449 ms
 Calculated average over 1000 steps:
 Average step took 7.26221 milliseconds to calculate.
 Average update time per triplet/pixel: 0.000726221 ms
+
+60x50 after adding a working nonlocal line tension term
+Calculated average over 100 steps:
+Average step took 56.2117 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0187372 ms
+Calculated average over 100 steps:
+Average step took 66.4738 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0221579 ms
+Calculated average over 100 steps:
+Average step took 87.6548 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0292183 ms
+Calculated average over 100 steps:
+Average step took 69.3335 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0231112 ms

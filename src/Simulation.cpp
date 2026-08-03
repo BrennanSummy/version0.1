@@ -6,6 +6,7 @@ Simulation::Simulation()
     initBoard();
     updateBoundaryBoardBufferViaScan();
     updateBoundaryBoardWithBuffer();
+    //pointModifyBoundaryBoard('B',2,6);
     printBoardWithBoundary();
     //std::cout << "board initialized" << std::endl;
 }
@@ -165,6 +166,12 @@ void Simulation::printBoardWithBoundary()
 void Simulation::updateBufferElement(int i, int j)
 {
     updateNeighborVals(i,j);
+    for (int x = 0; x<3;x++)
+    {
+        char X[3] = {'A', 'B', 'C'};
+        updateProspectiveBoundaryLengths(X[x],i,j);
+        //std::cout<<"boundary length: " <<m_prospectiveBoundaryLengths[x] << std::endl;
+    }
     updateProbabilities();
     m_boardBuffer[j][i] = roll();
 }
@@ -215,7 +222,351 @@ void Simulation::updateNeighborVals(int i, int j)
 }
 
 void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j)
-{}
+{
+    //std::cout << "Element (i,j) = (" << i << "," << j << ")" << std::endl;
+    m_visitedEdgePositions.clear();
+    char currentValue = m_board[j][i];
+    pointModifyBoundaryBoard(prospectiveValue,i,j);
+    //printBoardWithBoundary();
+
+    int boundi=2*i;
+    int boundj=2*j;
+    // Get the indices of the edges surrounding the board element ij
+    int indices[6][2] = {   {boundj+1,boundi-1},
+                            {boundj+1,boundi},
+                            {boundj,boundi+1},
+                            {boundj-1,boundi+1},
+                            {boundj-1,boundi},
+                            {boundj,boundi-1}
+    };
+
+    // Keep track of (up to 6) initial edge positions
+    int initEdgePositions[6][2];
+    bool boundaries[6] = {0,0,0,0,0,0};
+    bool allBounds = true;
+    for (int neighborIndex=0;neighborIndex<6;neighborIndex++)
+    {
+        if(!edgePositionCheck(indices[neighborIndex])){allBounds=false; continue;}
+        char boundaryType = m_boundaryBoard[indices[neighborIndex][0]][indices[neighborIndex][1]];
+        if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
+        {
+            boundaries[neighborIndex] = 1;
+            // Remember this edge's position
+            for(int dirInd=0;dirInd<2;dirInd++) {initEdgePositions[neighborIndex][dirInd] = indices[neighborIndex][dirInd];}
+        }
+        else{allBounds=false;}
+
+    }
+    // Save some processing time by abandoning when every edge is a compatible boundary
+    if(allBounds)
+    {
+        //std::cout << "Setting boundary length to 6, as the element is surrounded by boundary" << std::endl;
+        m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]=6;
+        // Revert point modification
+        pointModifyBoundaryBoard(currentValue,i,j);
+        return;
+    }
+    // Start at the first matching edge found, then cross off any '1's in the boundaries bool array as you go down the boundary line.
+    // If any 1s remain in the bool array after that boundary is explored, mark bottleneck as true and act accordingly.
+
+    for (int initialEdgeIndex=0;initialEdgeIndex<6;initialEdgeIndex++)
+    {
+        bool redundantEdge=false;
+        // Find the next starting edge
+        if(boundaries[initialEdgeIndex])
+        {
+            int startingEdgePosition[2] = {initEdgePositions[initialEdgeIndex][0],
+                                           initEdgePositions[initialEdgeIndex][1]
+            };
+            // Test to see if this starting edge has already been visited
+            for (int edgeIndex = 0; edgeIndex<m_visitedEdgePositions.size(); edgeIndex++)
+            {
+                if ( startingEdgePosition[0]==m_visitedEdgePositions[edgeIndex][0] &&
+                        startingEdgePosition[1]==m_visitedEdgePositions[edgeIndex][1])
+                        {
+                            redundantEdge=true;
+                            break;
+                        }
+            }
+            if(!redundantEdge)
+            {
+                for (int startingDirection=0;startingDirection<2;startingDirection++)
+                {   
+                    // Set start position to this edge and make a position buffer
+                    int position[2];
+                    int positionBuffer[2];
+                    for(int dirInd=0;dirInd<2;dirInd++){position[dirInd]       = indices[initialEdgeIndex][dirInd];
+                                                        positionBuffer[dirInd] = position[dirInd];
+                    }
+
+                    // Start looking down the line of contiguous edges
+                    exploreLine(startingEdgePosition, position, startingDirection, prospectiveValue);
+                }   
+            }
+        }
+    }
+    
+    // Revert point modification
+    pointModifyBoundaryBoard(currentValue,i,j);
+}
+
+void Simulation::exploreLine(int* startingEdgePosition, int* position, bool direction, char prospectiveValue)
+{
+    // Add the current position to the visited edge vector
+    m_visitedEdgePositions.push_back(std::array<int,2> {position[0],position[1]});
+
+    // Use the direction to select the two possible edge neighbor indices to look through
+    int startIndex = direction * 2;
+    int endIndex = startIndex + 2;
+    int positionBuffer[2];
+    for (int edgeNeighborIndex = startIndex; edgeNeighborIndex<endIndex; edgeNeighborIndex++)
+    {
+        // Set position buffer
+        positionBuffer[0] = position[0]; positionBuffer[1] = position[1];
+        // Load the position of the neighboring edge into the position buffer
+        getAdjacentEdgePosition(positionBuffer, edgeNeighborIndex);
+        /* Make sure that position is valid (not out of bounds)
+            if it is, skip the rest of this iteration to look at the next edge.*/
+        if(!edgePositionCheck(positionBuffer)){continue;}
+        char val = m_boundaryBoard[positionBuffer[0]][positionBuffer[1]];
+        // If that edge has a compatible boundary type, recurse then break
+        if( val == domainToBoundaryMap.at(prospectiveValue)[0] ||  val == domainToBoundaryMap.at(prospectiveValue)[1])
+        {
+            // Increment the correct prospective boundary length
+            m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]++;
+            //std::cout<<"val: " << prospectiveValue<<" pos: " << positionBuffer[1]<< "i, "<<positionBuffer[0]<<"j. length: " << 
+            //m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] << std::endl;
+            // Get the direction for the next step
+            bool newDirection = getEdgeFindingDirection(position, edgeNeighborIndex);
+            // Use the buffer to update position
+            position[0] = positionBuffer[0]; position[1] = positionBuffer[1];
+            // Make sure that this isn't a loop by checking equivalence with starting position
+            if ( startingEdgePosition[0]==position[0] &&
+                    startingEdgePosition[1]==position[1])
+                    {
+                        break;
+                    }
+
+            // Recurse
+            exploreLine(startingEdgePosition, position, newDirection, prospectiveValue);
+            
+            break;
+        }
+    }
+
+}
+
+bool Simulation::edgePositionCheck(int* position)
+{
+    bool positionIsValid = (position[0] >= 0)        && (position[1] >= 0)         &&
+                        (position[0] < 2*m_height-1)  && (position[1] < 2*m_width-1);
+    return positionIsValid;
+}
+
+bool Simulation::getEdgeFindingDirection(int* position, int chosenNeighborIndex)
+{
+    bool direction;
+    if (position[0] % 2 ==0)
+    {
+        // sparse row
+        switch(chosenNeighborIndex)
+        {
+            case 0:
+                direction=1;
+                break;
+            case 1:
+                direction=0;
+                break;
+            case 2:
+                direction=0;
+                break;
+            case 3:
+                direction=1;
+                break;
+        }
+    }
+    else
+    {
+        // dense row
+        if(position[1]%2==1)
+        {
+            // Right-Up pointing line
+            switch(chosenNeighborIndex)
+            {
+                case 0:
+                    direction=0;
+                    break;
+                case 1:
+                    direction=0;
+                    break;
+                case 2:
+                    direction=1;
+                    break;
+                case 3:
+                    direction=1;
+                    break;
+            }
+        }
+        if(position[1]%2==0)
+        {
+            // Left-Up pointing line
+            switch(chosenNeighborIndex)
+            {
+                case 0:
+                    direction=0;
+                    break;
+                case 1:
+                    direction=1;
+                    break;
+                case 2:
+                    direction=1;
+                    break;
+                case 3:
+                    direction=0;
+                    break;
+            }
+        }
+
+    }
+    return direction;
+}
+
+void Simulation::getAdjacentEdgePosition(int* edgePosition, int neighborIndex)
+{
+    if (edgePosition[0] % 2 ==0)
+    {
+        // sparse row
+        switch(neighborIndex)
+        {
+            case 0:
+                edgePosition[1]--;
+                edgePosition[0]++;
+                break;
+            case 1:
+                edgePosition[0]++;
+                break;
+            case 2:
+                edgePosition[1]++;
+                edgePosition[0]--;
+                break;
+            case 3:
+                edgePosition[0]--;
+                break;
+        }
+    }
+    else
+    {
+        // dense row
+        if(edgePosition[1]%2==1)
+        {
+            // Right-Up pointing line
+            switch(neighborIndex)
+            {
+                case 0:
+                    edgePosition[0]++;
+                    break;
+                case 1:
+                    edgePosition[1]++;
+                    break;
+                case 2:
+                    edgePosition[0]--;
+                    break;
+                case 3:
+                    edgePosition[1]--;
+                    break;
+            }
+        }
+        else if(edgePosition[1]%2==0)
+        {
+            // Left-Up pointing line
+            switch(neighborIndex)
+            {
+                case 0:
+                    edgePosition[1]++;
+                    break;
+                case 1:
+                    edgePosition[1]++;
+                    edgePosition[0]--;
+                    break;
+                case 2:
+                    edgePosition[1]--;
+                    break;
+                case 3:
+                    edgePosition[0]++;
+                    edgePosition[1]--;
+                    break;
+            }
+        }
+
+    }
+}
+
+void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j)
+{
+    int indices[6][2] = {   {j+1,i-1},
+                            {j+1,i},
+                            {j,i+1},
+                            {j-1,i+1},
+                            {j-1,i},
+                            {j,i-1}
+    };
+    
+    for (int neighbor = 0; neighbor < 6; neighbor++)
+    {
+        // Test the validity of the neighbor indices (this deals with edges and corners)
+        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
+                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
+        if(coordIsValid)
+        {
+            // Check the state of the board for the neighbor
+            char neighborValue = m_board[indices[neighbor][0]][indices[neighbor][1]];
+
+            char boundaryType = '.';
+            if( (neighborValue=='A' && prospectiveValue=='B') || (neighborValue=='B' && prospectiveValue=='A') )
+            {
+                boundaryType = 'D';
+            }
+            else if( (neighborValue=='A' && prospectiveValue=='C') || (neighborValue=='C' && prospectiveValue=='A') )
+            {
+                boundaryType = 'E';
+            }
+            else if( (neighborValue=='B' && prospectiveValue=='C') || (neighborValue=='C' && prospectiveValue=='B') )
+            {
+                boundaryType = 'F';
+            }
+            /* Update the boundary array using the correct indices as judged by the
+                neighbor loop index*/
+            int boundi=2*i;
+            int boundj=2*j;
+            switch(neighbor)
+            {
+                case 0:
+                boundi += -1;
+                boundj +=  1;
+                break;
+                case 1:
+                boundj +=  1;
+                break;
+                case 2:
+                boundi +=  1;
+                break;
+                case 3:
+                boundi += +1;
+                boundj += -1;
+                break;
+                case 4:
+                boundj += -1;
+                break;
+                case 5:
+                boundi += -1;
+                break;
+            }
+            m_boundaryBoard[boundj][boundi] = boundaryType;
+        }
+
+    }
+
+}
 
 void Simulation::updateBoardWithBuffer()
 {
@@ -249,13 +600,21 @@ void Simulation::updateProbabilities()
     double B = m_neighborVals[1];
     double C = m_neighborVals[2];
 
-    double tension_A = m_prospectiveBoundaryLengths[0];
-    double tension_B = m_prospectiveBoundaryLengths[1];
-    double tension_C = m_prospectiveBoundaryLengths[2];
+    double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
+    double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
+    double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
 
-    double boltzmann_A = std::exp(-(B+C + tension_A)/m_kT);
-    double boltzmann_B = std::exp(-(A+C + tension_B)/m_kT);
-    double boltzmann_C = std::exp(-(A+B + tension_C)/m_kT);
+    double nearest_A = m_nearestNeighborFactor*(B+C);
+    double nearest_B = m_nearestNeighborFactor*(A+C);
+    double nearest_C = m_nearestNeighborFactor*(B+A);
+
+    //double tension_A = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[0]-30,0.0);//
+    //double tension_B = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[1]-30,0.0);//
+    //double tension_C = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[2]-30,0.0);//
+
+    double boltzmann_A = std::exp(-(nearest_A + tension_A)/m_kT);
+    double boltzmann_B = std::exp(-(nearest_B + tension_B)/m_kT);
+    double boltzmann_C = std::exp(-(nearest_C + tension_C)/m_kT);
 
     double Z = boltzmann_A + boltzmann_B + boltzmann_C;
 
@@ -265,6 +624,8 @@ void Simulation::updateProbabilities()
 
     // Reset neighborVals
     for (int i=0;i<3;i++){m_neighborVals[i]=0;}
+    // Reset boundary lengths
+    for (int i=0;i<3;i++){m_prospectiveBoundaryLengths[i]=0;}
 }
 
 void Simulation::updateBoundaryBoardBufferElements(int boardi, int boardj)
@@ -367,7 +728,7 @@ void Simulation::step()
     double tDiffDouble = tDiff.count();
     m_stepDurations[m_stepCounter] = tDiffDouble;
 
-    if ( m_stepCounter % 1000 == 0 )
+    if ( m_stepCounter % 100 == 0 )
     {
         // get average calculation time
         double avgStepTime;
@@ -390,4 +751,12 @@ void Simulation::step()
 void Simulation::updateTemp(float value)
 {
     m_kT = value;
+}
+void Simulation::updateTension(float value)
+{
+    m_tensionFactor = value;
+}
+void Simulation::updateNearestNeighbor(float value)
+{
+    m_nearestNeighborFactor = value;
 }
