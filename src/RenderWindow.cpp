@@ -3,7 +3,7 @@
 
 RenderWindow::RenderWindow(QWidget* parent)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
-            m_texture1(nullptr), m_indexCount(0)   {}
+            m_texture1(nullptr),m_texture2(nullptr), m_indexCount(0)   {}
 
 RenderWindow::~RenderWindow()
 {
@@ -32,6 +32,8 @@ void RenderWindow::initializeGL() {
 
 
 
+
+
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
 
@@ -43,23 +45,23 @@ void RenderWindow::initializeGL() {
     //char* simData = &m_sim->m_displayBoard[0][0];
 
     // Make a texture object
-    //std::cout << "trying to init texture" << std::endl;
-    //m_texture1 = new Texture("t2.png");
+    std::cout << "trying to init texture" << std::endl;
+    m_texture1 = new Texture("t1.png");
     // FOR DISPLAYBOARD int displayWidth = 2*m_sim->m_width + m_sim->m_height-1;
     // FOR DISPLAYBOARD int displayHeight = m_sim->m_height;
     // FOR DISPLAYBOARD m_texture2 = new Texture(displayWidth,displayHeight,simData);
     m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
-    // Do a bit of math to figure out where to put the vertices
-    float w = (float) m_sim->m_width;
-    float h = (float) m_sim->m_height;
+    // FOR DISPLAYBOARD // Do a bit of math to figure out where to put the vertices
+    // FOR DISPLAYBOARD float w = (float) m_sim->m_width;
+    // FOR DISPLAYBOARD float h = (float) m_sim->m_height;
 
-    float vertexWidth = 2/(1 + (h/(2*w)));
-    float vertexHeight = (sqrt(3) * h) / (w + (h/2));
+    // FOR DISPLAYBOARD float vertexWidth = 2/(1 + (h/(2*w)));
+    // FOR DISPLAYBOARD float vertexHeight = (sqrt(3) * h) / (w + (h/2));
 
-    float topY = -1 + vertexHeight;
-    float bottomRightX = -1 + vertexWidth;
-    float topLeftX = 1 - vertexWidth;
+    // FOR DISPLAYBOARD float topY = -1 + vertexHeight;
+    // FOR DISPLAYBOARD float bottomRightX = -1 + vertexWidth;
+    // FOR DISPLAYBOARD float topLeftX = 1 - vertexWidth;
     m_shader1->getShaderProgram()->setUniformValue("texWidth", m_sim->m_width);
     m_shader1->getShaderProgram()->setUniformValue("texHeight", m_sim->m_height);
 
@@ -75,7 +77,7 @@ void RenderWindow::initializeGL() {
     // TRY MAPPING X Texture coordinate off to the right to allow parallelogram shape 
     //float texOffset = 1.0/(4.0);
     float texOffset = (1.0 / (float) m_sim->m_width) * (floor(m_sim->m_height/2));
-    //float texOffset = 1.0/3.0;
+    //float texOffset = 0;
     std::vector<float> coolestVertices = {
         -1.0f           , -1.0f, 0.0f,              0.0f, 0.0f, // BLeft
          1.0f           , -1.0f, 0.0f,  1.0f + texOffset, 0.0f, // BRight
@@ -95,6 +97,14 @@ void RenderWindow::initializeGL() {
     //std::cout << "trying to init mesh" << std::endl;
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
+
+    // Get the uniform location for texture 1
+    int m_tex1Loc = m_shader1->getShaderProgram()->uniformLocation("t1");
+    // Get the uniform location for texture 2
+    int m_tex2Loc = m_shader1->getShaderProgram()->uniformLocation("boardTexture");
+
+    std::cout<<"tex1Loc " << m_tex1Loc << std::endl;
+    std::cout<<"tex2Loc " << m_tex2Loc << std::endl;
 }
 
 void RenderWindow::resizeGL(int w, int h)
@@ -130,11 +140,21 @@ void RenderWindow::paintGL()
     m_shader1->bind();
 
     // Bind the texture object
+    glActiveTexture(GL_TEXTURE0);
     m_texture2->bind(0);
-    m_shader1->getShaderProgram()->setUniformValue("texture",0);
+    m_shader1->getShaderProgram()->setUniformValue(m_tex2Loc,0);
+
+    // Set the static textures for each domain
+    glActiveTexture(GL_TEXTURE1);
+    m_texture1->bind(1);
+    m_shader1->getShaderProgram()->setUniformValue(m_tex1Loc,1);
+
+    //std::cout << "is texture 1 bound? " << m_texture1->getTexture()->isBound() << std::endl;
 
     m_mesh1->draw(GL_TRIANGLES, m_indexCount);
 
+    m_texture2->release(0);
+    m_texture1->release(1);
     m_shader1->release();
 }
 

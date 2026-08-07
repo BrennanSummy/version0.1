@@ -38,6 +38,8 @@ private:
     Texture* m_texture1;
     Texture* m_texture2;
     int m_indexCount;
+    int m_tex1Loc;
+    int m_tex2Loc;
     Simulation* m_sim;
 
     //QPointF mouseInitPosition;

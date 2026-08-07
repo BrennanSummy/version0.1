@@ -28,7 +28,7 @@ void MainWindow::setupWindow()
     // Add parameter sliders
     //////////////////////////////////////////////////////  Title              Min  Max Default Steps
     ParameterSlider* kTSlider       = new ParameterSlider("kT"               , 0.01, 10,   1,    100, parameterArea);
-    ParameterSlider* tensionSlider  = new ParameterSlider("Tension factor"   ,  0.0,0.1, 0.1,    100, parameterArea);
+    ParameterSlider* tensionSlider  = new ParameterSlider("Tension factor"   ,  0.0,0.1,0.02,    100, parameterArea);
     ParameterSlider* neighborSlider = new ParameterSlider("N-Neighbor factor",  0.0,100,   1,    100, parameterArea);
     ParameterSlider* framerateSlider= new ParameterSlider("Framerate"        ,  0.5, 60,  30,    120, parameterArea);
     //ParameterSlider* slider2        = new ParameterSlider("Param2"    ,   -7, -2,  -3,      3, parameterArea);
