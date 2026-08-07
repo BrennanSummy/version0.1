@@ -35,11 +35,15 @@ private:
     void mouseReleaseEvent(QMouseEvent* event) override;
     Shader* m_shader1;
     Mesh* m_mesh1;
-    Texture* m_texture1;
-    Texture* m_texture2;
+    Texture* m_textureA;
+    Texture* m_textureB;
+    Texture* m_textureC;
+    Texture* m_boardTexture;
+    int m_boardTexLoc;
+    int m_texALoc;
+    int m_texBLoc;
+    int m_texCLoc;
     int m_indexCount;
-    int m_tex1Loc;
-    int m_tex2Loc;
     Simulation* m_sim;
 
     //QPointF mouseInitPosition;

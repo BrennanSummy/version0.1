@@ -3,7 +3,8 @@
 
 RenderWindow::RenderWindow(QWidget* parent)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
-            m_texture1(nullptr),m_texture2(nullptr), m_indexCount(0)   {}
+            m_boardTexture(nullptr), m_textureA(nullptr)
+            , m_indexCount(0)   {}
 
 RenderWindow::~RenderWindow()
 {
@@ -14,8 +15,11 @@ RenderWindow::~RenderWindow()
 }
 
 void RenderWindow::initializeGL() {
-    //// Crucial: Initialize the OpenGL function pointers for this context
+    // Initialize the OpenGL function pointers for this context
     initializeOpenGLFunctions();
+    // Enable Transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
     // Set background color
@@ -42,30 +46,39 @@ void RenderWindow::initializeGL() {
     m_sim->printBoard();
 
     char* simData = &m_sim->m_board[0][0];
-    //char* simData = &m_sim->m_displayBoard[0][0];
 
-    // Make a texture object
-    std::cout << "trying to init texture" << std::endl;
-    m_texture1 = new Texture("t1.png");
-    // FOR DISPLAYBOARD int displayWidth = 2*m_sim->m_width + m_sim->m_height-1;
-    // FOR DISPLAYBOARD int displayHeight = m_sim->m_height;
-    // FOR DISPLAYBOARD m_texture2 = new Texture(displayWidth,displayHeight,simData);
-    m_texture2 = new Texture(m_sim->m_width,m_sim->m_height,simData);
+    int bWidthUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bWidth");
+    int bHeightUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bHeight");
+    std::cout<<"bWidthUniformLoc " << bWidthUniformLoc << std::endl;
+    std::cout<<"bHeightUniformLoc " << bHeightUniformLoc << std::endl;
+    m_shader1->getShaderProgram()->setUniformValue(bWidthUniformLoc, m_sim->m_width);
+    m_shader1->getShaderProgram()->setUniformValue(bHeightUniformLoc, m_sim->m_height);
 
-    // FOR DISPLAYBOARD // Do a bit of math to figure out where to put the vertices
-    // FOR DISPLAYBOARD float w = (float) m_sim->m_width;
-    // FOR DISPLAYBOARD float h = (float) m_sim->m_height;
+    m_shader1->bind();
+    // Make texture objects
+    std::cout << "trying to init textures" << std::endl;
+    m_textureA = new Texture("t1.png");
+    m_textureB = new Texture("LUNorm1.png");
+    m_textureC = new Texture("RUNorm1.png");
+    m_boardTexture = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
-    // FOR DISPLAYBOARD float vertexWidth = 2/(1 + (h/(2*w)));
-    // FOR DISPLAYBOARD float vertexHeight = (sqrt(3) * h) / (w + (h/2));
+    // Get the uniform location for textures ABC
+    int m_texALoc = m_shader1->getShaderProgram()->uniformLocation("texA");
+    // Get the uniform location for board texture
+    int m_boardTexLoc = m_shader1->getShaderProgram()->uniformLocation("boardTexture");
+    int m_texBLoc = m_shader1->getShaderProgram()->uniformLocation("texB");
+    int m_texCLoc = m_shader1->getShaderProgram()->uniformLocation("texC");
+    m_shader1->getShaderProgram()->setUniformValue(m_boardTexLoc,0);
+    m_shader1->getShaderProgram()->setUniformValue(m_texALoc,1);
+    m_shader1->getShaderProgram()->setUniformValue(m_texBLoc,2);
+    m_shader1->getShaderProgram()->setUniformValue(m_texCLoc,3);
 
-    // FOR DISPLAYBOARD float topY = -1 + vertexHeight;
-    // FOR DISPLAYBOARD float bottomRightX = -1 + vertexWidth;
-    // FOR DISPLAYBOARD float topLeftX = 1 - vertexWidth;
-    m_shader1->getShaderProgram()->setUniformValue("texWidth", m_sim->m_width);
-    m_shader1->getShaderProgram()->setUniformValue("texHeight", m_sim->m_height);
+    std::cout<<"boardTex " << m_boardTexLoc << std::endl;
+    std::cout<<"texALoc " << m_texALoc << std::endl;
+    std::cout<<"texBLoc " << m_texBLoc << std::endl;
+    std::cout<<"texCLoc " << m_texCLoc << std::endl;
 
-
+    m_shader1->release();
     // Set up vertex data with positions followed by texture coords
     //std::vector<float> coolestVertices = {
     //    -1.0f           , -1.0f, 0.0f,          0.0f, 0.0f, // BLeft
@@ -75,7 +88,6 @@ void RenderWindow::initializeGL() {
     //};
 
     // TRY MAPPING X Texture coordinate off to the right to allow parallelogram shape 
-    //float texOffset = 1.0/(4.0);
     float texOffset = (1.0 / (float) m_sim->m_width) * (floor(m_sim->m_height/2));
     //float texOffset = 0;
     std::vector<float> coolestVertices = {
@@ -85,26 +97,18 @@ void RenderWindow::initializeGL() {
          1.0f           ,  1.0f, 0.0f,  1.0f + texOffset, 1.0f  // TRight
     };
 
+    // Set up the indices for the two triangles (will be passed to the EBO)
     std::vector<unsigned int> indices =
     {
         0,1,2, // First Triangle
         1,2,3  // Second Triangle
     };
     m_indexCount = static_cast<int>(indices.size());
-    //std::cout << "index count is " << m_indexCount << std::endl;
 
     // Make a mesh object
-    //std::cout << "trying to init mesh" << std::endl;
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
 
-    // Get the uniform location for texture 1
-    int m_tex1Loc = m_shader1->getShaderProgram()->uniformLocation("t1");
-    // Get the uniform location for texture 2
-    int m_tex2Loc = m_shader1->getShaderProgram()->uniformLocation("boardTexture");
-
-    std::cout<<"tex1Loc " << m_tex1Loc << std::endl;
-    std::cout<<"tex2Loc " << m_tex2Loc << std::endl;
 }
 
 void RenderWindow::resizeGL(int w, int h)
@@ -120,7 +124,7 @@ void RenderWindow::drawLastAndComputeNext()
     // Load current texture
     char* texData = &m_sim->m_board[0][0];
     //char* texData = &m_sim->m_displayBoard[0][0];
-    m_texture2->updateData(texData);
+    m_boardTexture->updateData(texData);
 
     //std::cout << "texture updated to current board" << std::endl;
     // Draw
@@ -139,23 +143,23 @@ void RenderWindow::paintGL()
     // Bind the shader object
     m_shader1->bind();
 
-    // Bind the texture object
-    glActiveTexture(GL_TEXTURE0);
-    m_texture2->bind(0);
-    m_shader1->getShaderProgram()->setUniformValue(m_tex2Loc,0);
 
-    // Set the static textures for each domain
-    glActiveTexture(GL_TEXTURE1);
-    m_texture1->bind(1);
-    m_shader1->getShaderProgram()->setUniformValue(m_tex1Loc,1);
+    // Set the uniform values before binding textures? OLD
+    //m_boardTexture->bind(0);
+    m_boardTexture->m_texture->bind(0);
+    m_textureA->m_texture->bind(1);
 
-    //std::cout << "is texture 1 bound? " << m_texture1->getTexture()->isBound() << std::endl;
+    // order of binding doesn't matter if it's before uniform setting?
+    // Bind the texture objects
+    m_textureB->bind(2);
+    m_textureC->bind(3);
 
     m_mesh1->draw(GL_TRIANGLES, m_indexCount);
 
-    m_texture2->release(0);
-    m_texture1->release(1);
-    m_shader1->release();
+    m_textureC->release(3);
+    m_textureB->release(2);
+    m_textureA->m_texture->release(1);
+    m_boardTexture->m_texture->release(0);
 }
 
 

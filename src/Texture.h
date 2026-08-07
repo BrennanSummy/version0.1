@@ -13,19 +13,18 @@
 class Texture
 {
     private:
-        //std::unique_ptr<QOpenGLTexture> m_texture;
-        QOpenGLTexture* m_texture;
+        //QOpenGLTexture* m_texture;
         int m_width, m_height, m_bytesPerPixel;
         void configureSampling();
     
     public:
+        std::unique_ptr<QOpenGLTexture> m_texture;
         void updateData(char* matrixData);
         Texture(const std::string& path);
         Texture(int matrixWidth, int matrixHeight, char* matrixData);
         ~Texture();
-        QOpenGLTexture* getTexture();
-
         void bind(unsigned int slot = 0) const;
         void release(unsigned int slot = 0) const;
+
 
 };
