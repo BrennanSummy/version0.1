@@ -57,9 +57,9 @@ void RenderWindow::initializeGL() {
     m_shader1->bind();
     // Make texture objects
     std::cout << "trying to init textures" << std::endl;
-    m_textureA = new Texture("t1.png");
-    m_textureB = new Texture("LUNorm1.png");
-    m_textureC = new Texture("RUNorm1.png");
+    m_textureA = new Texture("textures/ATop.png");
+    m_textureB = new Texture("textures/BTop.png");
+    m_textureC = new Texture("textures/CTop.png");
     m_boardTexture = new Texture(m_sim->m_width,m_sim->m_height,simData);
 
     // Get the uniform location for textures ABC

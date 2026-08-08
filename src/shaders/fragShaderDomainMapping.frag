@@ -19,9 +19,9 @@ const vec4 backgroundColor = vec4(0.5,0.5,0.5,1.0);
 
 void main() 
 {
-   vec4 BColor = texture(texB, TexCoord*3);
-   vec4 CColor = texture(texC, TexCoord*10);
-   vec4 AColor = texture(texA, TexCoord);
+   vec4 AColor = texture(texA, TexCoord*bHeight);
+   vec4 BColor = texture(texB, TexCoord*bHeight);
+   vec4 CColor = texture(texC, TexCoord*bHeight);
 
    float horizontalOffset = -(0.5/bWidth)*floor(bHeight * TexCoord.y);
    vec2 shiftedPosition = vec2(TexCoord.x + horizontalOffset, TexCoord.y);
