@@ -130,7 +130,8 @@ void RenderWindow::drawLastAndComputeNext()
     // Draw
     update();
     // Compute next simulation state
-    m_sim->step();
+    //m_sim->step();
+    m_sim->randomStep();
     //std::cout << "simulation step completed" << std::endl;
 }
 

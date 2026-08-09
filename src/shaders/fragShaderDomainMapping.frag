@@ -34,18 +34,18 @@ void main()
 
    if(domainValue ==65u)
    {
-      //color = domainAColor;
-      color = AColor;
+      color = domainAColor;
+      //color = AColor;
    }
    else if(domainValue ==66u)
    {
-      //color = domainBColor;
-      color = BColor;
+      color = domainBColor;
+      //color = BColor;
    }
    else if(domainValue ==67u)
    {
-      //color = domainCColor;
-      color = CColor;
+      color = domainCColor;
+      //color = CColor;
    }
    else if(domainValue ==46u)
    {

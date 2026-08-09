@@ -80,3 +80,20 @@ Average update time per triplet/pixel: 0.0292183 ms
 Calculated average over 100 steps:
 Average step took 69.3335 milliseconds to calculate.
 Average update time per triplet/pixel: 0.0231112 ms
+
+
+After implementing random updates: The step size was 1/10th of the 300x200 board.
+Average step took 260.293 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0433822 ms
+Calculated average over 100 steps:
+Average step took 293.762 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0489604 ms
+Calculated average over 100 steps:
+Average step took 241.438 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0402397 ms
+Calculated average over 100 steps:
+Average step took 278.841 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0464735 ms
+Calculated average over 100 steps:
+Average step took 303.832 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0506387 ms

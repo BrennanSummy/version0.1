@@ -10,8 +10,8 @@
 #include <memory>
 #include <random>
 
-const int width = 30;
-const int height = 20;
+const int width = 300;
+const int height = 200;
 struct ScreenPosition
 {
     const double x;
@@ -29,6 +29,7 @@ class Simulation
         void printBoardWithBoundary();
         // The step function calculates the board state for the next timestep.
         void step();
+        void randomStep();
 
         // This updates the value of kT to the given value.
         void updateTemp(float value);
@@ -88,18 +89,24 @@ class Simulation
 
         // an accompanying array that stores probabilities of switching to each domain
         double m_probabilities[3];
+        // plan b array which stores the energies (at low kT the probabilities can vanish)
+        double m_energies[3];
 
         // random number device and generator and uniform distribution (used with the <random> library)
         std::random_device rand_device;
         std::mt19937 rand_generator;
-        std::uniform_real_distribution<double> uniform;
+        std::uniform_real_distribution<double> uniform_real;
+        std::uniform_int_distribution<int> uniform_3;
+        std::uniform_int_distribution<int> uniform_2;
+        std::uniform_int_distribution<int> uniform_int_i;
+        std::uniform_int_distribution<int> uniform_int_j;
 
         // time keeping variables to help with development
         int m_stepCounter = 0;
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        int m_stepSize = width*height;
+        int m_stepSize = floor(width*height/10);
 
         // Private methods
         // Initialize the board to some arbitrary state
@@ -109,8 +116,10 @@ class Simulation
         /* Updates the state of the board element buffer at the given coordinates
            (i is the first index of the board array).*/
         void updateBufferElement(int i,int j);
+        void updateBoardElement(int i,int j);
         // Update the elements of the boundary board relevant to board coords i,j
         void updateBoundaryBoardBufferElements(int boardi, int boardj);
+        void updateBoundaryBoardElements(int boardi, int boardj);
         // Writes the buffer to the state (done at the end of an update step)
         void updateBoardWithBuffer();
         // Writes the boundary board buffer to the boundary board state

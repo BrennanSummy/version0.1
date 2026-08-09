@@ -1,7 +1,7 @@
 #include "Simulation.h"
 
 Simulation::Simulation()
-:rand_device(), rand_generator(rand_device()), uniform(0,1)
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1)
 {
     initBoard();
     updateBoundaryBoardBufferViaScan();
@@ -176,6 +176,19 @@ void Simulation::updateBufferElement(int i, int j)
     m_boardBuffer[j][i] = roll();
 }
 
+void Simulation::updateBoardElement(int i, int j)
+{
+    updateNeighborVals(i,j);
+    for (int x = 0; x<3;x++)
+    {
+        char X[3] = {'A', 'B', 'C'};
+        updateProspectiveBoundaryLengths(X[x],i,j);
+        //std::cout<<"boundary length: " <<m_prospectiveBoundaryLengths[x] << std::endl;
+    }
+    updateProbabilities();
+    m_board[j][i] = roll();
+}
+
 void Simulation::updateNeighborVals(int i, int j)
 {
     // NOTE THAT A RIGHT-TILTED PARALLELOGRAM IS ASSUMED. 'i' INDEXES THE HORIZONTAL, 'j' THE VERTICAL
@@ -185,7 +198,8 @@ void Simulation::updateNeighborVals(int i, int j)
                             {j,i+1},
                             {j-1,i+1},
                             {j-1,i},
-                            {j,i-1}};
+                            {j,i-1}
+    };
     
     /* Loop through all of the neighbors:
         - if(coordinate is valid)
@@ -611,10 +625,13 @@ void Simulation::updateProbabilities()
     //double tension_A = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[0]-30,0.0);//
     //double tension_B = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[1]-30,0.0);//
     //double tension_C = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[2]-30,0.0);//
+    m_energies[0] = (nearest_A + tension_A);
+    m_energies[1] = (nearest_B + tension_B);
+    m_energies[2] = (nearest_C + tension_C);
 
-    double boltzmann_A = std::exp(-(nearest_A + tension_A)/m_kT);
-    double boltzmann_B = std::exp(-(nearest_B + tension_B)/m_kT);
-    double boltzmann_C = std::exp(-(nearest_C + tension_C)/m_kT);
+    double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
+    double boltzmann_B = std::exp(-(m_energies[1])/m_kT);
+    double boltzmann_C = std::exp(-(m_energies[2])/m_kT);
 
     double Z = boltzmann_A + boltzmann_B + boltzmann_C;
 
@@ -685,10 +702,77 @@ void Simulation::updateBoundaryBoardBufferElements(int boardi, int boardj)
     }
 }
 
+void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
+{
+    int indices[6][2] = {   {boardj+1,boardi-1},
+                            {boardj+1,boardi},
+                            {boardj  ,boardi+1},
+                            {boardj-1,boardi+1},
+                            {boardj-1,boardi},
+                            {boardj  ,boardi-1}
+    };
+
+    char ijValue = m_board[boardj][boardi];
+
+    for (int neighbor = 0; neighbor < 6; neighbor++)
+    {
+        // UPDATE BOUNDARY BOARD
+
+        // Note that this neighbor indexing is the same as boardNeighborIndex
+        // Test the validity of the neighbor indices (this deals with edges and corners)
+        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
+                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
+        if(coordIsValid)
+        {
+            // Check the state of the board to see what the boundary should be
+            char value = m_board[indices[neighbor][0]][indices[neighbor][1]];
+            char boundaryType = '.';
+            if( (value=='A' && ijValue=='B') || (value=='B' && ijValue=='A') )
+            {
+                boundaryType = 'D';
+            }
+            else if( (value=='A' && ijValue=='C') || (value=='C' && ijValue=='A') )
+            {
+                boundaryType = 'E';
+            }
+            else if( (value=='B' && ijValue=='C') || (value=='C' && ijValue=='B') )
+            {
+                boundaryType = 'F';
+            }
+            int boundi = 2*boardi;
+            int boundj = 2*boardj;
+            switch(neighbor)
+            {
+                case 0:
+                boundi += -1;
+                boundj +=  1;
+                break;
+                case 1:
+                boundj +=  1;
+                break;
+                case 2:
+                boundi +=  1;
+                break;
+                case 3:
+                boundi += +1;
+                boundj += -1;
+                break;
+                case 4:
+                boundj += -1;
+                break;
+                case 5:
+                boundi += -1;
+                break;
+            }
+            m_boundaryBoard[boundj][boundi] = boundaryType;
+        } 
+    }
+}
+
 char Simulation::roll()
 {
     // roll a number between 0 and 1
-    double roll = uniform(rand_generator);
+    double roll = uniform_real(rand_generator);
     char val;
     // if that number is between 0 and P(A), return 'A'
     if (roll<m_probabilities[0])
@@ -702,6 +786,93 @@ char Simulation::roll()
     else if (m_probabilities[0] + m_probabilities[1] <= roll)
     {
         val = 'C';
+    }
+    else // If kT is so low that some probs spike and others vanish, choose the lowest energy state
+    {
+        //std::cout << m_energies[0] << ":" << m_energies[1] << ":" << m_energies[2] << std::endl;
+        // Select the minimum energy, or do a 1/3 roll if they are equal
+        float smallestEnergy = std::min({m_energies[0],m_energies[1],m_energies[2]});
+        //std::cout << "smallest: " << smallestEnergy << std::endl;
+
+
+        // Logic vals
+
+        bool abEqual = m_energies[0] == m_energies[1];
+        bool acEqual = m_energies[0] == m_energies[2];
+        bool bcEqual = m_energies[1] == m_energies[2];
+
+        bool aSmall= ((m_energies[0] < m_energies[1]) && (m_energies[0] < m_energies[2]));
+
+        bool bSmall= ((m_energies[1] < m_energies[0]) && (m_energies[1] < m_energies[2]));
+
+        bool cSmall= ((m_energies[2] < m_energies[0]) && (m_energies[2] < m_energies[1]));
+
+        bool allEqual = abEqual && acEqual;
+
+        if(allEqual)
+        {
+            switch(uniform_3(rand_generator))
+            {
+                case 0:
+                    val='A';
+                    break;
+                case 1:
+                    val='B';
+                    break;
+                case 2:
+                    val='C';
+                    break;
+            }
+            return val;
+        }
+        else if (aSmall) // A has lowest energy
+        {
+            val='A';
+        }
+        else if (bSmall) // B has lowest energy
+        {
+            val='B';
+        }
+        else if (cSmall) // C has lowest energy
+        {
+            val='C';
+        }
+        else if (abEqual)
+        {
+            switch(uniform_2(rand_generator))
+            {
+                case 0:
+                    val='A';
+                    break;
+                case 1:
+                    val='B';
+                    break;
+            }
+        }
+        else if (acEqual)
+        {
+            switch(uniform_2(rand_generator))
+            {
+                case 0:
+                    val='A';
+                    break;
+                case 1:
+                    val='C';
+                    break;
+            }
+        }
+        else if (bcEqual)
+        {
+            switch(uniform_2(rand_generator))
+            {
+                case 0:
+                    val='B';
+                    break;
+                case 1:
+                    val='C';
+                    break;
+            }
+        }
     }
     return val;
 }
@@ -722,6 +893,48 @@ void Simulation::step()
     } 
     updateBoardWithBuffer();
     updateBoundaryBoardWithBuffer();
+    // Record time taken for the step, and print average every 1000 steps
+    auto tDone = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
+    double tDiffDouble = tDiff.count();
+    m_stepDurations[m_stepCounter] = tDiffDouble;
+
+    if ( m_stepCounter % 100 == 0 )
+    {
+        // get average calculation time
+        double avgStepTime;
+        for (int i = 0; i < m_stepCounter; i++)
+        {
+            avgStepTime += m_stepDurations[i];
+        }
+        avgStepTime = avgStepTime / m_stepCounter;
+        std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
+
+        std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
+
+        std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_width*m_height) << " ms" << std::endl;
+        m_stepCounter = 0;
+    }
+    
+    //printBoardWithBoundary();
+}
+
+void Simulation::randomStep()
+{
+    // for time keeping
+    m_stepCounter ++;
+    auto tBegin = std::chrono::high_resolution_clock::now();
+
+    // Carry out the update element by element, choosing a random one each time
+    for (int subStep = 0; subStep < m_stepSize; subStep++)
+    {
+        // Pick random indices
+        int iRand = uniform_int_i(rand_generator);
+        int jRand = uniform_int_j(rand_generator);
+        updateBoardElement(iRand,jRand);
+        updateBoundaryBoardElements(iRand,jRand);
+    } 
+
     // Record time taken for the step, and print average every 1000 steps
     auto tDone = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
