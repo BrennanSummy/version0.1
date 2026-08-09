@@ -98,6 +98,9 @@ class Simulation
         int m_stepCounter = 0;
         double m_stepDurations[1000];
 
+        // (Arbitrary once random updates were added) Number of elements updated per step.
+        int m_stepSize = width*height;
+
         // Private methods
         // Initialize the board to some arbitrary state
         void initBoard();
