@@ -1,8 +1,8 @@
 #include "Simulation.h"
 
 Simulation::Simulation()
-:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1),
-m_visitedEdgePositions({{'A',{{}}},{'B',{{}}},{'C',{{}}}})
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1)
+
 {
     initBoard();
     updateBoundaryBoardViaScan();
@@ -207,15 +207,15 @@ void Simulation::updateNeighborVals(int i, int j)
             {
                 case 'A':
                     m_neighborCounts[0]++;
-                    m_neighborVals[neighbor] = 0;
+                    //m_neighborVals[neighbor] = 0;
                     break;
                 case 'B':
                     m_neighborCounts[1]++;
-                    m_neighborVals[neighbor] = 1;
+                    //m_neighborVals[neighbor] = 1;
                     break;
                 case 'C':
                     m_neighborCounts[2]++;
-                    m_neighborVals[neighbor] = 2;
+                    //m_neighborVals[neighbor] = 2;
                     break;
             }
         }
@@ -232,7 +232,7 @@ bool Simulation::elementPositionCheck(int i, int j)
 void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j)
 {
     //std::cout << "Element (i,j) = (" << i << "," << j << ")" << std::endl;
-    m_visitedEdgePositions.at(prospectiveValue).clear();
+    //m_visitedEdgePositions.at(prospectiveValue).clear();
     char currentValue = m_board[j][i];
     pointModifyBoundaryBoard(prospectiveValue,i,j);
     //printBoardWithBoundary();
@@ -249,7 +249,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
     };
 
     // Keep track of (up to 6) initial edge positions
-    bool boundaries[6] = {0,0,0,0,0,0};
+    m_startingBoundaries = {0,0,0,0,0,0};
     bool allBounds = true;
     for (int neighborIndex=0;neighborIndex<6;neighborIndex++)
     {
@@ -258,7 +258,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
         {
             // Remember this edge's position
-            boundaries[neighborIndex] = 1;
+            m_remainingInitEdges.push_back({indices[neighborIndex][0], indices[neighborIndex][1], neighborIndex});
         }
         else{allBounds=false;}
 
@@ -268,48 +268,33 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
     {
         //std::cout << "Setting boundary length to 6, as the element is surrounded by boundary" << std::endl;
         m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]=6;
+        m_remainingInitEdges.clear();
         // Revert point modification
         pointModifyBoundaryBoard(currentValue,i,j);
         return;
     }
     // Start at the first matching edge found, then cross off any '1's in the boundaries bool array as you go down the boundary line.
     // If any 1s remain in the bool array after that boundary is explored, mark bottleneck as true and act accordingly.
-
-    for (int initialEdgeIndex=0;initialEdgeIndex<6;initialEdgeIndex++)
+    int pseudoEdgeIndex=0;
+    while (m_remainingInitEdges.size()>0)
     {
-        bool redundantEdge=false;
+        int initialEdgeIndex = m_remainingInitEdges[pseudoEdgeIndex%m_remainingInitEdges.size()][2];
         // Find the next starting edge
-        if(boundaries[initialEdgeIndex])
-        {
-            int startingEdgePosition[2] = {indices[initialEdgeIndex][0],
-                                           indices[initialEdgeIndex][1]
-            };
-            // Test to see if this starting edge has already been visited in the middle of some other line
-            for (int edgeIndex = 0; edgeIndex<m_visitedEdgePositions.at(prospectiveValue).size(); edgeIndex++)
-            {
-                if ( startingEdgePosition[0]==m_visitedEdgePositions.at(prospectiveValue)[edgeIndex][0] &&
-                        startingEdgePosition[1]==m_visitedEdgePositions.at(prospectiveValue)[edgeIndex][1])
-                        {
-                            redundantEdge=true;
-                            break;
-                        }
+        for (int startingDirection=0;startingDirection<2;startingDirection++)
+        {   
+            // Set start position to this edge and make a position buffer
+            int initPosition[2];
+            int position[2];
+            int positionBuffer[2];
+            for(int u=0;u<2;u++){   initPosition[u]   = indices[initialEdgeIndex][u];
+                                    position[u]       = initPosition[u];
+                                    positionBuffer[u] = position[u];
             }
-            if(!redundantEdge)
-            {
-                for (int startingDirection=0;startingDirection<2;startingDirection++)
-                {   
-                    // Set start position to this edge and make a position buffer
-                    int position[2];
-                    int positionBuffer[2];
-                    for(int u=0;u<2;u++){position[u]       = indices[initialEdgeIndex][u];
-                                         positionBuffer[u] = position[u];
-                    }
 
-                    // Start looking down the line of contiguous edges
-                    exploreLine(startingEdgePosition, position, startingDirection, prospectiveValue);
-                }   
-            }
-        }
+            // Start looking down the line of contiguous edges
+            exploreLine(initPosition, position, startingDirection, prospectiveValue);
+            pseudoEdgeIndex++;
+        }   
     }
     
     // Revert point modification
@@ -318,8 +303,16 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
 
 void Simulation::exploreLine(int* startingEdgePosition, int* position, bool direction, char prospectiveValue)
 {
-    // Add the current position to the visited edge vector
-    m_visitedEdgePositions.at(prospectiveValue).push_back(std::array<int,2> {position[0],position[1]});
+
+    // Test to see if this edge is one of the remaining starting edges
+    for (int edgeIndex = 0; edgeIndex<m_remainingInitEdges.size(); edgeIndex++)
+    {
+        if ( position[0]==m_remainingInitEdges[edgeIndex][0] && position[1]==m_remainingInitEdges[edgeIndex][1])
+        {
+            m_remainingInitEdges.erase(m_remainingInitEdges.begin() + edgeIndex);
+        }
+    }
+
 
     // Use the direction to select the two possible edge neighbor indices to look through
     int startIndex = direction * 2;

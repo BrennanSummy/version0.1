@@ -91,6 +91,10 @@ class Simulation
         // Map which takes in the prospective char for an element's step and gives you a vector of coordinates for the edges visited
         std::unordered_map<char, std::vector<std::array<int,2>>> m_visitedEdgePositions;
 
+        std::vector<std::array<int,3>> m_remainingInitEdges;
+
+        std::array<bool,6> m_startingBoundaries;
+
         // an accompanying array that stores probabilities of switching to each domain
         double m_probabilities[3];
         // plan b array which stores the energies (at low kT the probabilities can vanish)
