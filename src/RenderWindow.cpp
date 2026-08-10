@@ -130,8 +130,8 @@ void RenderWindow::drawLastAndComputeNext()
     // Draw
     update();
     // Compute next simulation state
-    //m_sim->step();
     m_sim->randomStep();
+    //multiThreadStep();
     //std::cout << "simulation step completed" << std::endl;
 }
 
@@ -232,3 +232,9 @@ void RenderWindow::mouseMoveEvent(QMouseEvent* event)
     m_mesh1->additiveUpdateVertData(delta);
     update();
 }
+
+//void RenderWindow::multiThreadStep()
+//{
+//    std::thread t1(&Simulation::randomStep, m_sim);
+//    if(t1.joinable()){ t1.join(); }
+//}

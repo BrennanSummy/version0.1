@@ -1,15 +1,14 @@
 #include "Simulation.h"
 
 Simulation::Simulation()
-:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1)
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1),
+m_visitedEdgePositions({{'A',{{}}},{'B',{{}}},{'C',{{}}}})
 {
     initBoard();
-    updateBoundaryBoardBufferViaScan();
-    updateBoundaryBoardWithBuffer();
-    //pointModifyBoundaryBoard('B',2,6);
+    updateBoundaryBoardViaScan();
     printBoardWithBoundary();
-    //std::cout << "board initialized" << std::endl;
 }
+
 
 void Simulation::initBoard()
 {
@@ -38,7 +37,7 @@ void Simulation::initBoard()
     
 }
 
-void Simulation::updateBoundaryBoardBufferViaScan()
+void Simulation::updateBoundaryBoardViaScan()
 {
     for (int i = 0; i < m_width; i++)
     {
@@ -95,7 +94,7 @@ void Simulation::updateBoundaryBoardBufferViaScan()
                         boundi +=  1;
                         break;
                     }
-                    m_boundaryBoardBuffer[boundj][boundi] = boundaryType;
+                    m_boundaryBoard[boundj][boundi] = boundaryType;
                     
                 }
 
@@ -163,31 +162,19 @@ void Simulation::printBoardWithBoundary()
     } 
 }
 
-void Simulation::updateBufferElement(int i, int j)
-{
-    updateNeighborVals(i,j);
-    for (int x = 0; x<3;x++)
-    {
-        char X[3] = {'A', 'B', 'C'};
-        updateProspectiveBoundaryLengths(X[x],i,j);
-        //std::cout<<"boundary length: " <<m_prospectiveBoundaryLengths[x] << std::endl;
-    }
-    updateProbabilities();
-    m_boardBuffer[j][i] = roll();
-}
-
 void Simulation::updateBoardElement(int i, int j)
 {
     updateNeighborVals(i,j);
     for (int x = 0; x<3;x++)
     {
-        char X[3] = {'A', 'B', 'C'};
-        updateProspectiveBoundaryLengths(X[x],i,j);
-        //std::cout<<"boundary length: " <<m_prospectiveBoundaryLengths[x] << std::endl;
+        updateProspectiveBoundaryLengths(m_X[x],i,j);
     }
     updateProbabilities();
     m_board[j][i] = roll();
 }
+
+void Simulation::incrementExploredPaths(){m_numPathsExplored++;}
+void Simulation::printExploredPaths(){std::cout<<m_numPathsExplored << " paths explored" <<std::endl;}
 
 void Simulation::updateNeighborVals(int i, int j)
 {
@@ -238,7 +225,7 @@ void Simulation::updateNeighborVals(int i, int j)
 void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j)
 {
     //std::cout << "Element (i,j) = (" << i << "," << j << ")" << std::endl;
-    m_visitedEdgePositions.clear();
+    m_visitedEdgePositions.at(prospectiveValue).clear();
     char currentValue = m_board[j][i];
     pointModifyBoundaryBoard(prospectiveValue,i,j);
     //printBoardWithBoundary();
@@ -293,10 +280,10 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
                                            initEdgePositions[initialEdgeIndex][1]
             };
             // Test to see if this starting edge has already been visited
-            for (int edgeIndex = 0; edgeIndex<m_visitedEdgePositions.size(); edgeIndex++)
+            for (int edgeIndex = 0; edgeIndex<m_visitedEdgePositions.at(prospectiveValue).size(); edgeIndex++)
             {
-                if ( startingEdgePosition[0]==m_visitedEdgePositions[edgeIndex][0] &&
-                        startingEdgePosition[1]==m_visitedEdgePositions[edgeIndex][1])
+                if ( startingEdgePosition[0]==m_visitedEdgePositions.at(prospectiveValue)[edgeIndex][0] &&
+                        startingEdgePosition[1]==m_visitedEdgePositions.at(prospectiveValue)[edgeIndex][1])
                         {
                             redundantEdge=true;
                             break;
@@ -327,7 +314,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
 void Simulation::exploreLine(int* startingEdgePosition, int* position, bool direction, char prospectiveValue)
 {
     // Add the current position to the visited edge vector
-    m_visitedEdgePositions.push_back(std::array<int,2> {position[0],position[1]});
+    m_visitedEdgePositions.at(prospectiveValue).push_back(std::array<int,2> {position[0],position[1]});
 
     // Use the direction to select the two possible edge neighbor indices to look through
     int startIndex = direction * 2;
@@ -582,30 +569,6 @@ void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j)
 
 }
 
-void Simulation::updateBoardWithBuffer()
-{
-    for (int i = 0; i < m_width; i++)
-    {
-        for (int j = 0; j < m_height; j++)
-        {
-            char val        = m_boardBuffer[j][i];
-            m_board[j][i]   = val;
-        }
-    }
-}
-
-void Simulation::updateBoundaryBoardWithBuffer()
-{
-    for (int i = 0; i < 2*m_width-1; i++)
-    {
-        for (int j = 0; j < 2*m_height-1; j++)
-        {
-            char val        = m_boundaryBoardBuffer[j][i];
-            m_boundaryBoard[j][i]   = val;
-        }
-    }
-}
-
 void Simulation::updateProbabilities()
 {
     // Naive energy function: Energy of X is total number of neighbors - number of X neighbors
@@ -643,63 +606,6 @@ void Simulation::updateProbabilities()
     for (int i=0;i<3;i++){m_neighborVals[i]=0;}
     // Reset boundary lengths
     for (int i=0;i<3;i++){m_prospectiveBoundaryLengths[i]=0;}
-}
-
-void Simulation::updateBoundaryBoardBufferElements(int boardi, int boardj)
-{
-    int indices[3][2] = {{boardj-1,boardi+1},  
-                         {boardj-1,boardi},    
-                         {boardj,boardi-1}     
-    };
-
-    char ijValue = m_boardBuffer[boardj][boardi];
-
-    for (int neighbor = 0; neighbor < 3; neighbor++)
-    {
-        // UPDATE BOUNDARY BOARD BUFFER
-        /* This relies on the boardBuffer, which is in the process of being updated.
-        But all of the elements below and to the left have already been updated, so this should be safe
-        (avoiding scanning artifacts) */
-
-        // Note that this neighbor indexing is boardNeighborIndex-3
-        // Test the validity of the neighbor indices (this deals with edges and corners)
-        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
-                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
-        if(coordIsValid)
-        {
-            // Check the state of the board from this timestep to see what the boundary should be
-            char value = m_boardBuffer[indices[neighbor][0]][indices[neighbor][1]];
-            char boundaryType = '.';
-            if( (value=='A' && ijValue=='B') || (value=='B' && ijValue=='A') )
-            {
-                boundaryType = 'D';
-            }
-            else if( (value=='A' && ijValue=='C') || (value=='C' && ijValue=='A') )
-            {
-                boundaryType = 'E';
-            }
-            else if( (value=='B' && ijValue=='C') || (value=='C' && ijValue=='B') )
-            {
-                boundaryType = 'F';
-            }
-            int boundi = 2*boardi;
-            int boundj = 2*boardj;
-            switch(neighbor)
-            {
-                case 0:
-                boundi += +1;
-                boundj += -1;
-                break;
-                case 1:
-                boundj += -1;
-                break;
-                case 2:
-                boundi += -1;
-                break;
-            }
-            m_boundaryBoardBuffer[boundj][boundi] = boundaryType;
-        } 
-    }
 }
 
 void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
@@ -877,48 +783,6 @@ char Simulation::roll()
     return val;
 }
 
-void Simulation::step()
-{
-    // for time keeping
-    m_stepCounter ++;
-    auto tBegin = std::chrono::high_resolution_clock::now();
-    // Carry out the update element by element, going left to right, bottom to top.
-    for (int j = 0; j < m_height; j++)
-    {
-        for (int i = 0; i < m_width; i++)
-        {
-            updateBufferElement(i,j);
-            updateBoundaryBoardBufferElements(i,j);
-        }
-    } 
-    updateBoardWithBuffer();
-    updateBoundaryBoardWithBuffer();
-    // Record time taken for the step, and print average every 1000 steps
-    auto tDone = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
-    double tDiffDouble = tDiff.count();
-    m_stepDurations[m_stepCounter] = tDiffDouble;
-
-    if ( m_stepCounter % 100 == 0 )
-    {
-        // get average calculation time
-        double avgStepTime;
-        for (int i = 0; i < m_stepCounter; i++)
-        {
-            avgStepTime += m_stepDurations[i];
-        }
-        avgStepTime = avgStepTime / m_stepCounter;
-        std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
-
-        std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
-
-        std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_width*m_height) << " ms" << std::endl;
-        m_stepCounter = 0;
-    }
-    
-    //printBoardWithBoundary();
-}
-
 void Simulation::randomStep()
 {
     // for time keeping
@@ -931,6 +795,7 @@ void Simulation::randomStep()
         // Pick random indices
         int iRand = uniform_int_i(rand_generator);
         int jRand = uniform_int_j(rand_generator);
+        // Update an element
         updateBoardElement(iRand,jRand);
         updateBoundaryBoardElements(iRand,jRand);
     } 
@@ -954,12 +819,13 @@ void Simulation::randomStep()
 
         std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
 
-        std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_width*m_height) << " ms" << std::endl;
+        std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
         m_stepCounter = 0;
     }
     
     //printBoardWithBoundary();
 }
+
 
 void Simulation::updateTemp(float value)
 {

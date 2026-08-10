@@ -45,6 +45,7 @@ private:
     int m_texCLoc;
     int m_indexCount;
     Simulation* m_sim;
+    //void multiThreadStep();
 
     //QPointF mouseInitPosition;
     Position mouseInitPosition;

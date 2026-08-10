@@ -10,8 +10,9 @@
 #include <memory>
 #include <random>
 
-const int width = 300;
-const int height = 200;
+
+const int width = 60;
+const int height = 40;
 struct ScreenPosition
 {
     const double x;
@@ -28,7 +29,6 @@ class Simulation
         // Prints the board with the boundary to the console.
         void printBoardWithBoundary();
         // The step function calculates the board state for the next timestep.
-        void step();
         void randomStep();
 
         // This updates the value of kT to the given value.
@@ -46,6 +46,7 @@ class Simulation
 
         /* char matrix used for keeping track of boundaries*/
         char m_boundaryBoard[2*height-1][2*width-1];
+
         
         /* The width and height of the board. The char matrix
             dimensions must be known at compile time. */
@@ -53,6 +54,7 @@ class Simulation
         int m_height=height;
 
     private:
+
         // Temperature for probability calculation
         double m_kT=1;
 
@@ -67,25 +69,23 @@ class Simulation
 
         // Unordered map to associate 'A' with 0, etc
         const std::unordered_map<char, int> domainToIntMap = {{'A',0}, {'B', 1}, {'C', 2}};
-
-        /* A buffer is used to hold the new element values to avoid influencing dynamics
-            with arbitrary sweeping of element updates */
-        char m_boardBuffer[height][width];
-
-        /* char matrix used for keeping track of boundaries*/
-        char m_boundaryBoardBuffer[2*height-1][2*width-1];
+        // Backwards version of that
+        const char m_X[3] = {'A', 'B', 'C'};
 
         /* static array that stores the number of A's B's and C's neighboring the current coordinate
             0 <-> A, 1 <-> B, 2 <-> C */
         short m_neighborVals[3];
 
+        // Counter that tracks how many paths have been explored since starting to update an element
+        int m_numPathsExplored;
+
         /* Array that stores the total lengths of the boundaries associated with A,B, or C.
             0 <-> A, 1 <-> B, 2 <-> C */
         int m_prospectiveBoundaryLengths[3]={0,0,0};
 
-        /* Array that stores the total lengths of the boundaries associated with A,B, or C.
-            0 <-> A, 1 <-> B, 2 <-> C */
-        std::vector<std::array<int,2>> m_visitedEdgePositions;
+        std::vector<std::array<int,2>> m_visitedEdgePositions1;
+        // Map which takes in the prospective char for an element's step and gives you a vector of coordinates for the edges visited
+        std::unordered_map<char, std::vector<std::array<int,2>>> m_visitedEdgePositions;
 
         // an accompanying array that stores probabilities of switching to each domain
         double m_probabilities[3];
@@ -106,24 +106,22 @@ class Simulation
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        int m_stepSize = floor(width*height/10);
+        int m_stepSize = floor(width*height/5);
 
         // Private methods
         // Initialize the board to some arbitrary state
         void initBoard();
-        // Initialize the boundary board by scanning the entire m_board.
-        void updateBoundaryBoardBufferViaScan();
-        /* Updates the state of the board element buffer at the given coordinates
+        // For initializing the boundary board by scanning the board
+        void updateBoundaryBoardViaScan();
+        /* Updates the state of the board element at the given coordinates
            (i is the first index of the board array).*/
-        void updateBufferElement(int i,int j);
         void updateBoardElement(int i,int j);
+
+        void incrementExploredPaths();
+        void printExploredPaths();
+
         // Update the elements of the boundary board relevant to board coords i,j
-        void updateBoundaryBoardBufferElements(int boardi, int boardj);
         void updateBoundaryBoardElements(int boardi, int boardj);
-        // Writes the buffer to the state (done at the end of an update step)
-        void updateBoardWithBuffer();
-        // Writes the boundary board buffer to the boundary board state
-        void updateBoundaryBoardWithBuffer();
         // Modifies boundaryBoard as if the element at i,j was instead value. Used for prospective boundary length finding
         void pointModifyBoundaryBoard(char prospectiveValue, int i, int j);
         /* Check which type of boundary is at a certain neighbor index, where the index is 0 at the top leftmost neighbor
