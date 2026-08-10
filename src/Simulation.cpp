@@ -197,29 +197,36 @@ void Simulation::updateNeighborVals(int i, int j)
     for (int neighbor = 0; neighbor < 6; neighbor++)
     {
         // Test the validity of the neighbor indices (this deals with edges and corners)
-        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
-                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
+        bool coordIsValid = elementPositionCheck(indices[neighbor][1],indices[neighbor][0]);
         if(coordIsValid)
         {
             // Check the state of the board from the previous timestep to get the value of this element
             char value = m_board[indices[neighbor][0]][indices[neighbor][1]];
-            // Increment the appropriate counter in m_neighborVals
+            // Increment the appropriate counter in m_neighborCounts
             switch (value)
             {
                 case 'A':
-                    m_neighborVals[0]++;
+                    m_neighborCounts[0]++;
+                    m_neighborVals[neighbor] = 0;
                     break;
                 case 'B':
-                    m_neighborVals[1]++;
+                    m_neighborCounts[1]++;
+                    m_neighborVals[neighbor] = 1;
                     break;
                 case 'C':
-                    m_neighborVals[2]++;
+                    m_neighborCounts[2]++;
+                    m_neighborVals[neighbor] = 2;
                     break;
             }
         }
 
     }
 
+}
+
+bool Simulation::elementPositionCheck(int i, int j)
+{
+    return (j >= 0) && (i >= 0) && (j < m_height) && (i < m_width);
 }
 
 void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j)
@@ -234,15 +241,14 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
     int boundj=2*j;
     // Get the indices of the edges surrounding the board element ij
     int indices[6][2] = {   {boundj+1,boundi-1},
-                            {boundj+1,boundi},
-                            {boundj,boundi+1},
+                            {boundj+1,boundi  },
+                            {boundj  ,boundi+1},
                             {boundj-1,boundi+1},
-                            {boundj-1,boundi},
-                            {boundj,boundi-1}
+                            {boundj-1,boundi  },
+                            {boundj  ,boundi-1}
     };
 
     // Keep track of (up to 6) initial edge positions
-    int initEdgePositions[6][2];
     bool boundaries[6] = {0,0,0,0,0,0};
     bool allBounds = true;
     for (int neighborIndex=0;neighborIndex<6;neighborIndex++)
@@ -251,9 +257,8 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         char boundaryType = m_boundaryBoard[indices[neighborIndex][0]][indices[neighborIndex][1]];
         if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
         {
-            boundaries[neighborIndex] = 1;
             // Remember this edge's position
-            for(int dirInd=0;dirInd<2;dirInd++) {initEdgePositions[neighborIndex][dirInd] = indices[neighborIndex][dirInd];}
+            boundaries[neighborIndex] = 1;
         }
         else{allBounds=false;}
 
@@ -276,10 +281,10 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         // Find the next starting edge
         if(boundaries[initialEdgeIndex])
         {
-            int startingEdgePosition[2] = {initEdgePositions[initialEdgeIndex][0],
-                                           initEdgePositions[initialEdgeIndex][1]
+            int startingEdgePosition[2] = {indices[initialEdgeIndex][0],
+                                           indices[initialEdgeIndex][1]
             };
-            // Test to see if this starting edge has already been visited
+            // Test to see if this starting edge has already been visited in the middle of some other line
             for (int edgeIndex = 0; edgeIndex<m_visitedEdgePositions.at(prospectiveValue).size(); edgeIndex++)
             {
                 if ( startingEdgePosition[0]==m_visitedEdgePositions.at(prospectiveValue)[edgeIndex][0] &&
@@ -296,8 +301,8 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
                     // Set start position to this edge and make a position buffer
                     int position[2];
                     int positionBuffer[2];
-                    for(int dirInd=0;dirInd<2;dirInd++){position[dirInd]       = indices[initialEdgeIndex][dirInd];
-                                                        positionBuffer[dirInd] = position[dirInd];
+                    for(int u=0;u<2;u++){position[u]       = indices[initialEdgeIndex][u];
+                                         positionBuffer[u] = position[u];
                     }
 
                     // Start looking down the line of contiguous edges
@@ -573,9 +578,9 @@ void Simulation::updateProbabilities()
 {
     // Naive energy function: Energy of X is total number of neighbors - number of X neighbors
     // e.g. E(A) = A+B+C - A = B+C where A is the number of neighbors with value 'A'
-    double A = m_neighborVals[0];
-    double B = m_neighborVals[1];
-    double C = m_neighborVals[2];
+    double A = m_neighborCounts[0];
+    double B = m_neighborCounts[1];
+    double C = m_neighborCounts[2];
 
     double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
     double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
@@ -602,8 +607,8 @@ void Simulation::updateProbabilities()
     m_probabilities[1] = boltzmann_B / Z;
     m_probabilities[2] = boltzmann_C / Z;
 
-    // Reset neighborVals
-    for (int i=0;i<3;i++){m_neighborVals[i]=0;}
+    // Reset neighborCounts
+    for (int i=0;i<3;i++){m_neighborCounts[i]=0;}
     // Reset boundary lengths
     for (int i=0;i<3;i++){m_prospectiveBoundaryLengths[i]=0;}
 }

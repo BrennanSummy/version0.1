@@ -74,7 +74,11 @@ class Simulation
 
         /* static array that stores the number of A's B's and C's neighboring the current coordinate
             0 <-> A, 1 <-> B, 2 <-> C */
-        short m_neighborVals[3];
+        short m_neighborCounts[3];
+
+        /* static array that stores the positions of A's B's and C's neighboring the current coordinate
+            0 <-> A, 1 <-> B, 2 <-> C , index 0 means upper left neighbor, indices go cw to 5 at the left. */
+        short m_neighborVals[6];
 
         // Counter that tracks how many paths have been explored since starting to update an element
         int m_numPathsExplored;
@@ -134,6 +138,8 @@ class Simulation
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
         // Check if an edge position is valid
         bool edgePositionCheck(int* position);
+        // Check if an edge position is valid
+        bool elementPositionCheck(int i,int j);
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j);
         // Uses the neighborVals array to update the probabilities array
