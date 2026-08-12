@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 60;
-const int height = 40;
+const int width = 4;
+const int height = 3;
 struct ScreenPosition
 {
     const double x;
@@ -42,10 +42,10 @@ class Simulation
 
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
-        char m_board[height][width];
+        char m_board[2][height][width];
 
         /* char matrix used for keeping track of boundaries*/
-        char m_boundaryBoard[2*height-1][2*width-1];
+        char m_boundaryBoard[2][2*height-1][2*width-1];
 
         
         /* The width and height of the board. The char matrix
@@ -114,7 +114,7 @@ class Simulation
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        int m_stepSize = floor(width*height/5);
+        int m_stepSize = floor(width*height/1);
 
         // Private methods
         // Initialize the board to some arbitrary state
@@ -123,33 +123,35 @@ class Simulation
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates
            (i is the first index of the board array).*/
-        void updateBoardElement(int i,int j);
+        void updateBoardElement(int i,int j, bool top);
 
         void incrementExploredPaths();
         void printExploredPaths();
 
         // Update the elements of the boundary board relevant to board coords i,j
-        void updateBoundaryBoardElements(int boardi, int boardj);
+        void updateBoundaryBoardElements(int boardi, int boardj, bool top);
         // Modifies boundaryBoard as if the element at i,j was instead value. Used for prospective boundary length finding
-        void pointModifyBoundaryBoard(char prospectiveValue, int i, int j);
+        void pointModifyBoundaryBoard(char prospectiveValue, int i, int j, bool top);
+        // Gets the correct neighboring edge coordinates given current board coords and neighbor index and side
+        void getNeighborEdgeCoordsFromIndex(int* i, int* j, int neighborIndex, bool top);
         /* Check which type of boundary is at a certain neighbor index, where the index is 0 at the top leftmost neighbor
             with top having priority over leftmost, and goes clockwise from there with a max of 3.
             Note that edgePosition is a length two int array that has j in the first and i in the second element*/
-        void getAdjacentEdgePosition(int* edgePosition, int neighborIndex);
+        void getAdjacentEdgePosition(int* edgePosition, int neighborIndex, bool top);
         // Recursive function that explores contiguous edges. Used for boundary length finding
         void exploreLine(int* startingEdgePosition, int* position, bool direction, char boundaryType);
         // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
-        // Check if an edge position is valid
+        // Check if an edge position is valid. Assumes position has j as element 0, i as element 1
         bool edgePositionCheck(int* position);
         // Check if an edge position is valid
         bool elementPositionCheck(int i,int j);
         // Checks the neighboring indices and updates the neighborVals array accordingly
-        void updateNeighborVals(int i, int j);
+        void updateNeighborVals(int i, int j, bool top);
         // Uses the neighborVals array to update the probabilities array
         void updateProbabilities();
         // Uses the boundary board to calculate the prospective lengths of boundaries
-        void updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j);
+        void updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j, bool top);
         // Uses the probabilties array and the uniform distribution to pick a domain for the current element
         char roll();
 };

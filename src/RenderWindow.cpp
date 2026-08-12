@@ -45,7 +45,7 @@ void RenderWindow::initializeGL() {
     m_sim = new Simulation();
     m_sim->printBoard();
 
-    char* simData = &m_sim->m_board[0][0];
+    char* simData = &m_sim->m_board[0][0][0];
 
     int bWidthUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bWidth");
     int bHeightUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bHeight");
@@ -122,7 +122,7 @@ void RenderWindow::resizeGL(int w, int h)
 void RenderWindow::drawLastAndComputeNext()
 {
     // Load current texture
-    char* texData = &m_sim->m_board[0][0];
+    char* texData = &m_sim->m_board[0][0][0];
     //char* texData = &m_sim->m_displayBoard[0][0];
     m_boardTexture->updateData(texData);
 

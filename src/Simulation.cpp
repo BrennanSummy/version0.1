@@ -21,16 +21,19 @@ void Simulation::initBoard()
             {
                 if(i>=(int) (m_width / 2))
                 {
-                m_board[j][i] = 'C';
+                m_board[0][j][i] = 'C';
+                m_board[1][j][i] = 'A';
                 }
                 else
                 {
-                m_board[j][i] = 'B';
+                m_board[0][j][i] = 'B';
+                m_board[1][j][i] = 'B';
                 }
             }
             else
             {
-                m_board[j][i] = 'A';
+                m_board[0][j][i] = 'A';
+                m_board[1][j][i] = 'C';
             }
         }
     } 
@@ -39,65 +42,64 @@ void Simulation::initBoard()
 
 void Simulation::updateBoundaryBoardViaScan()
 {
-    for (int i = 0; i < m_width; i++)
+    for (int top = 1; top>-1; top--)
     {
-        for (int j = 0; j < m_height; j++)
+        for (int i = 0; i < m_width; i++)
         {
-            // Check the state of the board
-            char ijValue   = m_board[j][i];
-
-            // Look to the upper left, upper right, and right for different domains
-            int indices[3][2] = {   {j+1,i-1},
-                                    {j+1,i},
-                                    {j,i+1},
-            };
-
-            for (int neighbor = 0; neighbor < 3; neighbor++)
+            for (int j = 0; j < m_height; j++)
             {
-                // Test the validity of the neighbor indices (this deals with edges and corners)
-                bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
-                                    (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
-                if(coordIsValid)
-                {
-                    // Check the state of the relevant neighbors
-                    int neighbor_j = indices[neighbor][0];
-                    int neighbor_i = indices[neighbor][1];
-                    char neighborValue = m_board[neighbor_j][neighbor_i];
+                // Check the state of the board
+                char ijValue   = m_board[top][j][i];
 
-                    char boundaryType = '.';
-                    if( (neighborValue=='A' && ijValue=='B') || (neighborValue=='B' && ijValue=='A') )
-                    {
-                        boundaryType = 'D';
-                    }
-                    else if( (neighborValue=='A' && ijValue=='C') || (neighborValue=='C' && ijValue=='A') )
-                    {
-                        boundaryType = 'E';
-                    }
-                    else if( (neighborValue=='B' && ijValue=='C') || (neighborValue=='C' && ijValue=='B') )
-                    {
-                        boundaryType = 'F';
-                    }
-                    /* Update the boundary array using the correct indices as judged by the
-                        neighbor loop index*/
-                    int boundi=2*i;
-                    int boundj=2*j;
-                    switch(neighbor)
-                    {
-                        case 0:
-                        boundi += -1;
-                        boundj +=  1;
-                        break;
-                        case 1:
-                        boundj +=  1;
-                        break;
-                        case 2:
-                        boundi +=  1;
-                        break;
-                    }
-                    m_boundaryBoard[boundj][boundi] = boundaryType;
-                    
+                // Look to the upper left, upper right, and right for different domains
+                int indices[3][2];
+                if(top)
+                {
+                    indices[0][0] = j+1; indices[0][1] = i-1;
+                    indices[1][0] = j+1; indices[1][1] = i  ;
+                    indices[2][0] = j  ; indices[2][1] = i+1;
+                }
+                else
+                {
+                    indices[0][0] = j+1; indices[0][1] = i  ;
+                    indices[1][0] = j+1; indices[1][1] = i-1;
+                    indices[2][0] = j  ; indices[2][1] = i-1;
                 }
 
+                for (int neighbor = 0; neighbor < 3; neighbor++)
+                {
+                    // Test the validity of the neighbor indices (this deals with edges and corners)
+                    bool coordIsValid = elementPositionCheck(indices[neighbor][1],indices[neighbor][0]);
+                    if(coordIsValid)
+                    {
+                        // Check the state of the relevant neighbors
+                        int neighbor_j = indices[neighbor][0];
+                        int neighbor_i = indices[neighbor][1];
+                        char neighborValue = m_board[top][neighbor_j][neighbor_i];
+
+                        char boundaryType = '.';
+                        if( (neighborValue=='A' && ijValue=='B') || (neighborValue=='B' && ijValue=='A') )
+                        {
+                            boundaryType = 'D';
+                        }
+                        else if( (neighborValue=='A' && ijValue=='C') || (neighborValue=='C' && ijValue=='A') )
+                        {
+                            boundaryType = 'E';
+                        }
+                        else if( (neighborValue=='B' && ijValue=='C') || (neighborValue=='C' && ijValue=='B') )
+                        {
+                            boundaryType = 'F';
+                        }
+                        /* Update the boundary array using the correct indices as judged by the
+                            neighbor loop index*/
+                        int neighbori = i;
+                        int neighborj = j;
+                        getNeighborEdgeCoordsFromIndex(&neighbori,&neighborj,neighbor,top);
+                        std::cout << "i,j: " << neighbori << "," << neighborj << std::endl;
+                        m_boundaryBoard[top][neighborj][neighbori] = boundaryType;
+                    }
+
+                }
             }
         }
     }
@@ -105,8 +107,9 @@ void Simulation::updateBoundaryBoardViaScan()
 
 void Simulation::printBoard()
 {
+    // TOP
     std::string space = " ";
-    space.append(" ");
+    //space.append(" ");
     for (int j = m_height-1; j >= 0; j--)
     {
         std::string space = "";
@@ -117,17 +120,33 @@ void Simulation::printBoard()
         std::cout << space;
         for (int i = 0; i < m_width; i++)
         {
-            std::cout <<m_board[j][i] <<  " ";
+            std::cout <<m_board[1][j][i] <<  " ";
         }
         std::cout << "\n";
     } 
     
+    // BOTTOM
+    //space.append(" ");
+    for (int j = m_height-1; j >= 0; j--)
+    {
+        space = "";
+        for (int spaces = (m_height-1-j); spaces > 0; spaces--)
+        {
+            space.append(" ");
+        }
+        std::cout << space;
+        for (int i = m_width-1; i >= 0; i--)
+        {
+            std::cout <<m_board[0][j][i] <<  " ";
+        }
+        std::cout << "\n";
+    } 
 }
 
 void Simulation::printBoardWithBoundary()
 {
+    // TOP
     std::string space = " ";
-    space.append(" ");
     for (int doublej = 2*m_height-2; doublej >= 0; doublej--)
     {
         std::string space = "";
@@ -142,11 +161,11 @@ void Simulation::printBoardWithBoundary()
         {
             for (int i = 0; i < m_width; i++)
             {
-                std::cout <<m_board[doublej/2][i] <<  " ";
+                std::cout <<m_board[1][doublej/2][i] <<  " ";
 
                 if(i<(m_width - 1))
                 {
-                    std::cout << m_boundaryBoard[doublej][2*i+1] <<  " ";
+                    std::cout << m_boundaryBoard[1][doublej][2*i+1] <<  " ";
                 }
             }
             std::cout << "\n";
@@ -155,38 +174,84 @@ void Simulation::printBoardWithBoundary()
         {
             for (int doublei = 0; doublei < 2*m_width - 1; doublei++)
             {
-                std::cout << m_boundaryBoard[doublej][doublei] <<  " ";
+                std::cout << m_boundaryBoard[1][doublej][doublei] <<  " ";
             }
             std::cout << "\n";
         }
     } 
+    std::cout << "\n";
+
+    // BOTTOM
+    for (int doublej = 2*m_height-2; doublej >= 0; doublej--)
+    {
+        std::string space = "";
+        for (int spaces = 2*m_height - 2 - doublej; spaces > 0; spaces--)
+        {
+            space.append(" ");
+        }
+
+        std::cout << space;
+
+        if(doublej%2==0) // Sparse row
+        {
+            for (int i = m_width - 1; i >= 0; i--)
+            {
+                if(i<(m_width - 1))
+                {
+                    std::cout << m_boundaryBoard[0][doublej][2*i+1] <<  " ";
+                }
+                std::cout <<m_board[0][doublej/2][i] <<  " ";
+
+            }
+            std::cout << "\n";
+        }
+        else
+        {
+            for (int doublei = 2*m_width - 2; doublei >=0; doublei--)
+            {
+                std::cout << m_boundaryBoard[0][doublej][doublei] <<  " ";
+            }
+            std::cout << "\n";
+        }
+    } 
+    std::cout << "\n";
 }
 
-void Simulation::updateBoardElement(int i, int j)
+void Simulation::updateBoardElement(int i, int j, bool top)
 {
-    updateNeighborVals(i,j);
+    updateNeighborVals(i,j, top);
     for (int x = 0; x<3;x++)
     {
-        updateProspectiveBoundaryLengths(m_X[x],i,j);
+        updateProspectiveBoundaryLengths(m_X[x],i,j, top);
     }
     updateProbabilities();
-    m_board[j][i] = roll();
+    m_board[top][j][i] = roll();
 }
 
-void Simulation::incrementExploredPaths(){m_numPathsExplored++;}
-void Simulation::printExploredPaths(){std::cout<<m_numPathsExplored << " paths explored" <<std::endl;}
-
-void Simulation::updateNeighborVals(int i, int j)
+void Simulation::updateNeighborVals(int i, int j, bool top)
 {
     // NOTE THAT A RIGHT-TILTED PARALLELOGRAM IS ASSUMED. 'i' INDEXES THE HORIZONTAL, 'j' THE VERTICAL
     // List the relevant neighbor indices, starting with the upper left and going clockwise
-    int indices[6][2] = {   {j+1,i-1},
-                            {j+1,i},
-                            {j,i+1},
-                            {j-1,i+1},
-                            {j-1,i},
-                            {j,i-1}
-    };
+    int indices[6][2];
+    if(top)
+    {
+        indices[0][0] = j+1; indices[0][1] = i-1;
+        indices[1][0] = j+1; indices[1][1] = i  ;
+        indices[2][0] = j  ; indices[2][1] = i+1;
+        indices[3][0] = j-1; indices[3][1] = i+1;
+        indices[4][0] = j-1; indices[4][1] = i  ;
+        indices[5][0] = j  ; indices[5][1] = i-1;
+
+    }
+    else
+    {
+        indices[0][0] = j+1; indices[0][1] = i  ;
+        indices[1][0] = j+1; indices[1][1] = i-1;
+        indices[2][0] = j  ; indices[2][1] = i-1;
+        indices[3][0] = j-1; indices[3][1] = i  ;
+        indices[4][0] = j-1; indices[4][1] = i+1;
+        indices[5][0] = j  ; indices[5][1] = i+1;
+    }
     
     /* Loop through all of the neighbors:
         - if(coordinate is valid)
@@ -201,7 +266,7 @@ void Simulation::updateNeighborVals(int i, int j)
         if(coordIsValid)
         {
             // Check the state of the board from the previous timestep to get the value of this element
-            char value = m_board[indices[neighbor][0]][indices[neighbor][1]];
+            char value = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
             // Increment the appropriate counter in m_neighborCounts
             switch (value)
             {
@@ -229,17 +294,16 @@ bool Simulation::elementPositionCheck(int i, int j)
     return (j >= 0) && (i >= 0) && (j < m_height) && (i < m_width);
 }
 
-void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j)
+void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j, bool top)
 {
     //std::cout << "Element (i,j) = (" << i << "," << j << ")" << std::endl;
     //m_visitedEdgePositions.at(prospectiveValue).clear();
-    char currentValue = m_board[j][i];
-    pointModifyBoundaryBoard(prospectiveValue,i,j);
+    char currentValue = m_board[top][j][i];
+    pointModifyBoundaryBoard(prospectiveValue,i,j, top);
     //printBoardWithBoundary();
 
     int boundi=2*i;
     int boundj=2*j;
-    // Get the indices of the edges surrounding the board element ij
     int indices[6][2] = {   {boundj+1,boundi-1},
                             {boundj+1,boundi  },
                             {boundj  ,boundi+1},
@@ -253,12 +317,16 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
     bool allBounds = true;
     for (int neighborIndex=0;neighborIndex<6;neighborIndex++)
     {
-        if(!edgePositionCheck(indices[neighborIndex])){allBounds=false; continue;}
-        char boundaryType = m_boundaryBoard[indices[neighborIndex][0]][indices[neighborIndex][1]];
+        int loopi = i;
+        int loopj = j;
+        // Get the indices of the edges surrounding the board element ij
+        getNeighborEdgeCoordsFromIndex(&loopi, &loopj, neighborIndex, top);
+        if(!edgePositionCheck((int[2]) {loopj, loopi})){allBounds=false; continue;}
+        char boundaryType = m_boundaryBoard[top][loopj][loopi];
         if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
         {
             // Remember this edge's position
-            m_remainingInitEdges.push_back({indices[neighborIndex][0], indices[neighborIndex][1], neighborIndex});
+            m_remainingInitEdges.push_back({loopj, loopi, neighborIndex});
         }
         else{allBounds=false;}
 
@@ -270,7 +338,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]=6;
         m_remainingInitEdges.clear();
         // Revert point modification
-        pointModifyBoundaryBoard(currentValue,i,j);
+        pointModifyBoundaryBoard(currentValue,i,j,top);
         return;
     }
     // Start at the first matching edge found, then cross off any '1's in the boundaries bool array as you go down the boundary line.
@@ -282,14 +350,15 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         // Find the next starting edge
         for (int startingDirection=0;startingDirection<2;startingDirection++)
         {   
+            int loopi = i;
+            int loopj = j;
+            // Get the indices of the edges surrounding the board element ij
+            getNeighborEdgeCoordsFromIndex(&loopi, &loopj, initialEdgeIndex, top);
+
             // Set start position to this edge and make a position buffer
-            int initPosition[2];
-            int position[2];
-            int positionBuffer[2];
-            for(int u=0;u<2;u++){   initPosition[u]   = indices[initialEdgeIndex][u];
-                                    position[u]       = initPosition[u];
-                                    positionBuffer[u] = position[u];
-            }
+            int initPosition[3]  = {loopj          , loopi          , top};
+            int position[3]      = {initPosition[0], initPosition[1], top};
+            //int positionBuffer[3]= {position[0]    , position[1]    , top};
 
             // Start looking down the line of contiguous edges
             exploreLine(initPosition, position, startingDirection, prospectiveValue);
@@ -298,7 +367,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
     }
     
     // Revert point modification
-    pointModifyBoundaryBoard(currentValue,i,j);
+    pointModifyBoundaryBoard(currentValue,i,j, top);
 }
 
 void Simulation::exploreLine(int* startingEdgePosition, int* position, bool direction, char prospectiveValue)
@@ -323,11 +392,11 @@ void Simulation::exploreLine(int* startingEdgePosition, int* position, bool dire
         // Set position buffer
         positionBuffer[0] = position[0]; positionBuffer[1] = position[1];
         // Load the position of the neighboring edge into the position buffer
-        getAdjacentEdgePosition(positionBuffer, edgeNeighborIndex);
+        getAdjacentEdgePosition(positionBuffer, edgeNeighborIndex, position[2]);
         /* Make sure that position is valid (not out of bounds)
             if it is, skip the rest of this iteration to look at the next edge.*/
         if(!edgePositionCheck(positionBuffer)){continue;}
-        char val = m_boundaryBoard[positionBuffer[0]][positionBuffer[1]];
+        char val = m_boundaryBoard[position[2]][positionBuffer[0]][positionBuffer[1]];
         // If that edge has a compatible boundary type, recurse then break
         if( val == domainToBoundaryMap.at(prospectiveValue)[0] ||  val == domainToBoundaryMap.at(prospectiveValue)[1])
         {
@@ -430,95 +499,169 @@ bool Simulation::getEdgeFindingDirection(int* position, int chosenNeighborIndex)
     return direction;
 }
 
-void Simulation::getAdjacentEdgePosition(int* edgePosition, int neighborIndex)
+void Simulation::getAdjacentEdgePosition(int* edgePosition, int neighborIndex, bool top)
 {
-    if (edgePosition[0] % 2 ==0)
+    if(top) // top board
     {
-        // sparse row
-        switch(neighborIndex)
+        if (edgePosition[0] % 2 ==0) // sparse row
         {
-            case 0:
-                edgePosition[1]--;
-                edgePosition[0]++;
-                break;
-            case 1:
-                edgePosition[0]++;
-                break;
-            case 2:
-                edgePosition[1]++;
-                edgePosition[0]--;
-                break;
-            case 3:
-                edgePosition[0]--;
-                break;
+            switch(neighborIndex)
+            {
+                case 0:
+                    edgePosition[1]--;
+                    edgePosition[0]++;
+                    break;
+                case 1:
+                    edgePosition[0]++;
+                    break;
+                case 2:
+                    edgePosition[1]++;
+                    edgePosition[0]--;
+                    break;
+                case 3:
+                    edgePosition[0]--;
+                    break;
+            }
+        }
+        else // dense row
+        {
+            if(edgePosition[1]%2==1) // Right-Up pointing line
+            {
+                switch(neighborIndex)
+                {
+                    case 0:
+                        edgePosition[0]++;
+                        break;
+                    case 1:
+                        edgePosition[1]++;
+                        break;
+                    case 2:
+                        edgePosition[0]--;
+                        break;
+                    case 3:
+                        edgePosition[1]--;
+                        break;
+                }
+            }
+            else if(edgePosition[1]%2==0) // Left-Up pointing line
+            {
+                switch(neighborIndex)
+                {
+                    case 0:
+                        edgePosition[1]++;
+                        break;
+                    case 1:
+                        edgePosition[1]++;
+                        edgePosition[0]--;
+                        break;
+                    case 2:
+                        edgePosition[1]--;
+                        break;
+                    case 3:
+                        edgePosition[0]++;
+                        edgePosition[1]--;
+                        break;
+                }
+            }
         }
     }
-    else
+    else // bottom board (note that directions assume you are looking down at a board with the bottom facing you)
     {
-        // dense row
-        if(edgePosition[1]%2==1)
+        if (edgePosition[0] % 2 ==0) // sparse row
         {
-            // Right-Up pointing line
             switch(neighborIndex)
             {
-                case 0:
+                case 0: // Upper Left Neighbor from birds eye WRT bottom
                     edgePosition[0]++;
                     break;
                 case 1:
-                    edgePosition[1]++;
+                    edgePosition[1]--;
+                    edgePosition[0]++;
                     break;
                 case 2:
                     edgePosition[0]--;
                     break;
-                case 3:
-                    edgePosition[1]--;
-                    break;
-            }
-        }
-        else if(edgePosition[1]%2==0)
-        {
-            // Left-Up pointing line
-            switch(neighborIndex)
-            {
-                case 0:
-                    edgePosition[1]++;
-                    break;
-                case 1:
+                case 3: // Lower Left Neighbor
                     edgePosition[1]++;
                     edgePosition[0]--;
                     break;
-                case 2:
-                    edgePosition[1]--;
-                    break;
-                case 3:
-                    edgePosition[0]++;
-                    edgePosition[1]--;
-                    break;
             }
         }
-
+        else // dense row
+        {
+            if(edgePosition[1]%2==1) // Right-Up pointing line
+            {
+                switch(neighborIndex)
+                {
+                    case 0: // Upper neighbor (vertical line)
+                        edgePosition[1]--;
+                        edgePosition[0]++;
+                        break;
+                    case 1:
+                        edgePosition[1]--;
+                        break;
+                    case 2:
+                        edgePosition[1]++;
+                        edgePosition[0]--;
+                        break;
+                    case 3: // Left Neighbor
+                        edgePosition[1]++;
+                        break;
+                }
+            }
+            else if(edgePosition[1]%2==0) // Left-Up pointing line
+            {
+                switch(neighborIndex)
+                {
+                    case 0:
+                        edgePosition[0]++;
+                        break;
+                    case 1:
+                        edgePosition[1]--;
+                        break;
+                    case 2:
+                        edgePosition[0]--;
+                        break;
+                    case 3:
+                        edgePosition[1]++;
+                        break;
+                }
+            }
+        }
     }
 }
 
-void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j)
+void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j, bool top)
 {
-    int indices[6][2] = {   {j+1,i-1},
-                            {j+1,i},
-                            {j,i+1},
-                            {j-1,i+1},
-                            {j-1,i},
-                            {j,i-1}
-    };
+    int indices[6][2];
+    if(top)
+    {
+        indices[0][0] = j+1; indices[0][1] = i-1;
+        indices[1][0] = j+1; indices[1][1] = i  ;
+        indices[2][0] = j  ; indices[2][1] = i+1;
+        indices[3][0] = j-1; indices[3][1] = i+1;
+        indices[4][0] = j-1; indices[4][1] = i  ;
+        indices[5][0] = j  ; indices[5][1] = i-1;
+
+    }
+    else
+    {
+        indices[0][0] = j+1; indices[0][1] = i  ;
+        indices[1][0] = j+1; indices[1][1] = i-1;
+        indices[2][0] = j  ; indices[2][1] = i-1;
+        indices[3][0] = j-1; indices[3][1] = i  ;
+        indices[4][0] = j-1; indices[4][1] = i+1;
+        indices[5][0] = j  ; indices[5][1] = i+1;
+    }
     
     for (int neighbor = 0; neighbor < 6; neighbor++)
     {
         // Test the validity of the neighbor indices (this deals with edges and corners)
-        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
-                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
+        bool coordIsValid = elementPositionCheck(indices[neighbor][1],indices[neighbor][0]);
         if(coordIsValid)
         {
             // Check the state of the board for the neighbor
-            char neighborValue = m_board[indices[neighbor][0]][indices[neighbor][1]];
+            char neighborValue = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
 
             char boundaryType = '.';
             if( (neighborValue=='A' && prospectiveValue=='B') || (neighborValue=='B' && prospectiveValue=='A') )
@@ -535,36 +678,81 @@ void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j)
             }
             /* Update the boundary array using the correct indices as judged by the
                 neighbor loop index*/
-            int boundi=2*i;
-            int boundj=2*j;
-            switch(neighbor)
+
+            int neighbori = i;
+            int neighborj = j;
+            getNeighborEdgeCoordsFromIndex(&neighbori,&neighborj,neighbor,top);
+            if(neighbori==-1 || neighborj ==-1)
             {
-                case 0:
-                boundi += -1;
-                boundj +=  1;
-                break;
-                case 1:
-                boundj +=  1;
-                break;
-                case 2:
-                boundi +=  1;
-                break;
-                case 3:
-                boundi += +1;
-                boundj += -1;
-                break;
-                case 4:
-                boundj += -1;
-                break;
-                case 5:
-                boundi += -1;
-                break;
+                std::cout << top << std::endl;
+                std::cout << "element neighbor: " << indices[neighbor][1] << "," << indices[neighbor][0] <<std::endl;
+                std::cout << "i,j: " << i << "," << j << "\nni,nj: " << neighbori << "," << neighborj << std::endl;
             }
-            m_boundaryBoard[boundj][boundi] = boundaryType;
+
+            m_boundaryBoard[top][neighborj][neighbori] = boundaryType;
         }
 
     }
 
+}
+
+void Simulation::getNeighborEdgeCoordsFromIndex(int* iptr, int* jptr, int neighborIndex, bool top)
+{
+    *iptr = 2* (*iptr);
+    *jptr = 2* (*jptr);
+    if(top)
+    {
+        switch(neighborIndex)
+        {
+            case 0:
+            *iptr += -1;
+            *jptr +=  1;
+            break;
+            case 1:
+            *jptr +=  1;
+            break;
+            case 2:
+            *iptr +=  1;
+            break;
+            case 3:
+            *iptr += +1;
+            *jptr += -1;
+            break;
+            case 4:
+            *jptr += -1;
+            break;
+            case 5:
+            *iptr += -1;
+            break;
+        }
+
+    }
+    else // Bottom layer
+    {
+        switch(neighborIndex)
+        {
+            case 0:
+            *jptr +=  1;
+            break;
+            case 1:
+            *iptr += -1;
+            *jptr +=  1;
+            break;
+            case 2:
+            *iptr += -1;
+            break;
+            case 3:
+            *jptr += -1;
+            break;
+            case 4:
+            *jptr += -1;
+            *iptr += +1;
+            break;
+            case 5:
+            *iptr += +1;
+            break;
+        }
+    }
 }
 
 void Simulation::updateProbabilities()
@@ -606,7 +794,7 @@ void Simulation::updateProbabilities()
     for (int i=0;i<3;i++){m_prospectiveBoundaryLengths[i]=0;}
 }
 
-void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
+void Simulation::updateBoundaryBoardElements(int boardi, int boardj, bool top)
 {
     int indices[6][2] = {   {boardj+1,boardi-1},
                             {boardj+1,boardi},
@@ -616,7 +804,7 @@ void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
                             {boardj  ,boardi-1}
     };
 
-    char ijValue = m_board[boardj][boardi];
+    char ijValue = m_board[top][boardj][boardi];
 
     for (int neighbor = 0; neighbor < 6; neighbor++)
     {
@@ -629,7 +817,7 @@ void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
         if(coordIsValid)
         {
             // Check the state of the board to see what the boundary should be
-            char value = m_board[indices[neighbor][0]][indices[neighbor][1]];
+            char value = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
             char boundaryType = '.';
             if( (value=='A' && ijValue=='B') || (value=='B' && ijValue=='A') )
             {
@@ -668,7 +856,7 @@ void Simulation::updateBoundaryBoardElements(int boardi, int boardj)
                 boundi += -1;
                 break;
             }
-            m_boundaryBoard[boundj][boundi] = boundaryType;
+            m_boundaryBoard[top][boundj][boundi] = boundaryType;
         } 
     }
 }
@@ -793,9 +981,11 @@ void Simulation::randomStep()
         // Pick random indices
         int iRand = uniform_int_i(rand_generator);
         int jRand = uniform_int_j(rand_generator);
+        int topRand = uniform_2(rand_generator);
         // Update an element
-        updateBoardElement(iRand,jRand);
-        updateBoundaryBoardElements(iRand,jRand);
+        updateBoardElement(iRand,jRand,topRand);
+        pointModifyBoundaryBoard(m_board[topRand][jRand][iRand], iRand,jRand, topRand);
+        //updateBoundaryBoardElements(iRand,jRand,topRand);
     } 
 
     // Record time taken for the step, and print average every 1000 steps

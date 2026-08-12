@@ -97,3 +97,169 @@ Average update time per triplet/pixel: 0.0464735 ms
 Calculated average over 100 steps:
 Average step took 303.832 milliseconds to calculate.
 Average update time per triplet/pixel: 0.0506387 ms
+
+
+WITH path memory, board size: 60x40. Lower values ~10ms are from nearest neighbor dominant regimes (few long paths), 
+higher wait times are during tension dominated (granular) regimes
+Calculated average over 100 steps:
+Average step took 25.4067 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0529305 ms
+Calculated average over 100 steps:
+Average step took 26.1794 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0545404 ms
+Calculated average over 100 steps:
+Average step took 25.7098 milliseconds to calculate.
+Average update time per triplet/pixel: 0.053562 ms
+Calculated average over 100 steps:
+Average step took 28.3723 milliseconds to calculate.
+Average update time per triplet/pixel: 0.059109 ms
+Calculated average over 100 steps:
+Average step took 32.9902 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0687295 ms
+Calculated average over 100 steps:
+Average step took 23.0774 milliseconds to calculate.
+Average update time per triplet/pixel: 0.048078 ms
+Calculated average over 100 steps:
+Average step took 18.0553 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0376152 ms
+Calculated average over 100 steps:
+Average step took 13.8599 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0288747 ms
+Calculated average over 100 steps:
+Average step took 11.6454 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0242613 ms
+Calculated average over 100 steps:
+Average step took 12.161 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0253353 ms
+Calculated average over 100 steps:
+Average step took 9.66041 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0201259 ms
+Calculated average over 100 steps:
+Average step took 9.10931 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0189777 ms
+Calculated average over 100 steps:
+Average step took 12.8673 milliseconds to calculate.
+Average update time per triplet/pixel: 0.026807 ms
+Calculated average over 100 steps:
+Average step took 15.6974 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0327029 ms
+Calculated average over 100 steps:
+Average step took 17.8758 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0372413 ms
+Calculated average over 100 steps:
+Average step took 27.6733 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0576527 ms
+Calculated average over 100 steps:
+Average step took 28.3403 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0590423 ms
+Calculated average over 100 steps:
+Average step took 26.4022 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0550046 ms
+Calculated average over 100 steps:
+Average step took 27.6071 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0575148 ms
+Calculated average over 100 steps:
+Average step took 27.2096 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0566867 ms
+Calculated average over 100 steps:
+Average step took 27.4736 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0572366 ms
+Calculated average over 100 steps:
+Average step took 24.8434 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0517572 ms
+Calculated average over 100 steps:
+Average step took 22.993 milliseconds to calculate.
+Average update time per triplet/pixel: 0.047902 ms
+Calculated average over 100 steps:
+Average step took 23.3604 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0486675 ms
+Calculated average over 100 steps:
+Average step took 25.9998 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0541662 ms
+
+WITHOUT path memory (using every-step init-edge checking) with same board size. Same patterns with wait times. 
+High kT prompted higher waits at the end.
+Calculated average over 100 steps:
+Average step took 17.8833 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0372568 ms
+Calculated average over 100 steps:
+Average step took 17.2195 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0358739 ms
+Calculated average over 100 steps:
+Average step took 16.9756 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0353659 ms
+Calculated average over 100 steps:
+Average step took 17.0509 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0355228 ms
+Calculated average over 100 steps:
+Average step took 17.201 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0358353 ms
+Calculated average over 100 steps:
+Average step took 17.794 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0370708 ms
+Calculated average over 100 steps:
+Average step took 17.9338 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0373621 ms
+Calculated average over 100 steps:
+Average step took 16.9656 milliseconds to calculate.
+Average update time per triplet/pixel: 0.035345 ms
+Calculated average over 100 steps:
+Average step took 10.6809 milliseconds to calculate.
+Average update time per triplet/pixel: 0.022252 ms
+Calculated average over 100 steps:
+Average step took 8.55892 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0178311 ms
+Calculated average over 100 steps:
+Average step took 8.28613 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0172628 ms
+Calculated average over 100 steps:
+Average step took 8.39787 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0174956 ms
+Calculated average over 100 steps:
+Average step took 7.98839 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0166425 ms
+Calculated average over 100 steps:
+Average step took 8.05705 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0167855 ms
+Calculated average over 100 steps:
+Average step took 8.63944 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0179988 ms
+Calculated average over 100 steps:
+Average step took 19.2633 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0401319 ms
+Calculated average over 100 steps:
+Average step took 19.552 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0407333 ms
+Calculated average over 100 steps:
+Average step took 19.8536 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0413616 ms
+Calculated average over 100 steps:
+Average step took 19.7501 milliseconds to calculate.
+Average update time per triplet/pixel: 0.041146 ms
+Calculated average over 100 steps:
+Average step took 19.3678 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0403495 ms
+Calculated average over 100 steps:
+Average step took 17.5201 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0365002 ms
+Calculated average over 100 steps:
+Average step took 16.684 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0347584 ms
+Calculated average over 100 steps:
+Average step took 18.4981 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0385377 ms
+Calculated average over 100 steps:
+Average step took 21.8757 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0455743 ms
+Calculated average over 100 steps:
+Average step took 23.9223 milliseconds to calculate.
+Average update time per triplet/pixel: 0.049838 ms
+Calculated average over 100 steps:
+Average step took 24.0636 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0501325 ms
+Calculated average over 100 steps:
+Average step took 24.5156 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0510741 ms
+Calculated average over 100 steps:
+Average step took 24.5434 milliseconds to calculate.
+Average update time per triplet/pixel: 0.0511321 ms
