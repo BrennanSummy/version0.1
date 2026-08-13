@@ -22,8 +22,8 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
-    //TOPBOTTOMSELECTvoid updateShowTop();
-    //TOPBOTTOMSELECTvoid updateShowBot();
+    void updateShowTop();//TOPBOTTOMSELECT
+    void updateShowBot();//TOPBOTTOMSELECT
 
 protected:
     void initializeGL() override;
@@ -48,8 +48,8 @@ private:
     int m_texBLoc;
     int m_texCLoc;
     int m_indexCount;
-    int m_showTopLoc;
-    int m_showBotLoc;
+    int m_showTopLoc;//TOPBOTTOMSELECT
+    int m_showBotLoc;//TOPBOTTOMSELECT
     bool m_showTop;
     bool m_showBot;
     Simulation* m_sim;

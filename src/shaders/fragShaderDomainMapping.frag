@@ -11,8 +11,8 @@ uniform sampler2D texC;
 uniform usampler2D boardBotTexture;
 uniform int bWidth;
 uniform int bHeight;
-//uniform uint showTop;
-//uniform uint showBot;
+uniform uint showTop;
+uniform uint showBot;
 
 const vec4 domainAColor = vec4(0.0,0.0,0.8,1.0);
 const vec4 domainBColor = vec4(0.0,0.8,0.0,1.0);
@@ -83,8 +83,14 @@ void main()
    {
       botColor = vec4(0.1,0.0,0.1,1.0);
    }
-   //   FragColor = botColor;
+   if(showTop==1u)
+   {
+   FragColor = botColor;
+   }
+   else
+   {
    FragColor = topColor;
+   }
    //FragColor = mix(topColor,botColor,0.5);
    /////   FragColor = backgroundColor;
 }
