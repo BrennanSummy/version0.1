@@ -4,12 +4,15 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 
-uniform usampler2D boardTexture;
+uniform usampler2D boardTopTexture;
 uniform sampler2D texA;
 uniform sampler2D texB;
 uniform sampler2D texC;
+uniform usampler2D boardBotTexture;
 uniform int bWidth;
 uniform int bHeight;
+//uniform uint showTop;
+//uniform uint showBot;
 
 const vec4 domainAColor = vec4(0.0,0.0,0.8,1.0);
 const vec4 domainBColor = vec4(0.0,0.8,0.0,1.0);
@@ -27,36 +30,74 @@ void main()
    vec2 shiftedPosition = vec2(TexCoord.x + horizontalOffset, TexCoord.y);
 
    // RGBA [0,1]
-   vec4 color;
+   vec4 topColor;
+   vec4 botColor;
 
    // This is the value (technically a shade of red) that is sampled to determine A,B, or C
-   uint domainValue = texture(boardTexture, shiftedPosition).r;
+   uint topDomainValue = texture(boardTopTexture, shiftedPosition).r;
+   uint botDomainValue = texture(boardBotTexture, shiftedPosition).r;
 
-   if(domainValue ==65u)
+   if(topDomainValue ==65u)
    {
-      color = domainAColor;
+      topColor = domainAColor;
       //color = AColor;
    }
-   else if(domainValue ==66u)
+   else if(topDomainValue ==66u)
    {
-      color = domainBColor;
+      topColor = domainBColor;
       //color = BColor;
    }
-   else if(domainValue ==67u)
+   else if(topDomainValue ==67u)
    {
-      color = domainCColor;
+      topColor = domainCColor;
       //color = CColor;
    }
-   else if(domainValue ==46u)
+   else if(topDomainValue ==46u)
    {
-      color = backgroundColor;
+      topColor = backgroundColor;
    }
    else
    {
-      color = vec4(0.1,0.0,0.1,1.0);
+      topColor = vec4(0.1,0.0,0.1,1.0);
    }
-   //color = vec4(float(domainValue)/70,0,0,1);
-   //FragColor = mix(color,texture(texA,TexCoord),0.9);
-   FragColor = color;
-   //FragColor = AColor;
+   if(botDomainValue ==65u)
+   {
+      botColor = domainAColor;
+      //color = AColor;
+   }
+   else if(botDomainValue ==66u)
+   {
+      botColor = domainBColor;
+      //color = BColor;
+   }
+   else if(botDomainValue ==67u)
+   {
+      botColor = domainCColor;
+      //color = CColor;
+   }
+   else if(botDomainValue ==46u)
+   {
+      botColor = backgroundColor;
+   }
+   else
+   {
+      botColor = vec4(0.1,0.0,0.1,1.0);
+   }
+   // Set final color
+   //if(showBot==0u && showTop==0u)
+   //{
+   //   FragColor = botColor;
+   //}
+   //else if((showTop==1) && (showBot==0))
+   //{
+   FragColor = topColor;
+   //}
+   //else if((showBot==1) && (showTop==1))
+   //{
+   //FragColor = mix(topColor,botColor,0.5);
+   //}
+   /////else
+   /////{
+   /////   FragColor = backgroundColor;
+   /////}
 }

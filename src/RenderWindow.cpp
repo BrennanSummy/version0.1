@@ -3,8 +3,7 @@
 
 RenderWindow::RenderWindow(QWidget* parent)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
-            m_boardTexture(nullptr), m_textureA(nullptr)
-            , m_indexCount(0)   {}
+            m_indexCount(0)   {}
 
 RenderWindow::~RenderWindow()
 {
@@ -45,38 +44,50 @@ void RenderWindow::initializeGL() {
     m_sim = new Simulation();
     m_sim->printBoard();
 
-    char* simData = &m_sim->m_board[0][0][0];
+    char* simTopData = &m_sim->m_board[1][0][0];
+    char* simBotData = &m_sim->m_board[0][0][0];
+
+    m_shader1->bind();
 
     int bWidthUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bWidth");
     int bHeightUniformLoc = m_shader1->getShaderProgram()->uniformLocation("bHeight");
-    std::cout<<"bWidthUniformLoc " << bWidthUniformLoc << std::endl;
-    std::cout<<"bHeightUniformLoc " << bHeightUniformLoc << std::endl;
     m_shader1->getShaderProgram()->setUniformValue(bWidthUniformLoc, m_sim->m_width);
     m_shader1->getShaderProgram()->setUniformValue(bHeightUniformLoc, m_sim->m_height);
+    // Initialize with just top layer showing
+    //TOPBOTTOMSELECTint m_showTopLoc = m_shader1->getShaderProgram()->uniformLocation("showTop");
+    //TOPBOTTOMSELECTint m_showBotLoc = m_shader1->getShaderProgram()->uniformLocation("showBot");
+    //TOPBOTTOMSELECTm_shader1->getShaderProgram()->setUniformValue(m_showTopLoc, 0);
+    //TOPBOTTOMSELECTm_shader1->getShaderProgram()->setUniformValue(m_showBotLoc, 0);
+    //TOPBOTTOMSELECTstd::cout << "bottom loc " << m_showBotLoc << std::endl;
+    //TOPBOTTOMSELECTstd::cout << "top loc " << m_showTopLoc << std::endl;
 
-    m_shader1->bind();
     // Make texture objects
     std::cout << "trying to init textures" << std::endl;
     m_textureA = new Texture("textures/ATop.png");
     m_textureB = new Texture("textures/BTop.png");
     m_textureC = new Texture("textures/CTop.png");
-    m_boardTexture = new Texture(m_sim->m_width,m_sim->m_height,simData);
+    m_boardTopTexture = new Texture(m_sim->m_width,m_sim->m_height,simTopData);
+    m_boardBotTexture = new Texture(m_sim->m_width,m_sim->m_height,simBotData);
 
     // Get the uniform location for textures ABC
     int m_texALoc = m_shader1->getShaderProgram()->uniformLocation("texA");
-    // Get the uniform location for board texture
-    int m_boardTexLoc = m_shader1->getShaderProgram()->uniformLocation("boardTexture");
     int m_texBLoc = m_shader1->getShaderProgram()->uniformLocation("texB");
     int m_texCLoc = m_shader1->getShaderProgram()->uniformLocation("texC");
-    m_shader1->getShaderProgram()->setUniformValue(m_boardTexLoc,0);
+    // Get the uniform location for board texture
+    int m_boardTopTexLoc = m_shader1->getShaderProgram()->uniformLocation("boardTopTexture");
+    int m_boardBotTexLoc = m_shader1->getShaderProgram()->uniformLocation("boardBotTexture");
+
+    m_shader1->getShaderProgram()->setUniformValue(m_boardTopTexLoc,0);
     m_shader1->getShaderProgram()->setUniformValue(m_texALoc,1);
     m_shader1->getShaderProgram()->setUniformValue(m_texBLoc,2);
     m_shader1->getShaderProgram()->setUniformValue(m_texCLoc,3);
+    m_shader1->getShaderProgram()->setUniformValue(m_boardBotTexLoc,4);
 
-    std::cout<<"boardTex " << m_boardTexLoc << std::endl;
+    std::cout<<"boardTopTex " << m_boardTopTexLoc << std::endl;
     std::cout<<"texALoc " << m_texALoc << std::endl;
     std::cout<<"texBLoc " << m_texBLoc << std::endl;
     std::cout<<"texCLoc " << m_texCLoc << std::endl;
+    std::cout<<"boardBotTex " << m_boardBotTexLoc << std::endl;
 
     m_shader1->release();
     // Set up vertex data with positions followed by texture coords
@@ -121,10 +132,12 @@ void RenderWindow::resizeGL(int w, int h)
 
 void RenderWindow::drawLastAndComputeNext()
 {
-    // Load current texture
-    char* texData = &m_sim->m_board[0][0][0];
+    // Load current textures
+    char* topTexData = &m_sim->m_board[0][0][0];
+    char* botTexData = &m_sim->m_board[1][0][0];
     //char* texData = &m_sim->m_displayBoard[0][0];
-    m_boardTexture->updateData(texData);
+    m_boardTopTexture->updateData(topTexData);
+    m_boardBotTexture->updateData(botTexData);
 
     //std::cout << "texture updated to current board" << std::endl;
     // Draw
@@ -145,22 +158,20 @@ void RenderWindow::paintGL()
     m_shader1->bind();
 
 
-    // Set the uniform values before binding textures? OLD
-    //m_boardTexture->bind(0);
-    m_boardTexture->m_texture->bind(0);
+    // Bind the textures
+    m_boardTopTexture->m_texture->bind(0);
     m_textureA->m_texture->bind(1);
-
-    // order of binding doesn't matter if it's before uniform setting?
-    // Bind the texture objects
     m_textureB->bind(2);
     m_textureC->bind(3);
+    m_boardBotTexture->m_texture->bind(4);
 
     m_mesh1->draw(GL_TRIANGLES, m_indexCount);
 
+    m_boardBotTexture->m_texture->release(4);
     m_textureC->release(3);
     m_textureB->release(2);
     m_textureA->m_texture->release(1);
-    m_boardTexture->m_texture->release(0);
+    m_boardTopTexture->m_texture->release(0);
 }
 
 
@@ -177,6 +188,33 @@ void RenderWindow::sliderUpdateTension(float sliderVal)
 void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
 {
     m_sim->updateNearestNeighbor(sliderVal);
+}
+
+void RenderWindow::updateShowTop()
+{
+    makeCurrent();
+    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
+    unsigned int value;
+    if(m_showTop){value = 0; m_showTop=false;}
+    else {value = 1; m_showTop=true;}
+    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
+    m_shader1->getShaderProgram()->setUniformValue(m_showTopLoc,value);
+    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
+    m_shader1->release();
+    doneCurrent();
+}
+void RenderWindow::updateShowBot()
+{
+    makeCurrent();
+    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
+    unsigned int value;
+    if(m_showBot){value = 0; m_showBot=false;}
+    else {value = 1; m_showBot=true;}
+    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
+    m_shader1->getShaderProgram()->setUniformValue(m_showBotLoc,value);
+    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
+    m_shader1->release();
+    doneCurrent();
 }
 
 void RenderWindow::updateVertices(std::vector<float> newVertices)
@@ -233,8 +271,3 @@ void RenderWindow::mouseMoveEvent(QMouseEvent* event)
     update();
 }
 
-//void RenderWindow::multiThreadStep()
-//{
-//    std::thread t1(&Simulation::randomStep, m_sim);
-//    if(t1.joinable()){ t1.join(); }
-//}

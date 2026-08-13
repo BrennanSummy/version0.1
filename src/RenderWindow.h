@@ -22,6 +22,8 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
+    void updateShowTop();
+    void updateShowBot();
 
 protected:
     void initializeGL() override;
@@ -38,12 +40,18 @@ private:
     Texture* m_textureA;
     Texture* m_textureB;
     Texture* m_textureC;
-    Texture* m_boardTexture;
-    int m_boardTexLoc;
+    Texture* m_boardTopTexture;
+    Texture* m_boardBotTexture;
+    int m_boardTopTexLoc;
+    int m_boardBotTexLoc;
     int m_texALoc;
     int m_texBLoc;
     int m_texCLoc;
     int m_indexCount;
+    int m_showTopLoc;
+    int m_showBotLoc;
+    bool m_showTop;
+    bool m_showBot;
     Simulation* m_sim;
     //void multiThreadStep();
 

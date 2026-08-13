@@ -44,6 +44,17 @@ void MainWindow::setupWindow()
     // Add start/stop button
     PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
     parameterLayout->insertWidget(0,startStopButton);
+
+    // Add check boxes for layer showing
+    QCheckBox* showTopCheckBox = new QCheckBox(parameterArea);
+    QCheckBox* showBotCheckBox = new QCheckBox(parameterArea);
+    showTopCheckBox->setText("Show Top");
+    showTopCheckBox->setChecked(true);
+    showBotCheckBox->setText("Show Bottom");
+    showBotCheckBox->setChecked(true);
+    parameterLayout->addWidget(showTopCheckBox);
+    parameterLayout->addWidget(showBotCheckBox);
+
     // Add a stretch item to push other widgets up
     parameterLayout->addStretch(1);
 
@@ -78,6 +89,10 @@ void MainWindow::setupWindow()
 
     // Connect the start/stop button to the QTimer
     connect(startStopButton, &PushButton::buttonPressed, updateTimer, &UpdateTimer::toggle);
+
+    connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);
+
+    connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);
 
     //std::cout << "End of Main Window Setup" << std::endl;
 }

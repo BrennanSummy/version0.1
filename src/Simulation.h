@@ -12,7 +12,7 @@
 
 
 const int width = 100;
-const int height = 100;
+const int height = 150;
 struct ScreenPosition
 {
     const double x;

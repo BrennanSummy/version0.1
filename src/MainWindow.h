@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QSplitter>
 #include <QTimer>
+#include <QCheckBox>
 #include "ParameterSlider.h"
 #include "PushButton.h"
 #include "UpdateTimer.h"
