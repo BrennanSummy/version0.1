@@ -1,0 +1,91 @@
+Element (i,j) = (1,1)
+Top? 0
+Prospective Value: A
+direction: 0
+length: 2
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F ! @ . 
+  C . C E + D B 
+   E E E . . D D 
+    A . A . A . A 
+
+direction: 1
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F ! D . 
+  C . C E + D B 
+   E E E . . D D 
+    A . A . A . A 
+
+direction: 0
+length: 4
+length: 5
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F @ @ . 
+  C . C E + ! B 
+   E E E . . D D 
+    A . A . A . A 
+
+direction: 1
+length: 6
+length: 7
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F D D . 
+  C . C E + ! B 
+   E E E . . @ @ 
+    A . A . A . A 
+
+direction: 0
+length: 9
+length: 10
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F @ @ . 
+  C . C ! + D B 
+   E E E . . D D 
+    A . A . A . A 
+
+direction: 1
+length: 11
+length: 12
+length: 13
+Length of boundary exceeded reasonable length
+     B . B D A . A 
+    . . . D . . . 
+   B . B D A . A 
+  F F F F E E E 
+ C . C . C . C 
+
+C . C F B . B 
+ . . . F D D . 
+  C . C ! + D B 
+   @ @ @ . . D D 
+    A . A . A . A 

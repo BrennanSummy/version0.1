@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 4;
-const int height = 3;
+const int width = 100;
+const int height = 100;
 struct ScreenPosition
 {
     const double x;
@@ -47,6 +47,8 @@ class Simulation
         /* char matrix used for keeping track of boundaries*/
         char m_boundaryBoard[2][2*height-1][2*width-1];
 
+        /* char matrix used for keeping track of boundaries*/
+        char m_debugBoundaryBoard[2][2*height-1][2*width-1];
         
         /* The width and height of the board. The char matrix
             dimensions must be known at compile time. */
@@ -114,7 +116,7 @@ class Simulation
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        int m_stepSize = floor(width*height/1);
+        int m_stepSize = 500; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
 
         // Private methods
         // Initialize the board to some arbitrary state
@@ -123,8 +125,11 @@ class Simulation
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates
            (i is the first index of the board array).*/
-        void updateBoardElement(int i,int j, bool top);
+        char updateBoardElement(int i,int j, bool top);
 
+        void setDebugBoardToBoundaryBoard();
+        void setDebugBoardElement(int i, int j, bool top, char value);
+        void printDebugBoard();
         void incrementExploredPaths();
         void printExploredPaths();
 
@@ -139,8 +144,8 @@ class Simulation
             Note that edgePosition is a length two int array that has j in the first and i in the second element*/
         void getAdjacentEdgePosition(int* edgePosition, int neighborIndex, bool top);
         // Recursive function that explores contiguous edges. Used for boundary length finding
-        void exploreLine(int* startingEdgePosition, int* position, bool direction, char boundaryType);
-        // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction
+        void exploreLine(int* startingEdgePosition, int* position, bool direction, char boundaryType, bool* looptr);
+        // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction. 0 means first two neighbors, 1 means last two
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
         // Check if an edge position is valid. Assumes position has j as element 0, i as element 1
         bool edgePositionCheck(int* position);
