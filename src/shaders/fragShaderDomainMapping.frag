@@ -83,21 +83,8 @@ void main()
    {
       botColor = vec4(0.1,0.0,0.1,1.0);
    }
-   // Set final color
-   //if(showBot==0u && showTop==0u)
-   //{
    //   FragColor = botColor;
-   //}
-   //else if((showTop==1) && (showBot==0))
-   //{
    FragColor = topColor;
-   //}
-   //else if((showBot==1) && (showTop==1))
-   //{
    //FragColor = mix(topColor,botColor,0.5);
-   //}
-   /////else
-   /////{
    /////   FragColor = backgroundColor;
-   /////}
 }

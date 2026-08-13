@@ -90,9 +90,9 @@ void MainWindow::setupWindow()
     // Connect the start/stop button to the QTimer
     connect(startStopButton, &PushButton::buttonPressed, updateTimer, &UpdateTimer::toggle);
 
-    connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);
+    //TOPBOTTOMSELECTconnect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);
 
-    connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);
+    //TOPBOTTOMSELECTconnect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);
 
     //std::cout << "End of Main Window Setup" << std::endl;
 }

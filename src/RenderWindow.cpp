@@ -133,8 +133,8 @@ void RenderWindow::resizeGL(int w, int h)
 void RenderWindow::drawLastAndComputeNext()
 {
     // Load current textures
-    char* topTexData = &m_sim->m_board[0][0][0];
-    char* botTexData = &m_sim->m_board[1][0][0];
+    char* topTexData = &m_sim->m_board[1][0][0];
+    char* botTexData = &m_sim->m_board[0][0][0];
     //char* texData = &m_sim->m_displayBoard[0][0];
     m_boardTopTexture->updateData(topTexData);
     m_boardBotTexture->updateData(botTexData);
@@ -190,33 +190,33 @@ void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
     m_sim->updateNearestNeighbor(sliderVal);
 }
 
-void RenderWindow::updateShowTop()
-{
-    makeCurrent();
-    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
-    unsigned int value;
-    if(m_showTop){value = 0; m_showTop=false;}
-    else {value = 1; m_showTop=true;}
-    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
-    m_shader1->getShaderProgram()->setUniformValue(m_showTopLoc,value);
-    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
-    m_shader1->release();
-    doneCurrent();
-}
-void RenderWindow::updateShowBot()
-{
-    makeCurrent();
-    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
-    unsigned int value;
-    if(m_showBot){value = 0; m_showBot=false;}
-    else {value = 1; m_showBot=true;}
-    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
-    m_shader1->getShaderProgram()->setUniformValue(m_showBotLoc,value);
-    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
-    m_shader1->release();
-    doneCurrent();
-}
-
+//TOPBOTTOMSELECTvoid RenderWindow::updateShowTop()
+//TOPBOTTOMSELECT{
+//TOPBOTTOMSELECT    makeCurrent();
+//TOPBOTTOMSELECT    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
+//TOPBOTTOMSELECT    unsigned int value;
+//TOPBOTTOMSELECT    if(m_showTop){value = 0; m_showTop=false;}
+//TOPBOTTOMSELECT    else {value = 1; m_showTop=true;}
+//TOPBOTTOMSELECT    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
+//TOPBOTTOMSELECT    m_shader1->getShaderProgram()->setUniformValue(m_showTopLoc,value);
+//TOPBOTTOMSELECT    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
+//TOPBOTTOMSELECT    m_shader1->release();
+//TOPBOTTOMSELECT    doneCurrent();
+//TOPBOTTOMSELECT}
+//TOPBOTTOMSELECTvoid RenderWindow::updateShowBot()
+//TOPBOTTOMSELECT{
+//TOPBOTTOMSELECT    makeCurrent();
+//TOPBOTTOMSELECT    if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
+//TOPBOTTOMSELECT    unsigned int value;
+//TOPBOTTOMSELECT    if(m_showBot){value = 0; m_showBot=false;}
+//TOPBOTTOMSELECT    else {value = 1; m_showBot=true;}
+//TOPBOTTOMSELECT    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
+//TOPBOTTOMSELECT    m_shader1->getShaderProgram()->setUniformValue(m_showBotLoc,value);
+//TOPBOTTOMSELECT    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
+//TOPBOTTOMSELECT    m_shader1->release();
+//TOPBOTTOMSELECT    doneCurrent();
+//TOPBOTTOMSELECT}
+//TOPBOTTOMSELECT
 void RenderWindow::updateVertices(std::vector<float> newVertices)
 {
     m_mesh1->updateVertData(newVertices);

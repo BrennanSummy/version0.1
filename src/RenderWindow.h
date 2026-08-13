@@ -22,8 +22,8 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
-    void updateShowTop();
-    void updateShowBot();
+    //TOPBOTTOMSELECTvoid updateShowTop();
+    //TOPBOTTOMSELECTvoid updateShowBot();
 
 protected:
     void initializeGL() override;
