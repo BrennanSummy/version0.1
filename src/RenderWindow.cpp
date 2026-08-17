@@ -1,9 +1,14 @@
 #include "RenderWindow.h"
 #include "Simulation.h"
 
-RenderWindow::RenderWindow(QWidget* parent)
+RenderWindow::RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor,
+double crossLayerBoundaryFactor)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
-            m_indexCount(0)   {}
+            m_indexCount(0),default_kT(kT), default_tension(tensionFactor),
+            default_intraLayerNeighbor(intraLayerNearestNeighbor),
+            default_crossLayerNeighbor(crossLayerNearestNeighbor),
+            default_crossLayerBoundary(crossLayerBoundaryFactor)
+            {}
 
 RenderWindow::~RenderWindow()
 {
@@ -40,8 +45,11 @@ void RenderWindow::initializeGL() {
     m_shader1 = new Shader();
     m_shader1->loadShaders(mesh1VertShaderPath,mesh1FragShaderPath);
 
+    // Load default values from MainWindow
+//    QObject* prnt = this->parent();
+
     // Ensure simulation object is initialized
-    m_sim = new Simulation();
+    m_sim = new Simulation(default_kT,default_tension,default_intraLayerNeighbor,default_crossLayerNeighbor,default_crossLayerBoundary);
     m_sim->printBoard();
 
     char* simTopData = &m_sim->m_board[1][0][0];
@@ -117,7 +125,6 @@ void RenderWindow::initializeGL() {
     // Make a mesh object
     m_mesh1 = new Mesh();
     m_mesh1->init(coolestVertices,indices,m_shader1->getShaderProgram());
-
 }
 
 void RenderWindow::resizeGL(int w, int h)
@@ -182,6 +189,15 @@ void RenderWindow::sliderUpdateTension(float sliderVal)
 void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
 {
     m_sim->updateNearestNeighbor(sliderVal);
+}
+
+void RenderWindow::sliderUpdateCrossLayerNearestNeighbor(float sliderVal)
+{
+    m_sim->updateCrossLayerNearestNeighbor(sliderVal);
+}
+void RenderWindow::sliderUpdateCrossLayerBoundary(float sliderVal)
+{
+    m_sim->updateCrossLayerBoundaryInterference(sliderVal);
 }
 
 void RenderWindow::updateShowTop()

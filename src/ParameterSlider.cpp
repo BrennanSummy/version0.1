@@ -12,15 +12,16 @@ ParameterSlider::ParameterSlider(   const QString& name,
     layout    = new QVBoxLayout(this);
     nameLabel = new QLabel(name);
     slider    = new QSlider(Qt::Horizontal);
-    valueLabel= new QLabel(QString::number(defaultValue,'f',2));
+    valueLabel= new QLabel(QString::number(defaultValue,'f',3));
+
+
+    // Connect the default and custom slider functions
+    connect(slider, &QSlider::valueChanged, this, &ParameterSlider::onSliderValueChanged);
 
     // Configure slider (0 to steps)
     slider->setRange(0, steps);
     slider->setSingleStep(1);
-    slider->setValue(defaultValue);
-
-    // Connect the default and custom slider functions
-    connect(slider, &QSlider::valueChanged, this, &ParameterSlider::onSliderValueChanged);
+    setValue(defaultValue);
 
     // Add widgets to layout
     layout->setSpacing(5);
@@ -35,12 +36,17 @@ ParameterSlider::~ParameterSlider() {
     delete layout; 
 }
 
+
+void ParameterSlider::emitDefaultValue()
+{
+    setValue(defaultValue);
+}
+
 void ParameterSlider::onSliderValueChanged(int inValue) {
     // Convert from slider steps to float value.
-    //float floatValue = inValue / 10.0f;
     float floatValue = sliderStepToValue(inValue);
 
-    valueLabel->setText(QString::number(floatValue, 'f', 2));
+    valueLabel->setText(QString::number(floatValue, 'f', 3));
     // Send out a Qt signal
     emit sliderHasChanged(floatValue);
 }

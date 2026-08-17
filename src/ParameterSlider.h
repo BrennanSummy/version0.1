@@ -19,6 +19,7 @@ public:
     ~ParameterSlider();
     void     setValue(float value);
     void     onSliderValueChanged(int value);
+    void     emitDefaultValue();
     float    sliderStepToValue(int sliderStep);
     int      sliderFloatValueToStep(float inFloatValue);
     float    value;

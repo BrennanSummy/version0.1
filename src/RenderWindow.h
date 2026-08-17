@@ -14,7 +14,8 @@ class RenderWindow : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
 public:
-    RenderWindow(QWidget* parent = nullptr);
+    RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor,
+                 double crossLayerBoundaryFactor);
     ~RenderWindow();
     void drawLastAndComputeNext();
 
@@ -22,8 +23,10 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
-    void updateShowTop();//TOPBOTTOMSELECT
-    void updateShowBot();//TOPBOTTOMSELECT
+    void sliderUpdateCrossLayerNearestNeighbor(float sliderVal);
+    void sliderUpdateCrossLayerBoundary(float sliderVal);
+    void updateShowTop();
+    void updateShowBot();
 
 protected:
     void initializeGL() override;
@@ -59,4 +62,10 @@ private:
     Position mouseInitPosition;
     int m_w;
     int m_h;
+    // Defaults inherited by MainWindow
+    double default_kT;
+    double default_tension;
+    double default_intraLayerNeighbor;
+    double default_crossLayerNeighbor;
+    double default_crossLayerBoundary;
 };

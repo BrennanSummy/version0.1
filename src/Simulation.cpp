@@ -1,7 +1,9 @@
 #include "Simulation.h"
 
-Simulation::Simulation()
-:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1)
+Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,width-1),uniform_int_j(0,height-1),
+m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
+m_crossLayerBoundaryFactor(crossLayerBoundaryFactor)
 
 {
     initBoard();
@@ -881,9 +883,6 @@ void Simulation::updateProbabilities()
     double nearest_B = m_nearestNeighborFactor*(A+C);
     double nearest_C = m_nearestNeighborFactor*(B+A);
 
-    //double tension_A = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[0]-30,0.0);//
-    //double tension_B = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[1]-30,0.0);//
-    //double tension_C = std::max(m_tensionFactor*m_prospectiveBoundaryLengths[2]-30,0.0);//
     m_energies[0] = (nearest_A + tension_A);
     m_energies[1] = (nearest_B + tension_B);
     m_energies[2] = (nearest_C + tension_C);
@@ -1236,6 +1235,8 @@ void Simulation::setDebugBoardToBoundaryBoard()
 }
 
 ///////////////////////////DEBUG FUNCTIONS/////////////////////////////////
+
+///////////////////////////PARAM UPDATE FUNCTIONS/////////////////////////////////
 void Simulation::updateTemp(float value)
 {
     m_kT = value;
@@ -1248,3 +1249,12 @@ void Simulation::updateNearestNeighbor(float value)
 {
     m_nearestNeighborFactor = value;
 }
+void Simulation::updateCrossLayerNearestNeighbor(float value)
+{
+    m_crossLayerNearestNeighborFactor = value;
+}
+void Simulation::updateCrossLayerBoundaryInterference(float value)
+{
+    m_crossLayerNearestNeighborFactor = value;
+}
+///////////////////////////PARAM UPDATE FUNCTIONS/////////////////////////////////

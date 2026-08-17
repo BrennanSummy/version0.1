@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 200;
-const int height = 200;
+const int width = 100;
+const int height = 100;
 struct ScreenPosition
 {
     const double x;
@@ -23,7 +23,7 @@ class Simulation
 {
     public:
         // Constructor
-        Simulation();
+        Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor);
         // Prints the board to the console.
         void printBoard();
         // Prints the board with the boundary to the console.
@@ -31,6 +31,7 @@ class Simulation
         // The step function calculates the board state for the next timestep.
         void randomStep();
 
+        //////////////////// Update Functions ////////////////////
         // This updates the value of kT to the given value.
         void updateTemp(float value);
 
@@ -39,6 +40,13 @@ class Simulation
 
         // This updates the value of nearestNeighborFactor to the given value.
         void updateNearestNeighbor(float value);
+
+        // This updates the value of m_crossLayerNearestNeighborFactor to the given value.
+        void updateCrossLayerNearestNeighbor(float value);
+
+        // This updates the value of m_crossLayerBoundaryFactor to the given value.
+        void updateCrossLayerBoundaryInterference(float value);
+        //////////////////// Update Functions ////////////////////
 
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
@@ -58,13 +66,19 @@ class Simulation
     private:
 
         // Temperature for probability calculation
-        double m_kT=1;
+        double m_kT;
 
         // Line tension factor for probability calculation
-        double m_tensionFactor=1;
+        double m_tensionFactor;
 
-        // Line tension factor for probability calculation
-        double m_nearestNeighborFactor=1;
+        // Intra-layer nearest neighbor factor for probability calculation
+        double m_nearestNeighborFactor;
+        
+        // Inter-layer nearest neighbor factor for probability calculation
+        double m_crossLayerNearestNeighborFactor;
+
+        // Inter-layer boundary interference factor for probability calculation
+        double m_crossLayerBoundaryFactor;
 
         // Unordered map to associate 'A' with D or E, etc
         const std::unordered_map<char, std::array<char,2>> domainToBoundaryMap = {{'A',{'D','E'}}, {'B', {'D', 'F'}}, {'C', {'E', 'F'}}};
