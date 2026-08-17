@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 50;
-const int height = 50;
+const int width = 200;
+const int height = 200;
 struct ScreenPosition
 {
     const double x;

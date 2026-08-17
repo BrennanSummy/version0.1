@@ -54,12 +54,10 @@ void RenderWindow::initializeGL() {
     m_shader1->getShaderProgram()->setUniformValue(bWidthUniformLoc, m_sim->m_width);
     m_shader1->getShaderProgram()->setUniformValue(bHeightUniformLoc, m_sim->m_height);
     // Initialize with just top layer showing
-    int m_showTopLoc = m_shader1->getShaderProgram()->uniformLocation("showTop");//TOPBOTTOMSELECT
-    int m_showBotLoc = m_shader1->getShaderProgram()->uniformLocation("showBot");//TOPBOTTOMSELECT
-    m_shader1->getShaderProgram()->setUniformValue(m_showTopLoc, 0);             //TOPBOTTOMSELECT
-    m_shader1->getShaderProgram()->setUniformValue(m_showBotLoc, 0);             //TOPBOTTOMSELECT
-    std::cout << "bottom loc " << m_showBotLoc << std::endl;                     //TOPBOTTOMSELECT
-    std::cout << "top loc " << m_showTopLoc << std::endl;                        //TOPBOTTOMSELECT
+    m_shader1->getShaderProgram()->setUniformValue("showTop", 1);             
+    m_shader1->getShaderProgram()->setUniformValue("showBot", 1);             
+    m_showTop = true;
+    m_showBot = true;
 
     // Make texture objects
     std::cout << "trying to init textures" << std::endl;
@@ -127,7 +125,6 @@ void RenderWindow::resizeGL(int w, int h)
     glViewport(0, 0, w, h);
     m_w = w;
     m_h = h;
-    //std::cout << "width is now " <<m_w<<" and height " << m_h<< std::endl;
 }
 
 void RenderWindow::drawLastAndComputeNext()
@@ -139,13 +136,10 @@ void RenderWindow::drawLastAndComputeNext()
     m_boardTopTexture->updateData(topTexData);
     m_boardBotTexture->updateData(botTexData);
 
-    //std::cout << "texture updated to current board" << std::endl;
     // Draw
     update();
     // Compute next simulation state
     m_sim->randomStep();
-    //multiThreadStep();
-    //std::cout << "simulation step completed" << std::endl;
 }
 
 void RenderWindow::paintGL()
@@ -190,30 +184,32 @@ void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
     m_sim->updateNearestNeighbor(sliderVal);
 }
 
-void RenderWindow::updateShowTop()//TOPBOTTOMSELECT
+void RenderWindow::updateShowTop()
 {
     makeCurrent();
+    // Bind the shader program and alert if unsuccessful
     if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
-    unsigned int value;
-    if(m_showTop){value = 0; m_showTop=false;}
-    else {value = 1; m_showTop=true;}
-    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
-    m_shader1->getShaderProgram()->setUniformValue(m_showTopLoc,value);
-    std::cout << "set showTop at " << m_showTopLoc << " to " << value << std::endl;
+    // Toggle the appropriate boolean and update the uniform used in the fragment shader
+    if(m_showTop){m_showTop=false;}
+    else {m_showTop=true;}
+    m_shader1->getShaderProgram()->setUniformValue("showTop",m_showTop);
+    // Release and render the change
     m_shader1->release();
+    paintGL();
     doneCurrent();
 }
 void RenderWindow::updateShowBot()
 {
     makeCurrent();
+    // Bind the shader program and alert if unsuccessful
     if(!m_shader1->getShaderProgram()->bind()){std::cout << "shader not bound"<<std::endl;}
-    unsigned int value;
-    if(m_showBot){value = 0; m_showBot=false;}
-    else {value = 1; m_showBot=true;}
-    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
-    m_shader1->getShaderProgram()->setUniformValue(m_showBotLoc,value);
-    std::cout << "set showBot at " << m_showBotLoc << " to " << value << std::endl;
+    // Toggle the appropriate boolean and update the uniform used in the fragment shader
+    if(m_showBot){m_showBot=false;}
+    else { m_showBot=true;}
+    m_shader1->getShaderProgram()->setUniformValue("showBot",m_showBot);
+    // Release and render the change
     m_shader1->release();
+    paintGL();
     doneCurrent();
 }
 void RenderWindow::updateVertices(std::vector<float> newVertices)

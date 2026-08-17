@@ -1,4 +1,5 @@
 #version 330 core
+#extension GL_ARB_explicit_uniform_location : enable
 
 out vec4 FragColor;
 
@@ -11,8 +12,8 @@ uniform sampler2D texC;
 uniform usampler2D boardBotTexture;
 uniform int bWidth;
 uniform int bHeight;
-uniform uint showTop;
-uniform uint showBot;
+layout(location = 4) uniform bool showTop;
+layout(location = 5) uniform bool showBot;
 
 const vec4 domainAColor = vec4(0.0,0.0,0.8,1.0);
 const vec4 domainBColor = vec4(0.0,0.8,0.0,1.0);
@@ -83,14 +84,20 @@ void main()
    {
       botColor = vec4(0.1,0.0,0.1,1.0);
    }
-   if(showTop==1u)
+   if(showTop && showBot)
+   {
+   FragColor = mix(topColor,botColor,0.5);
+   }
+   else if(showTop && !showBot)
+   {
+   FragColor = topColor;
+   }
+   else if(showBot && !showTop)
    {
    FragColor = botColor;
    }
    else
    {
-   FragColor = topColor;
+   FragColor = backgroundColor;
    }
-   //FragColor = mix(topColor,botColor,0.5);
-   /////   FragColor = backgroundColor;
 }
