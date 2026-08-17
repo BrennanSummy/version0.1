@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 100;
-const int height = 100;
+const int width = 40;
+const int height = 40;
 struct ScreenPosition
 {
     const double x;
@@ -90,7 +90,15 @@ class Simulation
 
         /* static array that stores the number of A's B's and C's neighboring the current coordinate
             0 <-> A, 1 <-> B, 2 <-> C */
-        short m_neighborCounts[3];
+        short m_inLayerNeighborCounts[3];
+
+        /* static array that stores the number of A's B's and C's neighboring the current coordinate's complement (on the other side of the board)
+            0 <-> A, 1 <-> B, 2 <-> C */
+        short m_crossLayerNeighborCounts[3];
+
+        // A boolean that stores whether or not the proposed element value matches the complement or not
+        bool m_matchingComplement[3];
+
 
         /* static array that stores the positions of A's B's and C's neighboring the current coordinate
             0 <-> A, 1 <-> B, 2 <-> C , index 0 means upper left neighbor, indices go cw to 5 at the left. */
@@ -167,6 +175,8 @@ class Simulation
         bool elementPositionCheck(int i,int j);
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j, bool top);
+        // Checks the complement of the given value and updates m_matchingComplement accordingly (e.g. true in element 0 means that the complement matches A)
+        void updateMatchingComplement(int i, int j, bool top);
         // Uses the neighborVals array to update the probabilities array
         void updateProbabilities();
         // Uses the boundary board to calculate the prospective lengths of boundaries

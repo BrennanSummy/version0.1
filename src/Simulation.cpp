@@ -223,6 +223,7 @@ void Simulation::printBoardWithBoundary()
 char Simulation::updateBoardElement(int i, int j, bool top)
 {
     updateNeighborVals(i,j, top);
+    updateMatchingComplement(i,j,top);
     for (int x = 0; x<3;x++)
     {
         updateProspectiveBoundaryLengths(m_X[x],i,j, top);
@@ -270,28 +271,50 @@ void Simulation::updateNeighborVals(int i, int j, bool top)
         bool coordIsValid = elementPositionCheck(indices[neighbor][1],indices[neighbor][0]);
         if(coordIsValid)
         {
-            // Check the state of the board from the previous timestep to get the value of this element
-            char value = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
-            // Increment the appropriate counter in m_neighborCounts
-            switch (value)
+            // Check the state of the board to get the value of this element
+            char inLayerValue = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
+            char crossLayerValue = m_board[!top][indices[neighbor][0]][indices[neighbor][1]];
+            // Increment the appropriate counter in m_inLayerNeighborCounts
+            switch (inLayerValue)
             {
                 case 'A':
-                    m_neighborCounts[0]++;
+                    m_inLayerNeighborCounts[0]++;
                     //m_neighborVals[neighbor] = 0;
                     break;
                 case 'B':
-                    m_neighborCounts[1]++;
+                    m_inLayerNeighborCounts[1]++;
                     //m_neighborVals[neighbor] = 1;
                     break;
                 case 'C':
-                    m_neighborCounts[2]++;
+                    m_inLayerNeighborCounts[2]++;
                     //m_neighborVals[neighbor] = 2;
+                    break;
+            }
+            switch (crossLayerValue)
+            {
+                case 'A':
+                    m_crossLayerNeighborCounts[0]++;
+                    break;
+                case 'B':
+                    m_crossLayerNeighborCounts[1]++;
+                    break;
+                case 'C':
+                    m_crossLayerNeighborCounts[2]++;
                     break;
             }
         }
 
     }
 
+}
+
+void Simulation::updateMatchingComplement(int i, int j, bool top)
+{
+    char complement = m_board[!top][j][i];
+    for(int prospValIndex = 0; prospValIndex < 3; prospValIndex++)
+    {
+        m_matchingComplement[prospValIndex] = (complement==m_X[prospValIndex]);
+    }
 }
 
 bool Simulation::elementPositionCheck(int i, int j)
@@ -871,21 +894,43 @@ void Simulation::updateProbabilities()
 {
     // Naive energy function: Energy of X is total number of neighbors - number of X neighbors
     // e.g. E(A) = A+B+C - A = B+C where A is the number of neighbors with value 'A'
-    double A = m_neighborCounts[0];
-    double B = m_neighborCounts[1];
-    double C = m_neighborCounts[2];
-
-    double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
-    double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
-    double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
+    //////////////////////////////// Nearest Neighbor ////////////////////////////////
+    double A = m_inLayerNeighborCounts[0];
+    double B = m_inLayerNeighborCounts[1];
+    double C = m_inLayerNeighborCounts[2];
 
     double nearest_A = m_nearestNeighborFactor*(B+C);
     double nearest_B = m_nearestNeighborFactor*(A+C);
     double nearest_C = m_nearestNeighborFactor*(B+A);
+    //////////////////////////////// Nearest Neighbor ////////////////////////////////
 
-    m_energies[0] = (nearest_A + tension_A);
-    m_energies[1] = (nearest_B + tension_B);
-    m_energies[2] = (nearest_C + tension_C);
+    ////////////////////////////////     Tension      ////////////////////////////////
+    double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
+    double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
+    double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
+    ////////////////////////////////     Tension      ////////////////////////////////
+
+    //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
+    // THESE WOULD ALLOW TRACKING OF THE NEIGHBORS OF THE COMPLEMENT
+    double A_CL = m_crossLayerNeighborCounts[0];
+    double B_CL = m_crossLayerNeighborCounts[1];
+    double C_CL = m_crossLayerNeighborCounts[2];
+
+
+    // A positive CL neighbor factor -> matching complement adds energy
+    double cLNearest_A = m_crossLayerNearestNeighborFactor*(m_matchingComplement[0]);// + (B_CL + C_CL));
+    double cLNearest_B = m_crossLayerNearestNeighborFactor*(m_matchingComplement[1]);// + (A_CL + C_CL));
+    double cLNearest_C = m_crossLayerNearestNeighborFactor*(m_matchingComplement[2]);// + (A_CL + B_CL));
+
+    //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
+
+    //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
+
+    //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
+
+    m_energies[0] = (nearest_A + tension_A + cLNearest_A);
+    m_energies[1] = (nearest_B + tension_B + cLNearest_B);
+    m_energies[2] = (nearest_C + tension_C + cLNearest_C);
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
     double boltzmann_B = std::exp(-(m_energies[1])/m_kT);
@@ -897,10 +942,8 @@ void Simulation::updateProbabilities()
     m_probabilities[1] = boltzmann_B / Z;
     m_probabilities[2] = boltzmann_C / Z;
 
-    // Reset neighborCounts
-    for (int i=0;i<3;i++){m_neighborCounts[i]=0;}
-    // Reset boundary lengths
-    for (int i=0;i<3;i++){m_prospectiveBoundaryLengths[i]=0;}
+    // Reset neighbor counts and boundary lengths
+    for (int i=0;i<3;i++){m_inLayerNeighborCounts[i]=0;m_crossLayerNeighborCounts[i]=0;m_prospectiveBoundaryLengths[i]=0;}
 }
 
 void Simulation::updateBoundaryBoardElements(int boardi, int boardj, bool top)
@@ -1255,6 +1298,6 @@ void Simulation::updateCrossLayerNearestNeighbor(float value)
 }
 void Simulation::updateCrossLayerBoundaryInterference(float value)
 {
-    m_crossLayerNearestNeighborFactor = value;
+    m_crossLayerBoundaryFactor = value;
 }
 ///////////////////////////PARAM UPDATE FUNCTIONS/////////////////////////////////
