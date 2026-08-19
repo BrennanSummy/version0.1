@@ -380,6 +380,20 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, int i, 
         int initialEdgeIndex = m_remainingInitEdges[0][2];
 
 
+        // These indices are turned into the appropriate starting edge coordinates by the function below
+        int edgei = i;
+        int edgej = j;
+
+        // Get the indices of the edges surrounding the board element ij
+        getNeighborEdgeCoordsFromIndex(&edgei, &edgej, initialEdgeIndex, top);
+        // If this edge overlaps the one on the other side of the board, count that
+        if (m_boundaryBoard[!top][edgej][edgei] != '.')
+        {
+            m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
+            //std::cout << "Overlap: " << m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] << std::endl;
+        }
+        
+
         // Count this starting edge in the length
         m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]++;
 
@@ -427,6 +441,7 @@ void Simulation::exploreLine(int* startingEdgePosition, int* position, bool dire
     }
 
 
+
     // Use the direction to select the two possible edge neighbor indices to look through
     int startIndex = direction * 2;
     int endIndex = startIndex + 2;
@@ -461,9 +476,11 @@ void Simulation::exploreLine(int* startingEdgePosition, int* position, bool dire
             std::cout<<"length: " << 
             m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] << std::endl;
             std::cout << "//////////////////////////////////////////element done//////////////////////////////////////////"<< std::endl;
+            */
 
-            //setDebugBoardElement(positionBuffer[1],positionBuffer[0],position[2],'@');
+            setDebugBoardElement(positionBuffer[1],positionBuffer[0],position[2],'@');
 
+            /*
             if(m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] > m_width*m_height)
             {
                 throw std::runtime_error("Length of boundary exceeded reasonable length");
@@ -487,6 +504,13 @@ void Simulation::exploreLine(int* startingEdgePosition, int* position, bool dire
             bool newDirection = getEdgeFindingDirection(position, edgeNeighborIndex);
             // Use the buffer to update position
             position[0] = positionBuffer[0]; position[1] = positionBuffer[1];
+
+            // Increment the overlap count if appropriate
+            if (m_boundaryBoard[!position[2]][position[0]][position[1]] != '.')
+            {
+                m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
+                //std::cout << "Overlap: " << m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] << std::endl;
+            }
             // Recurse
             exploreLine(startingEdgePosition, position, newDirection, prospectiveValue, looptr);
             
@@ -925,12 +949,19 @@ void Simulation::updateProbabilities()
     //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
 
     //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
+    int A_overlaps = m_prospectiveBoundaryOverlapCounts[0];
+    int B_overlaps = m_prospectiveBoundaryOverlapCounts[1];
+    int C_overlaps = m_prospectiveBoundaryOverlapCounts[2];
+
+    double cLBoundaryInterface_A = m_crossLayerBoundaryFactor*A_overlaps;
+    double cLBoundaryInterface_B = m_crossLayerBoundaryFactor*B_overlaps;
+    double cLBoundaryInterface_C = m_crossLayerBoundaryFactor*C_overlaps;
 
     //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
 
-    m_energies[0] = (nearest_A + tension_A + cLNearest_A);
-    m_energies[1] = (nearest_B + tension_B + cLNearest_B);
-    m_energies[2] = (nearest_C + tension_C + cLNearest_C);
+    m_energies[0] = (nearest_A + tension_A + cLNearest_A + cLBoundaryInterface_A);
+    m_energies[1] = (nearest_B + tension_B + cLNearest_B + cLBoundaryInterface_B);
+    m_energies[2] = (nearest_C + tension_C + cLNearest_C + cLBoundaryInterface_C);
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
     double boltzmann_B = std::exp(-(m_energies[1])/m_kT);
@@ -943,7 +974,13 @@ void Simulation::updateProbabilities()
     m_probabilities[2] = boltzmann_C / Z;
 
     // Reset neighbor counts and boundary lengths
-    for (int i=0;i<3;i++){m_inLayerNeighborCounts[i]=0;m_crossLayerNeighborCounts[i]=0;m_prospectiveBoundaryLengths[i]=0;}
+    for (int i=0;i<3;i++)
+    {
+        m_inLayerNeighborCounts[i]=0;
+        m_crossLayerNeighborCounts[i]=0;
+        m_prospectiveBoundaryLengths[i]=0;
+        m_prospectiveBoundaryOverlapCounts[i]=0;
+    }
 }
 
 void Simulation::updateBoundaryBoardElements(int boardi, int boardj, bool top)

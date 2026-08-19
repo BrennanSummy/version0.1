@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 40;
-const int height = 40;
+const int width = 50;
+const int height = 30;
 struct ScreenPosition
 {
     const double x;
@@ -110,6 +110,9 @@ class Simulation
         /* Array that stores the total lengths of the boundaries associated with A,B, or C.
             0 <-> A, 1 <-> B, 2 <-> C */
         int m_prospectiveBoundaryLengths[3]={0,0,0};
+
+        // Array that, for each prospective boundary, keeps track of the number of overlaps with boundaries on the other side
+        int m_prospectiveBoundaryOverlapCounts[3]={0,0,0};
 
         std::vector<std::array<int,2>> m_visitedEdgePositions1;
         // Map which takes in the prospective char for an element's step and gives you a vector of coordinates for the edges visited
