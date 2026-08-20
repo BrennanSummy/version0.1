@@ -508,7 +508,7 @@ void Simulation::exploreLine(int* startingEdgePosition, int* position, bool dire
             // Increment the overlap count if appropriate
             if (m_boundaryBoard[!position[2]][position[0]][position[1]] != '.')
             {
-                m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
+                //m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
                 //std::cout << "Overlap: " << m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] << std::endl;
             }
             // Recurse
@@ -953,9 +953,9 @@ void Simulation::updateProbabilities()
     int B_overlaps = m_prospectiveBoundaryOverlapCounts[1];
     int C_overlaps = m_prospectiveBoundaryOverlapCounts[2];
 
-    double cLBoundaryInterface_A = m_crossLayerBoundaryFactor*A_overlaps;
-    double cLBoundaryInterface_B = m_crossLayerBoundaryFactor*B_overlaps;
-    double cLBoundaryInterface_C = m_crossLayerBoundaryFactor*C_overlaps;
+    double cLBoundaryInterface_A = 100*m_crossLayerBoundaryFactor*A_overlaps;
+    double cLBoundaryInterface_B = 100*m_crossLayerBoundaryFactor*B_overlaps;
+    double cLBoundaryInterface_C = 100*m_crossLayerBoundaryFactor*C_overlaps;
 
     //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
 
