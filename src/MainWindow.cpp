@@ -28,8 +28,8 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////           Title               Min   Max  Default                    Steps
-    ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    5, default_kT                ,   50, parameterArea);
-    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   ,    0,  0.1, default_tension           ,  100, parameterArea);
+    ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    5, default_kT                ,  100, parameterArea);
+    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   ,    -0.1,  0.1, default_tension        ,  100, parameterArea);
     ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor",    0,   10, default_intraLayerNeighbor,  100, parameterArea);
     ParameterSlider* crossLayerNeighborSlider = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,   20, parameterArea);
     ParameterSlider* crossLayerBoundarySlider = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,   20, parameterArea);

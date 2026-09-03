@@ -10,6 +10,7 @@ m_crossLayerBoundaryFactor(crossLayerBoundaryFactor)
     updateBoundaryBoardViaScan();
     setDebugBoardToBoundaryBoard();
     printBoardWithBoundary();
+    clearNeighborVals();
 }
 
 
@@ -220,6 +221,63 @@ void Simulation::printBoardWithBoundary()
     std::cout << "\n";
 }
 
+int Simulation::countDissimNeighbors(bool top)
+{
+    int count = 0;
+    for (int i = 0; i < m_width; i++)
+    {
+        for (int j = 0; j < m_height; j++)
+        {
+            // Count neighbors, then see how many are not similar
+            updateNeighborVals(i, j, top);
+            char value = m_board[top][j][i];
+
+            for (int valIndex = 0; valIndex < 3; valIndex++)
+            {
+                if (valIndex != domainToIntMap.at(value))
+                {
+                    count += m_inLayerNeighborCounts[valIndex];
+                }
+            }
+            clearNeighborVals();
+        }
+
+    }
+
+    return count/2;
+}
+
+int Simulation::countEdges(bool top)
+{
+    int count = 0;
+    for (int boundi = 0; boundi < 2*m_width - 1; boundi++)
+    {
+        for (int boundj = 0; boundj < 2*m_height - 1; boundj++)
+        {
+            char val = m_boundaryBoard[top][boundj][boundi];
+            if (val == 'D' || val == 'E' || val == 'F')
+            {
+                //DEBUGstd::cout << "Edge: " << m_boundaryBoard[top][boundj][boundi]  << std::endl;
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+int Simulation::getConfigurationEnergy()
+{
+    int energy = 0;
+    // ONLY TOP LAYER FOR NOW (top=1)
+    for (int top = 1; top <2; top++)
+    {
+        energy += m_tensionFactor*countEdges(top);
+        energy += m_nearestNeighborFactor*countDissimNeighbors(top);
+    }
+    return energy;
+}
+
+
 char Simulation::updateBoardElement(int i, int j, bool top)
 {
     updateNeighborVals(i,j, top);
@@ -273,7 +331,7 @@ void Simulation::updateNeighborVals(int i, int j, bool top)
         {
             // Check the state of the board to get the value of this element
             char inLayerValue = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
-            char crossLayerValue = m_board[!top][indices[neighbor][0]][indices[neighbor][1]];
+            //char crossLayerValue = m_board[!top][indices[neighbor][0]][indices[neighbor][1]];
             // Increment the appropriate counter in m_inLayerNeighborCounts
             switch (inLayerValue)
             {
@@ -290,6 +348,7 @@ void Simulation::updateNeighborVals(int i, int j, bool top)
                     //m_neighborVals[neighbor] = 2;
                     break;
             }
+            /*
             switch (crossLayerValue)
             {
                 case 'A':
@@ -301,11 +360,19 @@ void Simulation::updateNeighborVals(int i, int j, bool top)
                 case 'C':
                     m_crossLayerNeighborCounts[2]++;
                     break;
-            }
+            }*/
         }
 
     }
 
+}
+
+void Simulation::clearNeighborVals()
+{
+    for (int i=0;i<3;i++)
+    {
+        m_inLayerNeighborCounts[i]=0;
+    }
 }
 
 void Simulation::updateMatchingComplement(int i, int j, bool top)
@@ -919,49 +986,77 @@ void Simulation::updateProbabilities()
     // Naive energy function: Energy of X is total number of neighbors - number of X neighbors
     // e.g. E(A) = A+B+C - A = B+C where A is the number of neighbors with value 'A'
     //////////////////////////////// Nearest Neighbor ////////////////////////////////
-    double A = m_inLayerNeighborCounts[0];
-    double B = m_inLayerNeighborCounts[1];
-    double C = m_inLayerNeighborCounts[2];
+    ////double A = m_inLayerNeighborCounts[0];
+    ////double B = m_inLayerNeighborCounts[1];
+    ////double C = m_inLayerNeighborCounts[2];
 
-    double nearest_A = m_nearestNeighborFactor*(B+C);
-    double nearest_B = m_nearestNeighborFactor*(A+C);
-    double nearest_C = m_nearestNeighborFactor*(B+A);
+    ////double nearest_A = m_nearestNeighborFactor*(B+C);
+    ////double nearest_B = m_nearestNeighborFactor*(A+C);
+    ////double nearest_C = m_nearestNeighborFactor*(B+A);
+
+
+    int ip1;
+    int ip2;
+    for (int i = 0; i<3; i++)
+    {
+        ip1 = (i + 1) % 3;
+        ip2 = (i + 2) % 3;
+        //////////////////////////////// Nearest Neighbor ////////////////////////////////
+        m_nearestEnergy[i] = m_nearestNeighborFactor * (m_inLayerNeighborCounts[ip1] + m_inLayerNeighborCounts[ip2]);
+        //////////////////////////////// Nearest Neighbor ////////////////////////////////
+
+        ////////////////////////////////     Tension      ////////////////////////////////
+        m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
+        ////////////////////////////////     Tension      ////////////////////////////////
+
+        //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
+        m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * m_matchingComplement[i];
+        //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
+
+        //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
+        m_cLBoundaryInterferenceEnergy[i] = 100*m_crossLayerBoundaryFactor*m_prospectiveBoundaryOverlapCounts[i];
+        //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
+
+
+        // Total Energy
+        m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+    }
     //////////////////////////////// Nearest Neighbor ////////////////////////////////
 
     ////////////////////////////////     Tension      ////////////////////////////////
-    double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
-    double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
-    double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
+    //double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
+    //double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
+    //double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
     ////////////////////////////////     Tension      ////////////////////////////////
 
     //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
     // THESE WOULD ALLOW TRACKING OF THE NEIGHBORS OF THE COMPLEMENT
-    double A_CL = m_crossLayerNeighborCounts[0];
-    double B_CL = m_crossLayerNeighborCounts[1];
-    double C_CL = m_crossLayerNeighborCounts[2];
+    // IRRELEVANT double A_CL = m_crossLayerNeighborCounts[0];
+    // IRRELEVANT double B_CL = m_crossLayerNeighborCounts[1];
+    // IRRELEVANT double C_CL = m_crossLayerNeighborCounts[2];
 
 
     // A positive CL neighbor factor -> matching complement adds energy
-    double cLNearest_A = m_crossLayerNearestNeighborFactor*(m_matchingComplement[0]);// + (B_CL + C_CL));
-    double cLNearest_B = m_crossLayerNearestNeighborFactor*(m_matchingComplement[1]);// + (A_CL + C_CL));
-    double cLNearest_C = m_crossLayerNearestNeighborFactor*(m_matchingComplement[2]);// + (A_CL + B_CL));
+    ////double cLNearest_A = m_crossLayerNearestNeighborFactor*(m_matchingComplement[0]);// + (B_CL + C_CL));
+    ////double cLNearest_B = m_crossLayerNearestNeighborFactor*(m_matchingComplement[1]);// + (A_CL + C_CL));
+    ////double cLNearest_C = m_crossLayerNearestNeighborFactor*(m_matchingComplement[2]);// + (A_CL + B_CL));
 
     //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
 
     //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
-    int A_overlaps = m_prospectiveBoundaryOverlapCounts[0];
-    int B_overlaps = m_prospectiveBoundaryOverlapCounts[1];
-    int C_overlaps = m_prospectiveBoundaryOverlapCounts[2];
+    ////int A_overlaps = m_prospectiveBoundaryOverlapCounts[0];
+    ////int B_overlaps = m_prospectiveBoundaryOverlapCounts[1];
+    ////int C_overlaps = m_prospectiveBoundaryOverlapCounts[2];
 
-    double cLBoundaryInterface_A = 100*m_crossLayerBoundaryFactor*A_overlaps;
-    double cLBoundaryInterface_B = 100*m_crossLayerBoundaryFactor*B_overlaps;
-    double cLBoundaryInterface_C = 100*m_crossLayerBoundaryFactor*C_overlaps;
+    ////double cLBoundaryInterface_A = 100*m_crossLayerBoundaryFactor*A_overlaps;
+    ////double cLBoundaryInterface_B = 100*m_crossLayerBoundaryFactor*B_overlaps;
+    ////double cLBoundaryInterface_C = 100*m_crossLayerBoundaryFactor*C_overlaps;
 
     //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
 
-    m_energies[0] = (nearest_A + tension_A + cLNearest_A + cLBoundaryInterface_A);
-    m_energies[1] = (nearest_B + tension_B + cLNearest_B + cLBoundaryInterface_B);
-    m_energies[2] = (nearest_C + tension_C + cLNearest_C + cLBoundaryInterface_C);
+    //m_energies[0] = (nearest_A + tension_A + cLNearest_A + cLBoundaryInterface_A);
+    //m_energies[1] = (nearest_B + tension_B + cLNearest_B + cLBoundaryInterface_B);
+    //m_energies[2] = (nearest_C + tension_C + cLNearest_C + cLBoundaryInterface_C);
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
     double boltzmann_B = std::exp(-(m_energies[1])/m_kT);
@@ -972,7 +1067,74 @@ void Simulation::updateProbabilities()
     m_probabilities[0] = boltzmann_A / Z;
     m_probabilities[1] = boltzmann_B / Z;
     m_probabilities[2] = boltzmann_C / Z;
+    /*
+    //////////////////////////////// Energy Analysis ////////////////////////////////
 
+    double min = m_probabilities[0];
+    double max = m_probabilities[0];
+    int min_ind = 0;
+    int max_ind = 0;
+    for (int i = 1; i < 3; i++)
+    {
+        if (m_probabilities[i] < min)
+        {
+            min = m_probabilities[i];
+            min_ind = i;
+        }
+        if (m_probabilities[i] > max)
+        {
+            max = m_probabilities[i];
+            max_ind = i;
+        }
+    }
+    int middle_ind;
+    if(min_ind == (max_ind+1)%3)
+    {
+        middle_ind = (max_ind+2)%3;
+    } else
+    {
+        middle_ind = (max_ind+1)%3;
+    }
+    //ip1 = (min_ind+1)%3;
+    //ip2 = (min_ind+2)%3;
+    // If two domains share 90% of probability
+    //if(min < 0.1 && (m_prospectiveBoundaryLengths[ip1]!=6))
+    if(true)
+    {
+        if(true)
+        {
+            int dL12 = m_prospectiveBoundaryLengths[middle_ind]- m_prospectiveBoundaryLengths[max_ind];
+            double dN12 = (m_nearestEnergy[middle_ind] - m_nearestEnergy[max_ind])/m_nearestNeighborFactor;
+            int dL13 = m_prospectiveBoundaryLengths[min_ind]- m_prospectiveBoundaryLengths[max_ind];
+            double dTensionEnergy12  = m_tensionEnergy[middle_ind] - m_tensionEnergy[max_ind];
+            double dTensionEnergy13  = m_tensionEnergy[min_ind] - m_tensionEnergy[max_ind];
+            double dNeighborEnergy12 = m_nearestEnergy[middle_ind] - m_nearestEnergy[max_ind];
+            double dNeighborEnergy13 = m_nearestEnergy[min_ind] - m_nearestEnergy[max_ind];
+            double dTensionEnergy23  = m_tensionEnergy[min_ind] - m_tensionEnergy[middle_ind];
+            double dNeighborEnergy23 = m_nearestEnergy[min_ind] - m_nearestEnergy[middle_ind];
+
+            //double predDL12 = (1/m_tensionFactor)*(m_kT - dNeighborEnergy12);
+            //double predDL13 = (1/m_tensionFactor)*(m_kT - dNeighborEnergy13);
+            //double quantity = ((dTensionEnergy + dNeighborEnergy)/(m_kT));
+            //double logProbRatio12 = log(m_probabilities[max_ind]/m_probabilities[middle_ind]);
+            //double logProbRatio13 = log(m_probabilities[max_ind]/m_probabilities[min_ind]);
+            //std::cout << "X: " << dTensionEnergy  << std::endl;
+            //std::cout << "Y: " << dNeighborEnergy << std::endl;
+            //std::cout << dTensionEnergy  << "," << dNeighborEnergy << std::endl;
+            //std::cout << m_nearestNeighborFactor/m_tensionFactor  << "," << dL << std::endl;
+            //std::cout << quantity << "," << dL << std::endl;
+            //std::cout << "Quantity: " << quantity << " LPR: " << logProbRatio << std::endl;
+            //std::cout << "LPR12: " << logProbRatio12 << " LPR13: " << logProbRatio13 << std::endl;
+            //std::cout << "d12TN: " << dTensionEnergy12 << "," << dNeighborEnergy12 << std::endl;
+            //std::cout << "d13TN: " << dTensionEnergy13 << "," << dNeighborEnergy13 << std::endl;
+            //std::cout << "d23TN: " << dTensionEnergy23 << "," << dNeighborEnergy23 << std::endl;
+            //std::cout << "dL12,13: " << dL12 << "," << dL13 << std::endl;
+            std::cout << dL12 << "," << dN12 << std::endl;
+
+        }
+    }
+    //////////////////////////////// Energy Analysis ////////////////////////////////
+    */
     // Reset neighbor counts and boundary lengths
     for (int i=0;i<3;i++)
     {
@@ -1160,9 +1322,17 @@ char Simulation::roll()
 
 void Simulation::randomStep()
 {
+    if ( m_stepCounter % 100 == 0 )
+    {
+        // Print energy
+        std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
+        std::cout << "Boundary board:" << std::endl;
+        printBoardWithBoundary();
+    }
     // for time keeping
     m_stepCounter ++;
     auto tBegin = std::chrono::high_resolution_clock::now();
+
 
     // Carry out the update element by element, choosing a random one each time
     for (int subStep = 0; subStep < m_stepSize; subStep++)
@@ -1175,6 +1345,7 @@ void Simulation::randomStep()
         char result = updateBoardElement(iRand,jRand,topRand);
         // DEBUGprintBoard();
         pointModifyBoundaryBoard(result, iRand,jRand, topRand);
+
     } 
 
     // Record time taken for the step, and print average every 1000 steps
@@ -1198,6 +1369,7 @@ void Simulation::randomStep()
 
         std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
         m_stepCounter = 0;
+
     }
     
     //printBoardWithBoundary();

@@ -11,8 +11,8 @@
 #include <random>
 
 
-const int width = 20;
-const int height = 20;
+const int width  = 10;
+const int height = 10;
 struct ScreenPosition
 {
     const double x;
@@ -124,6 +124,11 @@ class Simulation
 
         // an accompanying array that stores probabilities of switching to each domain
         double m_probabilities[3];
+        // Energy terms for A B and C
+        double m_nearestEnergy[3];
+        double m_tensionEnergy[3];
+        double m_cLNearestEnergy[3];
+        double m_cLBoundaryInterferenceEnergy[3];
         // plan b array which stores the energies (at low kT the probabilities can vanish)
         double m_energies[3];
 
@@ -141,7 +146,11 @@ class Simulation
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        int m_stepSize = 500; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
+        const int m_stepSize = 500; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
+
+        // This keeps track of how much tension vs NN is determining outcomes
+        double tensionEnergyTypeCounter;
+        double nNEnergyTypeCounter;
 
         // Private methods
         // Initialize the board to some arbitrary state
@@ -155,8 +164,12 @@ class Simulation
         void setDebugBoardToBoundaryBoard();
         void setDebugBoardElement(int i, int j, bool top, char value);
         void printDebugBoard();
-        void incrementExploredPaths();
-        void printExploredPaths();
+        // Return the number of edges on the bottom or top board
+        int  countEdges(bool top);
+        // Return the number of dissimilar neighbors across the specified board (count dissimilar neighbors for each element and divide by 2)
+        int  countDissimNeighbors(bool top);
+        // Return the energy of the current state
+        int  getConfigurationEnergy();
 
         // Update the elements of the boundary board relevant to board coords i,j
         void updateBoundaryBoardElements(int boardi, int boardj, bool top);
@@ -178,6 +191,8 @@ class Simulation
         bool elementPositionCheck(int i,int j);
         // Checks the neighboring indices and updates the neighborVals array accordingly
         void updateNeighborVals(int i, int j, bool top);
+        // Clears m_inLayerNeighborCounts
+        void clearNeighborVals();
         // Checks the complement of the given value and updates m_matchingComplement accordingly (e.g. true in element 0 means that the complement matches A)
         void updateMatchingComplement(int i, int j, bool top);
         // Uses the neighborVals array to update the probabilities array
