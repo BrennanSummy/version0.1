@@ -140,7 +140,7 @@ class Simulation
         double m_stepDurations[1000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
-        const int m_stepSize = 500; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
+        const int m_stepSize = 2000; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
 
         // This keeps track of how much tension vs NN is determining outcomes
         double tensionEnergyTypeCounter;

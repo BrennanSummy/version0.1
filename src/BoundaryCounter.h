@@ -29,6 +29,10 @@ private:
 
     void explore(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge, bool direction, char value, int* length, bool* loop);
 
+    void exploreAllBoundaries(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge,
+                              bool direction, char value, int* length, bool* loop,std::vector<elementCoords>& visitedElements,
+                              std::vector<edgeCoords>& visitedEdges);
+
     void setTop(bool top);
 
 public:
@@ -38,6 +42,8 @@ public:
     ~BoundaryCounter();
     // Fast boundary counter for prospective boundary counting (REQUIRES THE RESPECTIVE BOUNDARY BOARD POINT MODIFICATION TO HAVE BEEN DONE ALREADY)
     int countProspectiveBoundaryLength(char value, elementCoords element, bool top, int* boundaryOverlaps);
+
+    std::vector<int> countAllBoundaryLengths(elementCoords element, bool top, std::vector<elementCoords>& visitedElements);
 };
 
 /* IDEA FOR BOUNDARY SCANNER */

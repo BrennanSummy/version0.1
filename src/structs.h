@@ -1,8 +1,9 @@
 #pragma once
 #include "constants.h"
 #include <iostream>
+#include <memory>
 #include <vector>
-
+struct elementCoords;
 struct edgeCoords
 {
     int i;
@@ -26,6 +27,31 @@ struct edgeCoords
             if((e.i == i) && (e.j == j))
             {
                 vec.erase(edge);
+                return true;
+            }
+        }
+        return false;
+    }
+    void addIfNotInVector(std::vector<edgeCoords>& vec)
+    {
+        bool add = true;
+        for (auto edge=vec.begin();edge!=vec.end(); ++edge)
+        {
+            edgeCoords e = *edge;
+            if((e.i == i) && (e.j == j))
+            {
+                add = false;
+            }
+        }
+        vec.push_back(edgeCoords(i,j));
+    }
+    bool isInVector(std::vector<edgeCoords>& vec)
+    {
+        for (auto elem=vec.begin();elem!=vec.end();++elem)
+        {
+            edgeCoords e = *elem;
+            if((e.i == i) && (e.j == j))
+            {
                 return true;
             }
         }
@@ -134,6 +160,7 @@ struct edgeCoords
         }
         return edgeCoords(outi,outj);
     }
+    std::unique_ptr<std::vector<elementCoords>> getAdjElements();
 };
 struct elementCoords
 {
@@ -174,6 +201,32 @@ struct elementCoords
         }
         return surroundingEdges;
     }
+    // Add an element if it is not already in a give element coord vector
+    void addIfNotInVector(std::vector<elementCoords>& vec)
+    {
+        bool add = true;
+        for (auto elem=vec.begin();elem!=vec.end(); ++elem)
+        {
+            elementCoords e = *elem;
+            if((e.i == i) && (e.j == j))
+            {
+                add = false;
+            }
+        }
+        if(add){vec.push_back(elementCoords(i,j));}
+    }
+    bool isInVector(std::vector<elementCoords>& vec)
+    {
+        for (auto elem=vec.begin();elem!=vec.end();++elem)
+        {
+            elementCoords e = *elem;
+            if((e.i == i) && (e.j == j))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 struct ScreenPosition
 {
@@ -186,4 +239,32 @@ template<typename T>
 void p(T val)
 {
     std::cout << val << std::endl;
+}
+
+inline std::unique_ptr<std::vector<elementCoords>> edgeCoords::getAdjElements()
+{
+    auto adjElements = std::make_unique<std::vector<elementCoords>>();
+    int outi = i/2;
+    int outj = j/2;
+    switch(this->orientation())
+    {
+        case('V'):
+            adjElements->push_back(elementCoords(outi,outj));
+            outi++;
+            adjElements->push_back(elementCoords(outi,outj));
+            break;
+        case('L'):
+            adjElements->push_back(elementCoords(outi,outj));
+            outj++;
+            adjElements->push_back(elementCoords(outi,outj));
+            break;
+        case('R'):
+            outi++;
+            adjElements->push_back(elementCoords(outi,outj));
+            outi--;
+            outj++;
+            adjElements->push_back(elementCoords(outi,outj));
+            break;
+    }
+    return adjElements;
 }

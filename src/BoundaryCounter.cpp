@@ -74,6 +74,11 @@ int BoundaryCounter::countProspectiveBoundaryLength(char value, elementCoords el
     return length;
 }
 
+/*
+Explore a boundary edge by edge. Starts at startEdge, moves forward recursively, crossing off any remainingInitEdges on the way.
+Only boundary types compatible with 'value' are considered. Increments length with each recursion, and sets loop to true if startEdge
+is found again by completing a loop.
+*/
 void BoundaryCounter::explore(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge, bool direction, char value, int* lengthPtr, bool* loop)
 {
     // Remove this edge if it is in the remainingInitEdges vector
@@ -94,6 +99,113 @@ void BoundaryCounter::explore(std::vector<edgeCoords>& remainingInitEdges, edgeC
             //int l = *lengthPtr;
             //std::cout<<"Length: " << l<< std::endl;
             explore(remainingInitEdges,startEdge,prospectiveEdge,edge.getNextEdgeFindingDirection(edgeInd),value,lengthPtr,loop);
+            break;
+        }
+    }
+
+}
+
+std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element, bool top, std::vector<elementCoords>& visitedElements)
+{
+    setTop(top);
+    char value = board[top][element.j][element.i];
+    std::vector<edgeCoords> remainingEdges = element.getValidSurroundingEdges();
+    int numberOfValidEdges = remainingEdges.size();
+    // Throw out edges that aren't boundaries
+    auto iterator = remainingEdges.begin();
+    while(iterator != remainingEdges.end())
+    {
+        // Dereferencing the iterator gives the edge object at that element of the vector
+        if(!edgeIsCompatibleWithValue(*iterator,value))
+        {
+            // Erase the element if it is not compatible (if it is not a boundary at all)
+            iterator = remainingEdges.erase(iterator);
+        }
+        else{iterator++;}
+    }
+
+    // If this element is surrounded by similar elements, there are no boundaries to count.
+    if(remainingEdges.empty()){return std::vector<int> {0};}
+
+    // If this element is fully surrounded by dissimilar elements, return that number.
+    if(remainingEdges.size()==numberOfValidEdges){return std::vector<int> {numberOfValidEdges};}
+
+    //// Now iterate through the edges, exploring all boundaries, including noncontiguous but adjacent ones ////
+    std::vector<int> lengths;
+    int numberOfNonContiguous = 0;
+    int edgeIndex = -1;
+    while(remainingEdges.size()!=0)
+    {
+        lengths.push_back(1);
+        edgeIndex = (edgeIndex+1)%remainingEdges.size();
+        edgeCoords initEdge = remainingEdges[edgeIndex];
+        // Reset the loop check
+        bool loop = false;
+        std::vector<edgeCoords> visitedEdges;
+        for (int initDirection = 0; initDirection<2; initDirection++)
+        {
+            exploreAllBoundaries(remainingEdges, initEdge,  initEdge, initDirection, value, &lengths[numberOfNonContiguous], &loop,
+                                 visitedElements,visitedEdges);
+            if(loop)
+            {
+                break;
+            }
+        }
+        numberOfNonContiguous++;
+    }
+    return lengths;
+}
+
+void BoundaryCounter::exploreAllBoundaries(std::vector<edgeCoords>& remainingEdges, edgeCoords startEdge,
+                                           edgeCoords edge, bool direction, char value, int* lengthPtr,
+                                           bool* loop, std::vector<elementCoords>& visitedElements,
+                                           std::vector<edgeCoords>& visitedEdges)
+{
+    edge.addIfNotInVector(visitedEdges);
+    // Remove this edge if it is in the remainingInitEdges vector
+    edge.removeIfInVector(remainingEdges);
+
+    // Check the relevant board element for noncontiguous adjacent boundaries
+    std::unique_ptr<std::vector<elementCoords>> adjElems = edge.getAdjElements();
+    // Choose the element that has the same char value
+    bool elementSelector;
+    if(board[m_top][(*adjElems)[0].j][(*adjElems)[0].i]==value){elementSelector=0;} else{elementSelector=1;}
+    // Add any novel edges to the remainingEdges vector
+    std::vector<edgeCoords> candidateEdges = (*adjElems)[elementSelector].getValidSurroundingEdges();
+    (*adjElems)[elementSelector].addIfNotInVector(visitedElements);
+    if(visitedElements.size()>10)
+    {
+        std::cout<<"Number of visited elements: " << visitedElements.size() << std::endl;
+    }
+    auto iterator = candidateEdges.begin();
+    while(iterator != candidateEdges.end())
+    {
+        // Dereferencing the iterator gives the edge object at that element of the vector
+        edgeCoords e = *iterator;
+        if(edgeIsCompatibleWithValue(e,value)&&!e.isInVector(visitedEdges))
+        {
+            e.addIfNotInVector(remainingEdges);
+        }
+        iterator++;
+    }
+
+    
+    // Look at edge neighbors 0,1 if direction is 0, or 2,3 if direction is 1
+    for (int edgeInd = direction*2; edgeInd < direction*2 + 2; edgeInd++)
+    {
+        // If there is a valid compatible edge at the given edgeIndex, choose that edge, increment length, and recurse
+        edgeCoords prospectiveEdge = edge.getAdjEdge(edgeInd);
+        if(edgeIsCompatibleWithValue(prospectiveEdge,value))
+        {
+            // Break if this closes a loop
+            if(prospectiveEdge.equals(startEdge)){*loop=true; break;}
+            // Increment the length, then recurse
+            *lengthPtr = *lengthPtr + 1;
+            //DEBUG
+            //int l = *lengthPtr;
+            //std::cout<<"Length: " << l<< std::endl;
+            exploreAllBoundaries(remainingEdges,startEdge,prospectiveEdge,edge.getNextEdgeFindingDirection(edgeInd),
+                                 value,lengthPtr,loop,visitedElements,visitedEdges);
             break;
         }
     }
