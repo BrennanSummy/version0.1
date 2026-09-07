@@ -9,19 +9,14 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include "BoundaryCounter.h"
+#include "constants.h"
+#include "structs.h"
 
-
-const int width  = 10;
-const int height = 10;
-struct ScreenPosition
-{
-    const double x;
-    const double y;
-};
 
 class Simulation
 {
-    public:
+   public:
         // Constructor
         Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor);
         // Prints the board to the console.
@@ -53,16 +48,15 @@ class Simulation
         char m_board[2][height][width];
 
         /* char matrix used for keeping track of boundaries*/
-        char m_boundaryBoard[2][2*height-1][2*width-1];
+        char m_boundaryBoard[2][bBHeight][bBWidth];
 
-        /* char matrix used for keeping track of boundaries*/
-        char m_debugBoundaryBoard[2][2*height-1][2*width-1];
-        
-        /* The width and height of the board. The char matrix
-            dimensions must be known at compile time. */
-        int m_width=width;
-        int m_height=height;
+        /* char matrix used for debugging boundaries*/
+        char m_debugBoundaryBoard[2][bBHeight][bBWidth];
 
+        int m_width   = (int)width;
+        int m_height  = (int)height;
+        int m_bBWidth = (int)bBWidth;
+        int m_bBHeight= (int)bBHeight;
     private:
 
         // Temperature for probability calculation
@@ -152,6 +146,9 @@ class Simulation
         double tensionEnergyTypeCounter;
         double nNEnergyTypeCounter;
 
+        // Boundary Counter object
+        BoundaryCounter m_counter;
+
         // Private methods
         // Initialize the board to some arbitrary state
         void initBoard();
@@ -182,9 +179,24 @@ class Simulation
             Note that edgePosition is a length two int array that has j in the first and i in the second element*/
         void getAdjacentEdgePosition(int* edgePosition, int neighborIndex, bool top);
         // Recursive function that explores contiguous edges. Used for boundary length finding
-        void exploreLine(int* startingEdgePosition, int* position, bool direction, char boundaryType, bool* looptr);
+        void exploreLine(std::vector<std::array<int,3>>& remainingInitEdges, int* startingEdgePosition, int* position, bool direction,
+                         char boundaryType, bool* looptr);
+
+        // Same idea as above, but this one returns a vector of adjacent board elements with the given value.
+        void exploreLineWithElementTracking(int* length, std::vector<std::array<int,2>>& passedElements, std::vector<std::array<int,3>>& remainingInitEdges,
+                                            int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr);
+
+        void exploreLineOLD(int* startingEdgePosition, int* position, bool direction, char boundaryType, bool* looptr);
         // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction. 0 means first two neighbors, 1 means last two
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
+        // For a given edge position, returns the two adjacent board element positions
+        std::vector<std::array<int,2>> getAdjElementPositionsFromEdgePos(int* edgePosition);
+        // For a given element position and a bool copy of the element board, checks off visited elements and returns
+        // the boundary length associated with the element.
+        int getBoundaryLengthAtElement(bool (*remainingElements)[height][width], int i, int j, bool top);
+        // Gets a vector containing the length of every boundary on the board
+        std::vector<int> getBoundaryLengths();
+        // Get a boundary board-shaped char array detailing the number of non-contiguous boundaries
         // Check if an edge position is valid. Assumes position has j as element 0, i as element 1
         bool edgePositionCheck(int* position);
         // Check if an edge position is valid
@@ -198,7 +210,8 @@ class Simulation
         // Uses the neighborVals array to update the probabilities array
         void updateProbabilities();
         // Uses the boundary board to calculate the prospective lengths of boundaries
-        void updateProspectiveBoundaryLengths(char prospectiveValue, int i, int j, bool top);
+        void updateProspectiveBoundaryLengthsOLD(char prospectiveValue, int i, int j, bool top);
+        void updateProspectiveBoundaryLengths(char prospectiveValue, elementCoords element, bool top);
         // Uses the probabilties array and the uniform distribution to pick a domain for the current element
         char roll();
 };

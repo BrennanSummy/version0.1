@@ -27,6 +27,7 @@ set(SOURCE_CODE
     src/PushButton.cpp
     src/UpdateTimer.cpp
     src/TextBox.cpp
+	src/BoundaryCounter.cpp
 )
 set(SOURCE_HEADERS
 	src/external/stb_image.h
@@ -40,6 +41,9 @@ set(SOURCE_HEADERS
     src/PushButton.h
     src/UpdateTimer.h
 	src/TextBox.h
+	src/BoundaryCounter.h
+	src/constants.h
+	src/structs.h
 )
 
 
