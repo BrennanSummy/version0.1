@@ -1529,26 +1529,8 @@ void Simulation::randomStep()
         std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
         std::cout << "Boundary board:" << std::endl;
         //printBoardWithBoundary();
-        /*
-        std::vector<elementCoords> visitedElements;
-        std::vector<int> lengths;
-        for (int j = 0; j < height; j++)
-        {
-            for (int i = 0; i < width; i++)
-            {
-                elementCoords elem = elementCoords(i,j);
-                if(!elem.isInVector(visitedElements))
-                {
-                   std::vector<int> newLengths = m_counter.countAllBoundaryLengths(elem,1,visitedElements);
-                   for (int n=0; n<newLengths.size(); n++)
-                   {
-                    lengths.push_back(newLengths[n]);
-                   }
-                }
-            }
-        }
+        std::vector<int> lengths = m_counter.boundaryScan(1);
         std::cout<< "All boundaries found in top layer: " << lengths.size() << std::endl;
-        */
     }
     // for time keeping
     m_stepCounter ++;

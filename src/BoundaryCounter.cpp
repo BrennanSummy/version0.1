@@ -105,9 +105,10 @@ void BoundaryCounter::explore(std::vector<edgeCoords>& remainingInitEdges, edgeC
 
 }
 
-std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element, bool top, std::vector<elementCoords>& visitedElements)
+std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element, bool top)
 {
     setTop(top);
+    checkOffElement(element);
     char value = board[top][element.j][element.i];
     std::vector<edgeCoords> remainingEdges = element.getValidSurroundingEdges();
     int numberOfValidEdges = remainingEdges.size();
@@ -134,6 +135,7 @@ std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element,
     std::vector<int> lengths;
     int numberOfNonContiguous = 0;
     int edgeIndex = -1;
+    std::vector<edgeCoords> visitedEdges;
     while(remainingEdges.size()!=0)
     {
         lengths.push_back(1);
@@ -141,11 +143,10 @@ std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element,
         edgeCoords initEdge = remainingEdges[edgeIndex];
         // Reset the loop check
         bool loop = false;
-        std::vector<edgeCoords> visitedEdges;
         for (int initDirection = 0; initDirection<2; initDirection++)
         {
-            exploreAllBoundaries(remainingEdges, initEdge,  initEdge, initDirection, value, &lengths[numberOfNonContiguous], &loop,
-                                 visitedElements,visitedEdges);
+            exploreLineNonContiguous(remainingEdges, initEdge,  initEdge, initDirection, value, &lengths[numberOfNonContiguous],
+                                     &loop, visitedEdges);
             if(loop)
             {
                 break;
@@ -156,9 +157,9 @@ std::vector<int> BoundaryCounter::countAllBoundaryLengths(elementCoords element,
     return lengths;
 }
 
-void BoundaryCounter::exploreAllBoundaries(std::vector<edgeCoords>& remainingEdges, edgeCoords startEdge,
+void BoundaryCounter::exploreLineNonContiguous(std::vector<edgeCoords>& remainingEdges, edgeCoords startEdge,
                                            edgeCoords edge, bool direction, char value, int* lengthPtr,
-                                           bool* loop, std::vector<elementCoords>& visitedElements,
+                                           bool* loop, 
                                            std::vector<edgeCoords>& visitedEdges)
 {
     edge.addIfNotInVector(visitedEdges);
@@ -170,13 +171,9 @@ void BoundaryCounter::exploreAllBoundaries(std::vector<edgeCoords>& remainingEdg
     // Choose the element that has the same char value
     bool elementSelector;
     if(board[m_top][(*adjElems)[0].j][(*adjElems)[0].i]==value){elementSelector=0;} else{elementSelector=1;}
+    checkOffElement((*adjElems)[elementSelector]);
     // Add any novel edges to the remainingEdges vector
     std::vector<edgeCoords> candidateEdges = (*adjElems)[elementSelector].getValidSurroundingEdges();
-    (*adjElems)[elementSelector].addIfNotInVector(visitedElements);
-    if(visitedElements.size()>10)
-    {
-        std::cout<<"Number of visited elements: " << visitedElements.size() << std::endl;
-    }
     auto iterator = candidateEdges.begin();
     while(iterator != candidateEdges.end())
     {
@@ -204,12 +201,70 @@ void BoundaryCounter::exploreAllBoundaries(std::vector<edgeCoords>& remainingEdg
             //DEBUG
             //int l = *lengthPtr;
             //std::cout<<"Length: " << l<< std::endl;
-            exploreAllBoundaries(remainingEdges,startEdge,prospectiveEdge,edge.getNextEdgeFindingDirection(edgeInd),
-                                 value,lengthPtr,loop,visitedElements,visitedEdges);
+            exploreLineNonContiguous(remainingEdges,startEdge,prospectiveEdge,edge.getNextEdgeFindingDirection(edgeInd),
+                                 value,lengthPtr,loop,visitedEdges);
             break;
         }
     }
 
+}
+
+// Sets every element of the checkBoard to 'O'
+void BoundaryCounter::resetCheckBoard()
+{
+    for (int j = 0; j<*m_bHeight; j++)
+    {
+        for (int i = 0; i<*m_bWidth; i++)
+        {
+            m_checkBoard[j][i] = 'O';
+        }
+    }
+}
+// Sets the given element of the checkBoard to 'X'
+void BoundaryCounter::checkOffElement(elementCoords element)
+{
+    m_checkBoard[element.j][element.i] = 'X';
+}
+bool BoundaryCounter::checkElement(elementCoords element)
+{
+    if(m_checkBoard[element.j][element.i]=='X')
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+std::vector<int> BoundaryCounter::boundaryScan(bool top)
+{
+    std::vector<int> allLengths;
+    for (int j = 0; j<*m_bHeight; j++)
+    {
+        for (int i = 0; i<*m_bWidth; i++)
+        {
+            elementCoords elem = elementCoords(i,j);
+            // If the element is not yet checked off
+            if(!checkElement(elem))
+            {
+                std::vector<int> lengths = countAllBoundaryLengths(elem, top);
+                //std::cout<<"Number of boundaries found from this element: "<<lengths.size()<<std::endl;
+                for (int n =0; n<lengths.size(); n++)
+                {
+                    if(lengths[n]!=0)
+                    {
+                        //std::cout<<"this length: " << lengths[n]<<std::endl;
+                        allLengths.push_back(lengths[n]);
+                    }
+                }
+                lengths.clear();
+            }
+
+        }
+    }
+    resetCheckBoard();
+    return allLengths;
 }
 
 // Test the edge value at the given coordinates to see if it is compatible with the given value (A <-> DE, B <-> DF, C <-> EF)

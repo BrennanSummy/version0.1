@@ -43,7 +43,10 @@ struct edgeCoords
                 add = false;
             }
         }
-        vec.push_back(edgeCoords(i,j));
+        if(add)
+        {
+            vec.push_back(edgeCoords(i,j));
+        }
     }
     bool isInVector(std::vector<edgeCoords>& vec)
     {
@@ -174,6 +177,16 @@ struct elementCoords
         return ((i>-1) && (j>-1) && (j<height) && (i<width));
     }
 
+    void print()
+    {
+        std::cout<< "(" << i << ", " << j << ")" << std::endl;
+    }
+
+    bool equals(elementCoords element)
+    {
+        return (element.i == i) && (element.j == j);
+    }
+
     std::vector<edgeCoords> getValidSurroundingEdges()
     {
         // Get the coordinates of this element in the boundary board
@@ -207,8 +220,7 @@ struct elementCoords
         bool add = true;
         for (auto elem=vec.begin();elem!=vec.end(); ++elem)
         {
-            elementCoords e = *elem;
-            if((e.i == i) && (e.j == j))
+            if(this->equals(*elem))
             {
                 add = false;
             }

@@ -18,6 +18,10 @@ private:
     // Pointer to the boundary board
     const char (&boundaryBoard)[2][bBHeight][bBWidth];
 
+    // A board the size of one side of the simulation element board,
+    // but stored here and used for checking off elements
+    char m_checkBoard[height][width];
+
     // Top (1) or bottom (0) layer of the board
     bool m_top;
 
@@ -29,11 +33,17 @@ private:
 
     void explore(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge, bool direction, char value, int* length, bool* loop);
 
-    void exploreAllBoundaries(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge,
-                              bool direction, char value, int* length, bool* loop,std::vector<elementCoords>& visitedElements,
+    void exploreLineNonContiguous(std::vector<edgeCoords>& remainingInitEdges, edgeCoords startEdge, edgeCoords edge,
+                              bool direction, char value, int* length, bool* loop,
                               std::vector<edgeCoords>& visitedEdges);
 
     void setTop(bool top);
+
+    void resetCheckBoard();
+
+    void checkOffElement(elementCoords element);
+
+    bool checkElement(elementCoords element);
 
 public:
     BoundaryCounter(char (&board)[2][height][width], char (&boundaryBoard)[2][bBHeight][bBWidth],
@@ -43,7 +53,9 @@ public:
     // Fast boundary counter for prospective boundary counting (REQUIRES THE RESPECTIVE BOUNDARY BOARD POINT MODIFICATION TO HAVE BEEN DONE ALREADY)
     int countProspectiveBoundaryLength(char value, elementCoords element, bool top, int* boundaryOverlaps);
 
-    std::vector<int> countAllBoundaryLengths(elementCoords element, bool top, std::vector<elementCoords>& visitedElements);
+    std::vector<int> countAllBoundaryLengths(elementCoords element, bool top);
+
+    std::vector<int> boundaryScan(bool top);
 };
 
 /* IDEA FOR BOUNDARY SCANNER */
