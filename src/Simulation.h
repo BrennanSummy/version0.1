@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include <algorithm>
 #include "BoundaryCounter.h"
 #include "constants.h"
 #include "structs.h"

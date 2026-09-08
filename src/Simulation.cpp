@@ -1526,11 +1526,52 @@ void Simulation::randomStep()
     if ( m_stepCounter % 100 == 0 )
     {
         // Print energy
+        std::cout << "______________________________________________________________________________" << std::endl;
         std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
-        std::cout << "Boundary board:" << std::endl;
         //printBoardWithBoundary();
         std::vector<int> lengths = m_counter.boundaryScan(1);
-        std::cout<< "All boundaries found in top layer: " << lengths.size() << std::endl;
+        int boundCount = lengths.size();
+        std::cout<< "All boundaries found in top layer: " << boundCount << std::endl;
+        double avg=0;
+        int maxBound=0;
+        for (int n = 0; n < boundCount; n++)
+        {
+            int length = lengths[n];
+            if(length>maxBound){maxBound=length;}
+            if(length>6)
+            {
+                avg += length;
+            }
+        }
+        avg = avg/boundCount;
+        double stdDev=0;
+        for (int n = 0; n < boundCount; n++)
+        {
+            double length = lengths[n];
+            stdDev+=std::pow((length - avg),2);
+        }
+        stdDev = (stdDev/((double)boundCount));
+        stdDev = std::pow(stdDev,0.5);
+        // Sort the lengths vector
+        std::sort(lengths.begin(),lengths.end());
+        double median;
+        if(boundCount%2==0)
+        {
+            median = ((double)(lengths[boundCount/2]+lengths[boundCount/2+1]))/2;
+        }
+        else{median = lengths[boundCount/2];}
+
+        // Predict the avg boundary length:
+        double predBoundLength = (1*m_kT + m_nearestNeighborFactor*1.0)/m_tensionFactor;
+
+
+        std::cout<<"Max boundary length " << maxBound << std::endl;
+        std::cout<<"Average boundary length: " << avg << std::endl;
+        std::cout<<"Predicted boundary length: " << predBoundLength << std::endl;
+        std::cout<<"Std Dev boundary length: " << stdDev << std::endl;
+        std::cout<<"Median boundary length " << median << std::endl;
+        std::cout << "______________________________________________________________________________" << std::endl;
+
     }
     // for time keeping
     m_stepCounter ++;
@@ -1566,11 +1607,11 @@ void Simulation::randomStep()
             avgStepTime += m_stepDurations[i];
         }
         avgStepTime = avgStepTime / m_stepCounter;
-        std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
+        //std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
 
-        std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
+        //std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
 
-        std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
+        //std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
         m_stepCounter = 0;
 
     }
