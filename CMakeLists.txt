@@ -44,6 +44,7 @@ set(SOURCE_HEADERS
 	src/BoundaryCounter.h
 	src/constants.h
 	src/structs.h
+	src/FileWriter.h
 )
 
 

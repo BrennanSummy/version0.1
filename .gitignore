@@ -84,6 +84,7 @@ vcpkg_installed/
 
 # test output & cache
 Testing/
+out/
 .cache/
 build.sh
 run.sh

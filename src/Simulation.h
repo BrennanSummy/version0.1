@@ -1,6 +1,7 @@
 #pragma once
 
 // chrono library is only used here for calculating the execution time for simulation stepping.
+#include <QWidget>
 #include <chrono>
 #include <unordered_map>
 #include <array>
@@ -13,11 +14,17 @@
 #include "BoundaryCounter.h"
 #include "constants.h"
 #include "structs.h"
+#include "FileWriter.h"
 
 
-class Simulation
+class Simulation: public QWidget
 {
-   public:
+    Q_OBJECT
+    signals:
+        void toggleStartStop();
+        void saveSnapshot(std::string fileName);
+
+    public:
         // Constructor
         Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor);
         // Prints the board to the console.
@@ -46,7 +53,7 @@ class Simulation
 
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
-        char m_board[2][height][width];
+        char m_board[2][bHeight][bWidth];
 
         /* char matrix used for keeping track of boundaries*/
         char m_boundaryBoard[2][bBHeight][bBWidth];
@@ -54,8 +61,8 @@ class Simulation
         /* char matrix used for debugging boundaries*/
         char m_debugBoundaryBoard[2][bBHeight][bBWidth];
 
-        int m_width   = (int)width;
-        int m_height  = (int)height;
+        int m_width   = (int)bWidth;
+        int m_height  = (int)bHeight;
         int m_bBWidth = (int)bBWidth;
         int m_bBHeight= (int)bBHeight;
     private:
@@ -99,9 +106,6 @@ class Simulation
             0 <-> A, 1 <-> B, 2 <-> C , index 0 means upper left neighbor, indices go cw to 5 at the left. */
         short m_neighborVals[6];
 
-        // Counter that tracks how many paths have been explored since starting to update an element
-        int m_numPathsExplored;
-
         /* Array that stores the total lengths of the boundaries associated with A,B, or C.
             0 <-> A, 1 <-> B, 2 <-> C */
         int m_prospectiveBoundaryLengths[3]={0,0,0};
@@ -138,21 +142,38 @@ class Simulation
 
         // time keeping variables to help with development
         int m_stepCounter = 0;
-        double m_stepDurations[1000];
+        double m_stepDurations[2000];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
         const int m_stepSize = 2000; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
 
-        // This keeps track of how much tension vs NN is determining outcomes
-        double tensionEnergyTypeCounter;
-        double nNEnergyTypeCounter;
+        // Number of boundary scans to do before moving on to the next file (multiply this by 100 to get total steps)
+        const int m_readsPerFile = 200;
+        int m_reads = 0;
+
+        // File counter (for bulk data collection)
+        int fileCount = 0;
+
+        // Parameter arrays indexed by fileCount
+        const double temps[4]             = {0.01, 0.34, 0.67, 1.00};
+        const double nearestNeighborFs[4] = {0.75,  1.25,  1.75,  2.25 };
+        const double tensionFs[4]         = {0.00, 0.015, 0.025, 0.035};
 
         // Boundary Counter object
         BoundaryCounter m_counter;
 
+        // File Writer object
+        FileWriter m_fileWriter;
+
         // Private methods
+        // Creates new log file if new file name is given, and either way makes a header row that lays out data order
+        void initLogFile(std::string newFileName="none");
+        // Writes a line of data to the current log file
+        void writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median);
         // Initialize the board to some arbitrary state
         void initBoard();
+        // Reset the board, then make a new log file
+        void resetWithNewName(std::string newName);
         // For initializing the boundary board by scanning the board
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates
@@ -194,7 +215,7 @@ class Simulation
         std::vector<std::array<int,2>> getAdjElementPositionsFromEdgePos(int* edgePosition);
         // For a given element position and a bool copy of the element board, checks off visited elements and returns
         // the boundary length associated with the element.
-        int getBoundaryLengthAtElement(bool (*remainingElements)[height][width], int i, int j, bool top);
+        int getBoundaryLengthAtElement(bool (*remainingElements)[bHeight][bWidth], int i, int j, bool top);
         // Gets a vector containing the length of every boundary on the board
         std::vector<int> getBoundaryLengths();
         // Get a boundary board-shaped char array detailing the number of non-contiguous boundaries

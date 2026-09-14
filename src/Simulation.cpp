@@ -3,7 +3,8 @@
 Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
 :rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,m_width-1),uniform_int_j(0,m_height-1),
 m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
-m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&width,&height,&bBWidth,&bBWidth))
+m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth)),
+m_fileWriter("defaultFile")
 
 {
     initBoard();
@@ -11,6 +12,51 @@ m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m
     setDebugBoardToBoundaryBoard();
     printBoardWithBoundary();
     clearNeighborVals();
+    
+    // First File Setup
+    double newTemp    = temps            [0];
+    double newNNF     = nearestNeighborFs[0];
+    double newTension = tensionFs        [0];
+    // Update the relevant parameters
+    updateTemp(newTemp);
+    updateNearestNeighbor(newNNF);
+    updateTension(newTension);
+
+    std::ostringstream osStream;
+    osStream << newTemp << "," << newNNF << "," << newTension;
+    std::string newName = osStream.str();
+    // Create new file, reset board, and unpause
+    resetWithNewName(newName);
+
+    initLogFile();
+}
+
+void Simulation::initLogFile(std::string newFileName)
+{
+    if(newFileName!="none")
+    {
+        m_fileWriter.setNewFileName(newFileName);
+        m_fileWriter.createFile();
+    }
+
+    std::ostringstream osStream;
+    osStream << "width:" << bWidth << "\n"
+             << "height:"<< bHeight<< "\n"
+             << "temp:"  << m_kT   << "\n"
+             << "NNF:"   << m_nearestNeighborFactor << "\n"
+             << "TenF:"  << m_tensionFactor << "\n";
+    std::string metaData = osStream.str();
+    m_fileWriter.insertLine(metaData);
+    std::string line = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
+    m_fileWriter.insertLine(line);
+}
+
+void Simulation::writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median)
+{
+    std::ostringstream osStream;
+    osStream << num << ","  << max << "," << avg << "," << stdDev << "," << median << "," << numOver6 << "," << avgWO6 << "," << stdDevWO6;
+    std::string line = osStream.str();
+    m_fileWriter.insertLine(line);
 }
 
 
@@ -42,6 +88,17 @@ void Simulation::initBoard()
         }
     } 
     
+}
+
+void Simulation::resetWithNewName(std::string newName)
+{
+    // Reset the board
+    initBoard();
+    updateBoundaryBoardViaScan();
+    
+    // Set a new file name
+    initLogFile(newName);
+
 }
 
 void Simulation::updateBoundaryBoardViaScan()
@@ -1525,33 +1582,84 @@ void Simulation::randomStep()
 {
     if ( m_stepCounter % 100 == 0 )
     {
+        // save snapshot every 50 reads
+        if ( m_reads%50 == 0)
+        {
+            emit saveSnapshot("logs/bulk/pics/" + m_fileWriter.getName() + "_" + std::to_string(m_reads));
+        }
+        // Should a new file be started?
+        if( m_reads == m_readsPerFile )
+        {
+            // Pause the simulation
+            emit toggleStartStop();
+
+
+            // Get the parameters for this upcoming file
+            fileCount++;
+
+            double newTemp    = temps            [fileCount/16];
+            double newNNF     = nearestNeighborFs[(fileCount/4)%4];
+            double newTension = tensionFs        [fileCount%4];
+            // Update the relevant parameters
+            updateTemp(newTemp);
+            updateNearestNeighbor(newNNF);
+            updateTension(newTension);
+
+            std::ostringstream osStream;
+            osStream << newTemp << "," << newNNF << "," << newTension;
+            std::string newName = osStream.str();
+            // Create new file, reset board, and unpause
+            resetWithNewName(newName);
+
+            // Play
+            emit toggleStartStop();
+
+            // Reset counter
+            m_reads = 0;
+            m_stepCounter = 0;
+        }
         // Print energy
         std::cout << "______________________________________________________________________________" << std::endl;
         std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
-        //printBoardWithBoundary();
+
+
         std::vector<int> lengths = m_counter.boundaryScan(1);
         int boundCount = lengths.size();
-        std::cout<< "All boundaries found in top layer: " << boundCount << std::endl;
+        int boundsOver6 = 0;
+        //std::cout<< "All boundaries found in top layer: " << boundCount << std::endl;
+        // True average boundary length
         double avg=0;
+        // Average excluding all thermal blips (6 long boundaries)
+        double avgWO6=0;
         int maxBound=0;
         for (int n = 0; n < boundCount; n++)
         {
             int length = lengths[n];
+            avg += length;
             if(length>maxBound){maxBound=length;}
             if(length>6)
             {
-                avg += length;
+                avgWO6 += length;
+                boundsOver6++;
             }
         }
+        avgWO6 = avgWO6/boundsOver6;
         avg = avg/boundCount;
-        double stdDev=0;
+        double stdDev   =0;
+        double stdDevWO6=0;
         for (int n = 0; n < boundCount; n++)
         {
             double length = lengths[n];
             stdDev+=std::pow((length - avg),2);
+            if(length>6)
+            {
+                stdDevWO6+=std::pow((length - avgWO6),2);
+            }
         }
         stdDev = (stdDev/((double)boundCount));
         stdDev = std::pow(stdDev,0.5);
+        stdDevWO6 = (stdDevWO6/((double)boundsOver6));
+        stdDevWO6 = std::pow(stdDevWO6,0.5);
         // Sort the lengths vector
         std::sort(lengths.begin(),lengths.end());
         double median;
@@ -1564,14 +1672,17 @@ void Simulation::randomStep()
         // Predict the avg boundary length:
         double predBoundLength = (1*m_kT + m_nearestNeighborFactor*1.0)/m_tensionFactor;
 
+        writeToLog(boundCount,boundsOver6,maxBound,avg,avgWO6,stdDev,stdDevWO6,median);
 
-        std::cout<<"Max boundary length " << maxBound << std::endl;
-        std::cout<<"Average boundary length: " << avg << std::endl;
-        std::cout<<"Predicted boundary length: " << predBoundLength << std::endl;
-        std::cout<<"Std Dev boundary length: " << stdDev << std::endl;
-        std::cout<<"Median boundary length " << median << std::endl;
-        std::cout << "______________________________________________________________________________" << std::endl;
-
+        //std::cout<<"Max boundary length " << maxBound << std::endl;
+        //std::cout<<"Average boundary length: " << avg << std::endl;
+        //std::cout<<"Average boundary length excluding 6s: " << avgWO6 << std::endl;
+        //std::cout<<"Predicted boundary length: " << predBoundLength << std::endl;
+        //std::cout<<"Std Dev boundary length: " << stdDev << std::endl;
+        //std::cout<<"Median boundary length " << median << std::endl;
+        //std::cout << "______________________________________________________________________________" << std::endl;
+        // Increment reads
+        m_reads++;
     }
     // for time keeping
     m_stepCounter ++;
@@ -1584,7 +1695,7 @@ void Simulation::randomStep()
         // Pick random indices
         int iRand = uniform_int_i(rand_generator);
         int jRand = uniform_int_j(rand_generator);
-        int topRand = uniform_2(rand_generator);
+        int topRand = 1;//uniform_2(rand_generator);
         // Update an element
         char result = updateBoardElement(iRand,jRand,topRand);
         // DEBUGprintBoard();

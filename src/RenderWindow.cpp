@@ -7,7 +7,8 @@ double crossLayerBoundaryFactor)
             m_indexCount(0),default_kT(kT), default_tension(tensionFactor),
             default_intraLayerNeighbor(intraLayerNearestNeighbor),
             default_crossLayerNeighbor(crossLayerNearestNeighbor),
-            default_crossLayerBoundary(crossLayerBoundaryFactor)
+            default_crossLayerBoundary(crossLayerBoundaryFactor),
+            m_sim(new Simulation(kT,tensionFactor,intraLayerNearestNeighbor,crossLayerNearestNeighbor,crossLayerBoundaryFactor))
             {}
 
 RenderWindow::~RenderWindow()
@@ -49,7 +50,7 @@ void RenderWindow::initializeGL() {
 //    QObject* prnt = this->parent();
 
     // Ensure simulation object is initialized
-    m_sim = new Simulation(default_kT,default_tension,default_intraLayerNeighbor,default_crossLayerNeighbor,default_crossLayerBoundary);
+    //m_sim = new Simulation(default_kT,default_tension,default_intraLayerNeighbor,default_crossLayerNeighbor,default_crossLayerBoundary);
     m_sim->printBoard();
 
     char* simTopData = &m_sim->m_board[1][0][0];
@@ -105,7 +106,7 @@ void RenderWindow::initializeGL() {
     //};
 
     // TRY MAPPING X Texture coordinate off to the right to allow parallelogram shape 
-    float texOffset = (1.0 / (float) m_sim->m_width) * (floor(m_sim->m_height/2));
+    float texOffset = (1.0 / (float) m_sim->m_width) * (m_sim->m_height/2);
     //float texOffset = 0;
     std::vector<float> coolestVertices = {
         -1.0f           , -1.0f, 0.0f,              0.0f, 0.0f, // BLeft
@@ -282,3 +283,29 @@ void RenderWindow::mouseMoveEvent(QMouseEvent* event)
     update();
 }
 
+void RenderWindow::printToImageFile(std::string fileName)
+{
+    this->makeCurrent();
+    float hwRatio = (float)(m_sim->m_height)/(m_sim->m_width);
+    float texOffset =  1.0f + (2.0f/3.0f)*hwRatio;
+    float size = 0.4;
+    float smallW = (3.0f/2.0f)*size/hwRatio + size/4.0f;
+    float smallH =             size;//*hwRatio;
+    std::vector<float> zoomVertices = {
+        -1.0f           ,       -1.0f, 0.0f,              0.0f, 0.0f, // BLeft
+        smallW-1.0f     ,       -1.0f, 0.0f,   texOffset, 0.0f, // BRight
+        -1.0f           , smallH-1.0f, 0.0f,        0.0f, 1.0f, // TLeft
+        smallW-1.0f     , smallH-1.0f, 0.0f,   texOffset, 1.0f  // TRight
+    };
+    updateVertices(zoomVertices);
+    QOpenGLFramebufferObjectFormat format;
+    format.setTextureTarget(GL_TEXTURE_2D);
+    QOpenGLFramebufferObject fbo(3*bWidth,2*bHeight,format);
+    fbo.bind();
+    paintGL();
+    fbo.release();
+    QImage fboImage = fbo.toImage(true);
+    QString fullFName = QString::fromStdString(dir + fileName +".png");
+    fboImage.save(fullFName, "PNG");
+    this->doneCurrent();
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QOpenGLWidget>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions_3_3_Core> // Update version if necessary
 #include <QOpenGLShaderProgram>
 #include <QWheelEvent>
@@ -18,6 +19,7 @@ public:
                  double crossLayerBoundaryFactor);
     ~RenderWindow();
     void drawLastAndComputeNext();
+    Simulation* m_sim;
 
 public slots:
     void sliderUpdateTemp(float sliderVal);
@@ -27,6 +29,7 @@ public slots:
     void sliderUpdateCrossLayerBoundary(float sliderVal);
     void updateShowTop();
     void updateShowBot();
+    void printToImageFile(std::string fileName="defaultImageName");
 
 protected:
     void initializeGL() override;
@@ -55,7 +58,6 @@ private:
     int m_showBotLoc;//TOPBOTTOMSELECT
     bool m_showTop;
     bool m_showBot;
-    Simulation* m_sim;
     //void multiThreadStep();
 
     //QPointF mouseInitPosition;

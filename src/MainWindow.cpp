@@ -28,9 +28,9 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////           Title               Min   Max  Default                    Steps
-    ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    5, default_kT                ,  100, parameterArea);
-    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   ,    -0.1,  0.1, default_tension        ,  100, parameterArea);
-    ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor",    0,   10, default_intraLayerNeighbor,  100, parameterArea);
+    ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    1, default_kT                ,    3, parameterArea);
+    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   , 0.01, 0.04, default_tension           ,    3, parameterArea);
+    ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor",  0.5,    2, default_intraLayerNeighbor,    3, parameterArea);
     ParameterSlider* crossLayerNeighborSlider = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,   20, parameterArea);
     ParameterSlider* crossLayerBoundarySlider = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,   20, parameterArea);
     ParameterSlider* framerateSlider          = new ParameterSlider("Framerate"        ,  0.5,   60, default_framerate         ,  120, parameterArea);
@@ -103,6 +103,12 @@ void MainWindow::setupWindow()
     connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT
                                                                                                      
     connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT
+
+    // Connect the Simulation pause/play signal to the startStopButton
+    connect(renderArea->m_sim,&Simulation::toggleStartStop, startStopButton, &PushButton::onPress);
+
+    // Connect Simulation saveSnapshot to renderArea method
+    connect(renderArea->m_sim,&Simulation::saveSnapshot,renderArea,&RenderWindow::printToImageFile);
 
     // Refresh all default values to make sure sliders match simulation, etc...
     //kTSlider->emitDefaultValue();

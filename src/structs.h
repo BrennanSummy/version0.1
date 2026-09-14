@@ -174,7 +174,7 @@ struct elementCoords
 
     bool isValid()
     {
-        return ((i>-1) && (j>-1) && (j<height) && (i<width));
+        return ((i>-1) && (j>-1) && (j<bHeight) && (i<bWidth));
     }
 
     void print()

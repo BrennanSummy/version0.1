@@ -1,6 +1,6 @@
 #include "BoundaryCounter.h"
 
-BoundaryCounter::BoundaryCounter(char (&board)[2][height][width], char (&boundaryBoard)[2][bBHeight][bBWidth],
+BoundaryCounter::BoundaryCounter(char (&board)[2][bHeight][bWidth], char (&boundaryBoard)[2][bBHeight][bBWidth],
                     const size_t* m_bWidth, const size_t* m_bHeight, const size_t* m_bBWidth, const size_t* m_bBHeight)
 :board(board),boundaryBoard(boundaryBoard),m_bWidth(m_bWidth),m_bHeight(m_bHeight),m_bBWidth(m_bBWidth),m_bBHeight(m_bBHeight)
 {

@@ -15,7 +15,7 @@ class MainWindow: public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     double default_kT                   = 1;
-    double default_tension              = 0.02;
+    double default_tension              = 0.00;
     double default_intraLayerNeighbor   = 1;
     double default_crossLayerNeighbor   = 0;
     double default_crossLayerBoundary   = 0;

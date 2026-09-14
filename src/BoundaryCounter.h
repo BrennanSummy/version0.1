@@ -13,14 +13,14 @@ private:
     const size_t* m_bBHeight;
 
     // Pointer to the board
-    const char (&board)[2][height][width];
+    const char (&board)[2][bHeight][bWidth];
 
     // Pointer to the boundary board
     const char (&boundaryBoard)[2][bBHeight][bBWidth];
 
     // A board the size of one side of the simulation element board,
     // but stored here and used for checking off elements
-    char m_checkBoard[height][width];
+    char m_checkBoard[bHeight][bWidth];
 
     // Top (1) or bottom (0) layer of the board
     bool m_top;
@@ -46,7 +46,7 @@ private:
     bool checkElement(elementCoords element);
 
 public:
-    BoundaryCounter(char (&board)[2][height][width], char (&boundaryBoard)[2][bBHeight][bBWidth],
+    BoundaryCounter(char (&board)[2][bHeight][bWidth], char (&boundaryBoard)[2][bBHeight][bBWidth],
                     const size_t* m_bWidth, const size_t* m_bHeight, const size_t* m_bBWidth, const size_t* m_bBHeight
                     );
     ~BoundaryCounter();
