@@ -1631,7 +1631,7 @@ void Simulation::randomStep()
             // Update the relevant parameters
             updateTemp(newTemp);
             updateNearestNeighbor(newNNF);
-            updateTension(newTension);
+            //updateTension(newTension);
 
             std::ostringstream osStream;
             osStream << newTemp << "," << newNNF << "," << newTension;
