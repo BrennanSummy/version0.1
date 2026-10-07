@@ -142,22 +142,21 @@ class Simulation: public QWidget
 
         // time keeping variables to help with development
         int m_stepCounter = 0;
-        double m_stepDurations[2000];
+        double m_stepDurations[scanBoundsPeriodInSteps];
 
         // (Arbitrary once random updates were added) Number of elements updated per step.
         const int m_stepSize = 2000; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
 
         // Number of boundary scans to do before moving on to the next file (multiply this by 100 to get total steps)
-        const int m_readsPerFile = 200;
         int m_reads = 0;
 
         // File counter (for bulk data collection)
         int fileCount = 0;
 
         // Parameter arrays indexed by fileCount
-        const double temps[4]             = {0.01, 0.34, 0.67, 1.00};
-        const double nearestNeighborFs[4] = {0.75,  1.25,  1.75,  2.25 };
-        const double tensionFs[4]         = {0.00, 0.015, 0.025, 0.035};
+        const double temps[2]             = {0.01, 1.00};
+        const double nearestNeighborFs[1] = {0.75};
+        const double tensionFs[8]         = {0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045};
 
         // Boundary Counter object
         BoundaryCounter m_counter;
@@ -170,6 +169,9 @@ class Simulation: public QWidget
         void initLogFile(std::string newFileName="none");
         // Writes a line of data to the current log file
         void writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median);
+
+        // Log the counts for a pixel's prospective state
+        void logAllCounts(int subStep);
         // Initialize the board to some arbitrary state
         void initBoard();
         // Reset the board, then make a new log file
@@ -178,7 +180,7 @@ class Simulation: public QWidget
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates
            (i is the first index of the board array).*/
-        char updateBoardElement(int i,int j, bool top);
+        char updateBoardElement(int i,int j, bool top, int subStep);
 
         void setDebugBoardToBoundaryBoard();
         void setDebugBoardElement(int i, int j, bool top, char value);

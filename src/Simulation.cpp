@@ -28,7 +28,6 @@ m_fileWriter("defaultFile")
     // Create new file, reset board, and unpause
     resetWithNewName(newName);
 
-    initLogFile();
 }
 
 void Simulation::initLogFile(std::string newFileName)
@@ -47,12 +46,14 @@ void Simulation::initLogFile(std::string newFileName)
              << "TenF:"  << m_tensionFactor << "\n";
     std::string metaData = osStream.str();
     m_fileWriter.insertLine(metaData);
-    std::string line = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
-    m_fileWriter.insertLine(line);
+    //std::string line = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
+    //m_fileWriter.insertLine(line);
 }
 
 void Simulation::writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median)
 {
+    std::string header = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
+    m_fileWriter.insertLine(header);
     std::ostringstream osStream;
     osStream << num << ","  << max << "," << avg << "," << stdDev << "," << median << "," << numOver6 << "," << avgWO6 << "," << stdDevWO6;
     std::string line = osStream.str();
@@ -334,8 +335,31 @@ int Simulation::getConfigurationEnergy()
     return energy;
 }
 
+void Simulation::logAllCounts(int subStep)
+{
+    bool write = false;
+    std::ostringstream osStream;
+    osStream << subStep;
+    for (int i = 0; i<3; i++)
+    {
+        short neighborCount = m_inLayerNeighborCounts[i];
+        int prospBoundLength =  m_prospectiveBoundaryLengths[i];
 
-char Simulation::updateBoardElement(int i, int j, bool top)
+        if(prospBoundLength !=0 && prospBoundLength !=6 && prospBoundLength != 4)
+        {
+            write = true;
+        }
+
+        osStream << "," << neighborCount << "," << prospBoundLength;
+    }
+    std::string counts = osStream.str();
+    if(write)
+    {
+        m_fileWriter.insertLine(counts);
+    }
+}
+
+char Simulation::updateBoardElement(int i, int j, bool top, int subStep)
 {
     elementCoords element = elementCoords(i,j);
     updateNeighborVals(i,j, top);
@@ -344,6 +368,7 @@ char Simulation::updateBoardElement(int i, int j, bool top)
     {
         updateProspectiveBoundaryLengths(m_X[x],element, top);
     }
+    //logAllCounts(subStep);
     updateProbabilities();
     char result = roll();
     m_board[top][j][i] = result;
@@ -1580,15 +1605,16 @@ char Simulation::roll()
 
 void Simulation::randomStep()
 {
-    if ( m_stepCounter % 100 == 0 )
+    // THIS SHOULD BE  % 100 == 0 FOR NORMAL FUNCTION
+    if ( m_stepCounter % scanBoundsPeriodInSteps == 0 )
     {
-        // save snapshot every 50 reads
-        if ( m_reads%50 == 0)
+        // save snapshot every 10 reads
+        if ( m_reads%grabScreenPeriodInReads == 0)
         {
             emit saveSnapshot("logs/bulk/pics/" + m_fileWriter.getName() + "_" + std::to_string(m_reads));
         }
         // Should a new file be started?
-        if( m_reads == m_readsPerFile )
+        if( m_reads == readsPerFile )
         {
             // Pause the simulation
             emit toggleStartStop();
@@ -1596,10 +1622,12 @@ void Simulation::randomStep()
 
             // Get the parameters for this upcoming file
             fileCount++;
+            int tSize =std::size(tensionFs);
+            int nSize =std::size(nearestNeighborFs);
 
-            double newTemp    = temps            [fileCount/16];
-            double newNNF     = nearestNeighborFs[(fileCount/4)%4];
-            double newTension = tensionFs        [fileCount%4];
+            double newTemp    = temps            [fileCount/(tSize*nSize)];
+            double newNNF     = nearestNeighborFs[(fileCount/(tSize))%nSize];
+            double newTension = tensionFs        [fileCount%tSize];
             // Update the relevant parameters
             updateTemp(newTemp);
             updateNearestNeighbor(newNNF);
@@ -1619,8 +1647,9 @@ void Simulation::randomStep()
             m_stepCounter = 0;
         }
         // Print energy
-        std::cout << "______________________________________________________________________________" << std::endl;
-        std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
+        //std::cout << "______________________________________________________________________________" << std::endl;
+        //std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
+        std::cout << "Read Count: " << m_reads << std::endl;
 
 
         std::vector<int> lengths = m_counter.boundaryScan(1);
@@ -1663,9 +1692,13 @@ void Simulation::randomStep()
         // Sort the lengths vector
         std::sort(lengths.begin(),lengths.end());
         double median;
-        if(boundCount%2==0)
+        if(boundCount==0)
         {
-            median = ((double)(lengths[boundCount/2]+lengths[boundCount/2+1]))/2;
+            median = 0;
+        }
+        else if(boundCount%2==0)
+        {
+            median = ((double)(lengths[boundCount/2-1]+lengths[boundCount/2]))/2;
         }
         else{median = lengths[boundCount/2];}
 
@@ -1674,6 +1707,9 @@ void Simulation::randomStep()
 
         writeToLog(boundCount,boundsOver6,maxBound,avg,avgWO6,stdDev,stdDevWO6,median);
 
+        //std::string header = "subStep,ANeighbor,ALength,BNeighbor,BLength,CNeighbor,CLength";
+
+        //m_fileWriter.insertLine(header);
         //std::cout<<"Max boundary length " << maxBound << std::endl;
         //std::cout<<"Average boundary length: " << avg << std::endl;
         //std::cout<<"Average boundary length excluding 6s: " << avgWO6 << std::endl;
@@ -1686,46 +1722,46 @@ void Simulation::randomStep()
     }
     // for time keeping
     m_stepCounter ++;
-    auto tBegin = std::chrono::high_resolution_clock::now();
+    //auto tBegin = std::chrono::high_resolution_clock::now();
 
 
     // Carry out the update element by element, choosing a random one each time
-    for (int subStep = 0; subStep < m_stepSize; subStep++)
+    for (int subStep = 0; subStep < stepSizeInPixelUpdates; subStep++)
     {
         // Pick random indices
         int iRand = uniform_int_i(rand_generator);
         int jRand = uniform_int_j(rand_generator);
         int topRand = 1;//uniform_2(rand_generator);
         // Update an element
-        char result = updateBoardElement(iRand,jRand,topRand);
+        char result = updateBoardElement(iRand,jRand,topRand, subStep);
         // DEBUGprintBoard();
         pointModifyBoundaryBoard(result, iRand,jRand, topRand);
 
     } 
 
     // Record time taken for the step, and print average every 1000 steps
-    auto tDone = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
-    double tDiffDouble = tDiff.count();
-    m_stepDurations[m_stepCounter] = tDiffDouble;
+    //auto tDone = std::chrono::high_resolution_clock::now();
+    //std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
+    //double tDiffDouble = tDiff.count();
+    //m_stepDurations[m_stepCounter % scanBoundsPeriodInSteps] = tDiffDouble;
 
-    if ( m_stepCounter % 100 == 0 )
-    {
-        // get average calculation time
-        double avgStepTime;
-        for (int i = 0; i < m_stepCounter; i++)
-        {
-            avgStepTime += m_stepDurations[i];
-        }
-        avgStepTime = avgStepTime / m_stepCounter;
-        //std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
+    //if ( m_stepCounter % scanBoundsPeriodInSteps == 0 )
+    //{
+    //    // get average calculation time
+    //    double avgStepTime;
+    //    for (int i = 0; i < m_stepCounter%scanBoundsPeriodInSteps; i++)
+    //    {
+    //        avgStepTime += m_stepDurations[i];
+    //    }
+    //    avgStepTime = avgStepTime / scanBoundsPeriodInSteps;
+    //    //std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
 
-        //std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
+    //    std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
 
-        //std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
-        m_stepCounter = 0;
+    //    //std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
+    //    //m_stepCounter = 0;
 
-    }
+    //}
     
     //printBoardWithBoundary();
 }
