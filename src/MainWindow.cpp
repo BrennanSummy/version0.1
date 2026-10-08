@@ -18,7 +18,7 @@ void MainWindow::setupWindow()
     // Create main splitter
     QSplitter*      splitter        = new QSplitter(Qt::Horizontal);
 
-    RenderWindow*   renderArea      = new RenderWindow(this, default_kT,default_tension,default_intraLayerNeighbor,
+    RenderWindow*   renderArea      = new RenderWindow(this, default_kT,default_tension,default_intraLayerNeighbor, default_crossLayerComplement,
                                                         default_crossLayerNeighbor,default_crossLayerBoundary);
     QWidget*        parameterArea   = new QWidget();
 
@@ -28,21 +28,21 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////           Title               Min   Max  Default                    Steps
-    ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    1, default_kT                ,  100, parameterArea);
-    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   , 0.01, 0.04, default_tension           ,    3, parameterArea);
-    ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor",  0.1,    2, default_intraLayerNeighbor,  100, parameterArea);
-    ParameterSlider* crossLayerNeighborSlider = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,  100, parameterArea);
-    ParameterSlider* crossLayerBoundarySlider = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,  100, parameterArea);
-    ParameterSlider* framerateSlider          = new ParameterSlider("Framerate"        ,  0.5,   60, default_framerate         ,  120, parameterArea);
+    ParameterSlider* kTSlider                   = new ParameterSlider("kT"               , 0.01,    1, default_kT                ,  100, parameterArea);
+    ParameterSlider* neighborSlider             = new ParameterSlider("N-Neighbor factor",  0.1,    2, default_intraLayerNeighbor,  100, parameterArea);
+    ParameterSlider* crossLayerComplementSlider = new ParameterSlider("CL Complement "   ,   -1,    1, default_tension           ,  100, parameterArea);
+    ParameterSlider* crossLayerNeighborSlider   = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,  100, parameterArea);
+    ParameterSlider* crossLayerBoundarySlider   = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,  100, parameterArea);
+    ParameterSlider* framerateSlider            = new ParameterSlider("Framerate"        ,  0.5,   60, default_framerate         ,  120, parameterArea);
     parameterLayout->setSpacing(30);
     // left, top, right, bottom margins
     parameterLayout->setContentsMargins(0,20,0,20);
     parameterLayout->addWidget(kTSlider);
     parameterLayout->addWidget(neighborSlider);
-    parameterLayout->addWidget(tensionSlider);
-    parameterLayout->addWidget(framerateSlider);
+    parameterLayout->addWidget(crossLayerComplementSlider);
     parameterLayout->addWidget(crossLayerNeighborSlider);
     parameterLayout->addWidget(crossLayerBoundarySlider);
+    parameterLayout->addWidget(framerateSlider);
     //parameterLayout->addWidget(slider2);
 
     // Add start/stop button
@@ -79,11 +79,11 @@ void MainWindow::setupWindow()
     // Temperature slider
     connect(kTSlider     ,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTemp);
 
-    // Tension slider
-    //connect(tensionSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTension);
-
     // Nearest neighbor slider
     connect(neighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateNearestNeighbor);
+
+    // Cross layer complement slider
+    connect(crossLayerComplementSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateCrossLayerComplement);
 
     // Cross layer nearest neighbor slider
     connect(crossLayerNeighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateCrossLayerNearestNeighbor);

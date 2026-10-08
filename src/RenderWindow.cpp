@@ -1,14 +1,14 @@
 #include "RenderWindow.h"
 #include "Simulation.h"
 
-RenderWindow::RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor,
+RenderWindow::RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor,
 double crossLayerBoundaryFactor)
         : QOpenGLWidget(parent), m_shader1(nullptr), m_mesh1(nullptr),
             m_indexCount(0),default_kT(kT), default_tension(tensionFactor),
             default_intraLayerNeighbor(intraLayerNearestNeighbor),
             default_crossLayerNeighbor(crossLayerNearestNeighbor),
             default_crossLayerBoundary(crossLayerBoundaryFactor),
-            m_sim(new Simulation(kT,tensionFactor,intraLayerNearestNeighbor,crossLayerNearestNeighbor,crossLayerBoundaryFactor))
+            m_sim(new Simulation(kT,tensionFactor,intraLayerNearestNeighbor,crossLayerComplement,crossLayerNearestNeighbor,crossLayerBoundaryFactor))
             {}
 
 RenderWindow::~RenderWindow()
@@ -190,6 +190,11 @@ void RenderWindow::sliderUpdateTension(float sliderVal)
 void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
 {
     m_sim->updateNearestNeighbor(sliderVal);
+}
+
+void RenderWindow::sliderUpdateCrossLayerComplement(float sliderVal)
+{
+    m_sim->updateCrossLayerComplement(sliderVal);
 }
 
 void RenderWindow::sliderUpdateCrossLayerNearestNeighbor(float sliderVal)

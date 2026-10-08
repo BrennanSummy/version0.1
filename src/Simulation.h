@@ -26,7 +26,8 @@ class Simulation: public QWidget
 
     public:
         // Constructor
-        Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor);
+        Simulation(double kT, double tensionFactor, double intraLayerNearestNeighborFactor, double crossLayerComplementFactor,
+                    double crossLayerNearestNeighborFactor, double crossLayerBoundaryFactor);
         // Prints the board to the console.
         void printBoard();
         // Prints the board with the boundary to the console.
@@ -43,6 +44,9 @@ class Simulation: public QWidget
 
         // This updates the value of nearestNeighborFactor to the given value.
         void updateNearestNeighbor(float value);
+
+        // This updates the value of m_crossLayerComplementFactor to the given value.
+        void updateCrossLayerComplement(float value);
 
         // This updates the value of m_crossLayerNearestNeighborFactor to the given value.
         void updateCrossLayerNearestNeighbor(float value);
@@ -76,6 +80,9 @@ class Simulation: public QWidget
         // Intra-layer nearest neighbor factor for probability calculation
         double m_nearestNeighborFactor;
         
+        // Inter-layer immediate complement factor for probability calculation
+        double m_crossLayerComplementFactor;
+
         // Inter-layer nearest neighbor factor for probability calculation
         double m_crossLayerNearestNeighborFactor;
 
@@ -126,6 +133,7 @@ class Simulation: public QWidget
         // Energy terms for A B and C
         double m_nearestEnergy[3];
         double m_tensionEnergy[3];
+        double m_cLComplementEnergy[3];
         double m_cLNearestEnergy[3];
         double m_cLBoundaryInterferenceEnergy[3];
         // plan b array which stores the energies (at low kT the probabilities can vanish)

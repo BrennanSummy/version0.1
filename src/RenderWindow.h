@@ -15,7 +15,7 @@ class RenderWindow : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
 public:
-    RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor,
+    RenderWindow(QWidget* parent, double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor,
                  double crossLayerBoundaryFactor);
     ~RenderWindow();
     void drawLastAndComputeNext();
@@ -25,6 +25,7 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
+    void sliderUpdateCrossLayerComplement(float sliderVal);
     void sliderUpdateCrossLayerNearestNeighbor(float sliderVal);
     void sliderUpdateCrossLayerBoundary(float sliderVal);
     void updateShowTop();

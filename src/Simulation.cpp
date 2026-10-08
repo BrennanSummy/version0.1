@@ -1,8 +1,8 @@
 #include "Simulation.h"
 
-Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
+Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
 :rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,m_width-1),uniform_int_j(0,m_height-1),
-m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
+m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerComplementFactor(crossLayerComplement),m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
 m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth)),
 m_fileWriter("defaultFile")
 
@@ -13,20 +13,20 @@ m_fileWriter("defaultFile")
     printBoardWithBoundary();
     clearNeighborVals();
     
-    // First File Setup
-    double newTemp    = temps            [0];
-    double newNNF     = nearestNeighborFs[0];
-    double newTension = tensionFs        [0];
-    // Update the relevant parameters
-    updateTemp(newTemp);
-    updateNearestNeighbor(newNNF);
-    updateTension(newTension);
+    //// First File Setup
+    //double newTemp    = temps            [0];
+    //double newNNF     = nearestNeighborFs[0];
+    //double newTension = tensionFs        [0];
+    //// Update the relevant parameters
+    //updateTemp(newTemp);
+    //updateNearestNeighbor(newNNF);
+    //updateTension(newTension);
 
-    std::ostringstream osStream;
-    osStream << newTemp << "," << newNNF << "," << newTension;
-    std::string newName = osStream.str();
-    // Create new file, reset board, and unpause
-    resetWithNewName(newName);
+    //std::ostringstream osStream;
+    //osStream << newTemp << "," << newNNF << "," << newTension;
+    //std::string newName = osStream.str();
+    //// Create new file, reset board, and unpause
+    //resetWithNewName(newName);
 
 }
 
@@ -953,19 +953,23 @@ void Simulation::updateProbabilities()
         ////////////////////////////////     Tension      ////////////////////////////////
         //T//m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
         ////////////////////////////////     Tension      ////////////////////////////////
+        
+        //////////////////////////////// Cross Layer Immediate Complement ////////////////////////////////
+        m_cLComplementEnergy[i] = m_crossLayerComplementFactor * m_matchingComplement[i];
+        //////////////////////////////// Cross Layer Immediate Complement ////////////////////////////////
 
         //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
-        m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * m_matchingComplement[i];
+        m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * m_crossLayerNeighborCounts[i];
         //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
 
         //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
-        m_cLBoundaryInterferenceEnergy[i] = 100*m_crossLayerBoundaryFactor*m_prospectiveBoundaryOverlapCounts[i];
+        m_cLBoundaryInterferenceEnergy[i] = m_crossLayerBoundaryFactor*m_prospectiveBoundaryOverlapCounts[i];
         //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
 
 
         // Total Energy
         //T//m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
-        m_energies[i] = (m_nearestEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+        m_energies[i] = (m_nearestEnergy[i] + m_cLComplementEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
     }
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
@@ -1452,6 +1456,10 @@ void Simulation::updateTension(float value)
 void Simulation::updateNearestNeighbor(float value)
 {
     m_nearestNeighborFactor = value;
+}
+void Simulation::updateCrossLayerComplement(float value)
+{
+    m_crossLayerComplementFactor = value;
 }
 void Simulation::updateCrossLayerNearestNeighbor(float value)
 {
