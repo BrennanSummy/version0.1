@@ -286,8 +286,9 @@ int Simulation::countDissimNeighbors(bool top)
     {
         for (int j = 0; j < m_height; j++)
         {
+            elementCoords element(i,j);
             // Count neighbors, then see how many are not similar
-            updateNeighborVals(i, j, top);
+            updateNeighborVals(element, top);
             char value = m_board[top][j][i];
 
             for (int valIndex = 0; valIndex < 3; valIndex++)
@@ -359,91 +360,62 @@ void Simulation::logAllCounts(int subStep)
     }
 }
 
-char Simulation::updateBoardElement(int i, int j, bool top, int subStep)
+char Simulation::updateBoardElement(elementCoords element, bool top, int subStep)
 {
-    elementCoords element = elementCoords(i,j);
-    updateNeighborVals(i,j, top);
-    updateMatchingComplement(i,j,top);
-    for (int x = 0; x<3;x++)
-    {
-        updateProspectiveBoundaryLengths(m_X[x],element, top);
-    }
-    //logAllCounts(subStep);
+    updateNeighborVals(element, top);
+    updateMatchingComplement(element,top);
+    //T//for (int x = 0; x<3;x++)
+    //T//{
+        //T//updateProspectiveBoundaryLengths(m_X[x],element, top);
+    //T//}
     updateProbabilities();
     char result = roll();
-    m_board[top][j][i] = result;
+    m_board[top][element.j][element.i] = result;
     return result;
 }
 
-void Simulation::updateNeighborVals(int i, int j, bool top)
+void Simulation::updateNeighborVals(elementCoords element, bool top)
 {
-    // NOTE THAT A RIGHT-TILTED PARALLELOGRAM IS ASSUMED. 'i' INDEXES THE HORIZONTAL, 'j' THE VERTICAL
     // List the relevant neighbor indices, starting with the upper left and going clockwise
-    int indices[6][2];
-    if(top)
-    {
-        indices[0][0] = j+1; indices[0][1] = i-1;
-        indices[1][0] = j+1; indices[1][1] = i  ;
-        indices[2][0] = j  ; indices[2][1] = i+1;
-        indices[3][0] = j-1; indices[3][1] = i+1;
-        indices[4][0] = j-1; indices[4][1] = i  ;
-        indices[5][0] = j  ; indices[5][1] = i-1;
+    std::vector<elementCoords> surroundingElements = element.getValidSurroundingElements();
 
-    }
-    else
-    {
-        indices[0][0] = j+1; indices[0][1] = i  ;
-        indices[1][0] = j+1; indices[1][1] = i-1;
-        indices[2][0] = j  ; indices[2][1] = i-1;
-        indices[3][0] = j-1; indices[3][1] = i  ;
-        indices[4][0] = j-1; indices[4][1] = i+1;
-        indices[5][0] = j  ; indices[5][1] = i+1;
-    }
     
     /* Loop through all of the neighbors:
-        - if(coordinate is valid)
-            - check char value of board[coordinate], return A, B, or C
-            - add 1 to the count of A, B, or C respectively
-        - else pass
+        - check char value of board[coordinate], return A, B, or C
+        - add 1 to the count of A, B, or C respectively
     */
-    for (int neighbor = 0; neighbor < 6; neighbor++)
+    for (int n = 0; n < surroundingElements.size(); n++)
     {
-        // Test the validity of the neighbor indices (this deals with edges and corners)
-        bool coordIsValid = elementPositionCheck(indices[neighbor][1],indices[neighbor][0]);
-        if(coordIsValid)
+        // Check the state of the board to get the value of this element
+        char inLayerValue    = m_board[ top][surroundingElements[n].j][surroundingElements[n].i];
+        char crossLayerValue = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        // Increment the appropriate counter in m_inLayerNeighborCounts
+        switch (inLayerValue)
         {
-            // Check the state of the board to get the value of this element
-            char inLayerValue = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
-            //char crossLayerValue = m_board[!top][indices[neighbor][0]][indices[neighbor][1]];
-            // Increment the appropriate counter in m_inLayerNeighborCounts
-            switch (inLayerValue)
-            {
-                case 'A':
-                    m_inLayerNeighborCounts[0]++;
-                    //m_neighborVals[neighbor] = 0;
-                    break;
-                case 'B':
-                    m_inLayerNeighborCounts[1]++;
-                    //m_neighborVals[neighbor] = 1;
-                    break;
-                case 'C':
-                    m_inLayerNeighborCounts[2]++;
-                    //m_neighborVals[neighbor] = 2;
-                    break;
-            }
-            /*
-            switch (crossLayerValue)
-            {
-                case 'A':
-                    m_crossLayerNeighborCounts[0]++;
-                    break;
-                case 'B':
-                    m_crossLayerNeighborCounts[1]++;
-                    break;
-                case 'C':
-                    m_crossLayerNeighborCounts[2]++;
-                    break;
-            }*/
+            case 'A':
+                m_inLayerNeighborCounts[0]++;
+                //m_neighborVals[neighbor] = 0;
+                break;
+            case 'B':
+                m_inLayerNeighborCounts[1]++;
+                //m_neighborVals[neighbor] = 1;
+                break;
+            case 'C':
+                m_inLayerNeighborCounts[2]++;
+                //m_neighborVals[neighbor] = 2;
+                break;
+        }
+        switch (crossLayerValue)
+        {
+            case 'A':
+                m_crossLayerNeighborCounts[0]++;
+                break;
+            case 'B':
+                m_crossLayerNeighborCounts[1]++;
+                break;
+            case 'C':
+                m_crossLayerNeighborCounts[2]++;
+                break;
         }
 
     }
@@ -458,9 +430,9 @@ void Simulation::clearNeighborVals()
     }
 }
 
-void Simulation::updateMatchingComplement(int i, int j, bool top)
+void Simulation::updateMatchingComplement(elementCoords element, bool top)
 {
-    char complement = m_board[!top][j][i];
+    char complement = m_board[!top][element.j][element.i];
     for(int prospValIndex = 0; prospValIndex < 3; prospValIndex++)
     {
         m_matchingComplement[prospValIndex] = (complement==m_X[prospValIndex]);
@@ -470,112 +442,6 @@ void Simulation::updateMatchingComplement(int i, int j, bool top)
 bool Simulation::elementPositionCheck(int i, int j)
 {
     return (j >= 0) && (i >= 0) && (j < m_height) && (i < m_width);
-}
-
-void Simulation::updateProspectiveBoundaryLengthsOLD(char prospectiveValue, int i, int j, bool top)
-{
-    //DEBUGstd::cout << "Element (i,j) = (" << i << "," << j << ")" << std::endl;
-    //DEBUGstd::cout << "Top? " << top << std::endl;
-    //DEBUGstd::cout << "Prospective Value: " << prospectiveValue << std::endl;
-    char currentValue = m_board[top][j][i];
-    pointModifyBoundaryBoard(prospectiveValue,i,j, top);
-    //printBoardWithBoundary();
-
-    int boundi=2*i;
-    int boundj=2*j;
-    int indices[6][2] = {   {boundj+1,boundi-1},
-                            {boundj+1,boundi  },
-                            {boundj  ,boundi+1},
-                            {boundj-1,boundi+1},
-                            {boundj-1,boundi  },
-                            {boundj  ,boundi-1}
-    };
-
-    // Keep track of (up to 6) initial edge positions
-    m_startingBoundaries = {0,0,0,0,0,0};
-    bool allBounds = true;
-    for (int neighborIndex=0;neighborIndex<6;neighborIndex++)
-    {
-        int loopi = i;
-        int loopj = j;
-        // Get the indices of the edges surrounding the board element ij
-        getNeighborEdgeCoordsFromIndex(&loopi, &loopj, neighborIndex, top);
-        if(!edgePositionCheck((int[2]) {loopj, loopi})){allBounds=false; continue;}
-        char boundaryType = m_boundaryBoard[top][loopj][loopi];
-        if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
-        {
-            // Remember this edge's position
-            m_remainingInitEdges.push_back({loopj, loopi, neighborIndex});
-        }
-        else{allBounds=false;}
-
-    }
-    // Save some processing time by abandoning when every edge is a compatible boundary
-    if(allBounds)
-    {
-        //DEBUGstd::cout << "Setting boundary length to 6, as the element is surrounded by boundary" << std::endl;
-        m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]=6;
-        m_remainingInitEdges.clear();
-        // Revert point modification
-        pointModifyBoundaryBoard(currentValue,i,j,top);
-        return;
-    }
-    // Look through every compatible boundary around the element one at a time
-    while (m_remainingInitEdges.size()>0)
-    {
-        // Keep track of whether or not the traced boundary makes a loop
-        bool loop = false;
-
-        // Find the next starting edge neighbor index (this element will be removed once exploreLine is called)
-        int initialEdgeIndex = m_remainingInitEdges[0][2];
-
-
-        // These indices are turned into the appropriate starting edge coordinates by the function below
-        int edgei = i;
-        int edgej = j;
-
-        // Get the indices of the edges surrounding the board element ij
-        getNeighborEdgeCoordsFromIndex(&edgei, &edgej, initialEdgeIndex, top);
-        // If this edge overlaps the one on the other side of the board, count that
-        if (m_boundaryBoard[!top][edgej][edgei] != '.')
-        {
-            m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
-            //std::cout << "Overlap: " << m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] << std::endl;
-        }
-        
-
-        // Count this starting edge in the length
-        m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]++;
-
-        // For each starting edge, travel down the line first in the 0 direction then in the 1 direction if not a loop
-        for (int startingDirection=0;startingDirection<2;startingDirection++)
-        {   
-            //DEBUGstd::cout<<"direction: " << startingDirection<<std::endl;
-            // These indices are turned into the appropriate starting edge coordinates by the function below
-            int loopi = i;
-            int loopj = j;
-
-            // Get the indices of the edges surrounding the board element ij
-            getNeighborEdgeCoordsFromIndex(&loopi, &loopj, initialEdgeIndex, top);
-
-            // Set start position to this edge and make a position buffer
-            int initPosition[3]  = {loopj          , loopi          , top};
-            int position[3]      = {initPosition[0], initPosition[1], top};
-
-            //DEBUGsetDebugBoardToBoundaryBoard();
-            //DEBUGsetDebugBoardElement(2*i, 2*j, top, '+');
-            //DEBUGsetDebugBoardElement(loopi, loopj, top, '!');
-
-            // Look down the line of contiguous edges and break if a loop is found
-            exploreLineOLD(initPosition, position, startingDirection, prospectiveValue, &loop);
-            //DEBUGprintDebugBoard();
-
-            if(loop){break;}
-        }   
-    }
-    
-    // Revert point modification
-    pointModifyBoundaryBoard(currentValue,i,j, top);
 }
 
 void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, elementCoords element, bool top)
@@ -657,210 +523,6 @@ void Simulation::exploreLine(std::vector<std::array<int,3>>& remainingInitEdges,
 
             // Recurse
             exploreLine(remainingInitEdges, startingEdgePosition, position, newDirection, prospectiveValue, looptr);
-            
-            break;
-        }
-    }
-
-}
-
-/*
-std::vector<int> Simulation::getBoundaryLengths()
-{
-    // Make a boolean array with the shape of the board. This acts as a checklist (which elements have had their boundaries inspected)
-    bool remainingElements[2][m_height][m_width];
-    for (int top = 1; top >-1; top--)
-    {
-        for (int j = 0; j < m_height; j++)
-        {
-            for (int i = 0; i < m_width; i++)
-            {
-                remainingElements[top][j][i] = false;
-            }
-        }
-    }
-
-    // Declare the vector of lengths
-    std::vector<int> boundaryLengths;
-    // Go through the remaining elements one by one, marking an element as true if it has been directly checked or if it is adjacent and compatible
-    // with a boundary connected to a checked element
-    for (int top = 1; top >-1; top--)
-    {
-        for (int j = 0; j < m_height; j++)
-        {
-            for (int i = 0; i < m_width; i++)
-            {
-                if(remainingElements[top][j][i] == false)
-                {
-                    int length = getBoundaryLengthAtElement(remainingElements, i, j, top);
-                    boundaryLengths.push_back(length);
-                }
-            }
-        }
-    }
-
-}
-    
-
-
-void Simulation::exploreLineWithElementTracking(int* length, std::vector<std::array<int,2>>& passedElements, std::vector<std::array<int,3>>& remainingInitEdges,
-                                                int* startingEdgePosition, int* position, bool direction, char value, bool* looptr)
-{
-    // Test to see if this edge is one of the remaining starting edges
-    for (int edgeIndex = 0; edgeIndex<remainingInitEdges.size(); edgeIndex++)
-    {
-        if ( position[0]==remainingInitEdges[edgeIndex][0] && position[1]==remainingInitEdges[edgeIndex][1])
-        {
-            remainingInitEdges.erase(remainingInitEdges.begin() + edgeIndex);
-        }
-    }
-
-    // Look on both sides of this edge to identify the coordinates of the element with the given value (we want to count this edge twice in the grand scheme)
-    std::vector<std::array<int,2>> adjElementCoords = getAdjElementPositionsFromEdgePos(position);
-    for (int n=0;n<2;n++)
-    {
-        std::array<int,2> coords = adjElementCoords[n];
-        if (m_board[position[2]][coords[0]][coords[1]] == value)
-        {
-            passedElements.push_back(coords);
-            // Later these coordinates will be removed from the vector of remaining coordinates to investigate
-        }
-    }
-
-
-    // Use the direction to select the two possible edge neighbor indices to look through
-    int startIndex = direction * 2;
-    int endIndex = startIndex + 2;
-    int positionBuffer[2];
-    for (int edgeNeighborIndex = startIndex; edgeNeighborIndex<endIndex; edgeNeighborIndex++)
-    {
-        // Set position buffer
-        positionBuffer[0] = position[0]; positionBuffer[1] = position[1];
-
-        // Load the position of the neighboring edge into the position buffer
-        getAdjacentEdgePosition(positionBuffer, edgeNeighborIndex, position[2]);
-
-        if(!edgePositionCheck(positionBuffer)){continue;}
-
-        char val = m_boundaryBoard[position[2]][positionBuffer[0]][positionBuffer[1]];
-
-        // If that edge has a compatible boundary type, recurse then break
-        if( val == domainToBoundaryMap.at(value)[0] ||  val == domainToBoundaryMap.at(value)[1])
-        {
-            // Increment the length
-            //m_prospectiveBoundaryLengths[domainToIntMap.at(value)]++;
-            *length ++;
-            
-            // Make sure that this isn't a loop by checking equivalence with starting position
-            if ( startingEdgePosition[0]==positionBuffer[0] &&
-                    startingEdgePosition[1]==positionBuffer[1])
-                    {
-                        //std::cout << "loop" << std::endl;
-                        *looptr = true;
-                        break;
-                    }
-
-            // Get the direction for the next step
-            bool newDirection = getEdgeFindingDirection(position, edgeNeighborIndex);
-
-            // Use the buffer to update position
-            position[0] = positionBuffer[0]; position[1] = positionBuffer[1];
-
-            // Recurse
-            exploreLineWithElementTracking(length, passedElements, remainingInitEdges, startingEdgePosition,
-                                           position, newDirection, value, looptr);
-            
-            break;
-        }
-    }
-
-}
-*/
-void Simulation::exploreLineOLD(int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr)
-{
-
-    // Test to see if this edge is one of the remaining starting edges
-    for (int edgeIndex = 0; edgeIndex<m_remainingInitEdges.size(); edgeIndex++)
-    {
-        if ( position[0]==m_remainingInitEdges[edgeIndex][0] && position[1]==m_remainingInitEdges[edgeIndex][1])
-        {
-            m_remainingInitEdges.erase(m_remainingInitEdges.begin() + edgeIndex);
-        }
-    }
-
-
-
-    // Use the direction to select the two possible edge neighbor indices to look through
-    int startIndex = direction * 2;
-    int endIndex = startIndex + 2;
-    int positionBuffer[2];
-    for (int edgeNeighborIndex = startIndex; edgeNeighborIndex<endIndex; edgeNeighborIndex++)
-    {
-        // Set position buffer
-        positionBuffer[0] = position[0]; positionBuffer[1] = position[1];
-        //DEBUGstd::cout << "initial pos " << positionBuffer[1] << "i, " << position[0] << "j" << std::endl;
-        //DEBUGstd::cout << "neighbor index " << edgeNeighborIndex<< std::endl;
-        // Load the position of the neighboring edge into the position buffer
-        getAdjacentEdgePosition(positionBuffer, edgeNeighborIndex, position[2]);
-        //DEBUGstd::cout << "candidate pos " << positionBuffer[1] << "i, " << positionBuffer[0] << "j" << std::endl;
-        /* Make sure that position is valid (not out of bounds)
-            if it is, skip the rest of this iteration to look at the next edge.*/
-        if(!edgePositionCheck(positionBuffer)){continue;}
-        //DEBUGstd::cout << "passed pos check" << std::endl;
-        char val = m_boundaryBoard[position[2]][positionBuffer[0]][positionBuffer[1]];
-        //DEBUGstd::cout << "looking for " << prospectiveValue << " compatible boundary at " << positionBuffer[1]<< "i, "<<positionBuffer[0]<<"j."<< std::endl;
-        // If that edge has a compatible boundary type, recurse then break
-        if( val == domainToBoundaryMap.at(prospectiveValue)[0] ||  val == domainToBoundaryMap.at(prospectiveValue)[1])
-        {
-            // Increment the correct prospective boundary length
-            m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)]++;
-            
-            //DEBUG
-            /* DEBUG 
-            try{
-
-            //std::cout<<"val: " << prospectiveValue<<" pos: " << positionBuffer[1]<< "i, "<<positionBuffer[0]<<"j. length: " << 
-            //m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] << std::endl;
-            std::cout<<"length: " << 
-            m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] << std::endl;
-            std::cout << "//////////////////////////////////////////element done//////////////////////////////////////////"<< std::endl;
-            */
-
-            setDebugBoardElement(positionBuffer[1],positionBuffer[0],position[2],'@');
-
-            /*
-            if(m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] > m_width*m_height)
-            {
-                throw std::runtime_error("Length of boundary exceeded reasonable length");
-            }
-            }
-            catch(const std::exception& e){std::cerr<<e.what()<<std::endl;}
-            //std::cout<<"starting pos: " << startingEdgePosition[1]<< "i, "<<startingEdgePosition[0]<<"j." << std::endl;
-            //std::cout<<"Top: "<< position[2] <<std::endl;
-            */
-            
-            // Make sure that this isn't a loop by checking equivalence with starting position
-            if ( startingEdgePosition[0]==positionBuffer[0] &&
-                    startingEdgePosition[1]==positionBuffer[1])
-                    {
-                        //std::cout << "loop" << std::endl;
-                        *looptr = true;
-                        break;
-                    }
-
-            // Get the direction for the next step
-            bool newDirection = getEdgeFindingDirection(position, edgeNeighborIndex);
-            // Use the buffer to update position
-            position[0] = positionBuffer[0]; position[1] = positionBuffer[1];
-
-            // Increment the overlap count if appropriate
-            if (m_boundaryBoard[!position[2]][position[0]][position[1]] != '.')
-            {
-                //m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)]++;
-                //std::cout << "Overlap: " << m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] << std::endl;
-            }
-            // Recurse
-            exploreLineOLD(startingEdgePosition, position, newDirection, prospectiveValue, looptr);
             
             break;
         }
@@ -1289,7 +951,7 @@ void Simulation::updateProbabilities()
         //////////////////////////////// Nearest Neighbor ////////////////////////////////
 
         ////////////////////////////////     Tension      ////////////////////////////////
-        m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
+        //T//m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
         ////////////////////////////////     Tension      ////////////////////////////////
 
         //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
@@ -1302,44 +964,9 @@ void Simulation::updateProbabilities()
 
 
         // Total Energy
-        m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+        //T//m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+        m_energies[i] = (m_nearestEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
     }
-    //////////////////////////////// Nearest Neighbor ////////////////////////////////
-
-    ////////////////////////////////     Tension      ////////////////////////////////
-    //double tension_A = m_tensionFactor*m_prospectiveBoundaryLengths[0];
-    //double tension_B = m_tensionFactor*m_prospectiveBoundaryLengths[1];
-    //double tension_C = m_tensionFactor*m_prospectiveBoundaryLengths[2];
-    ////////////////////////////////     Tension      ////////////////////////////////
-
-    //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
-    // THESE WOULD ALLOW TRACKING OF THE NEIGHBORS OF THE COMPLEMENT
-    // IRRELEVANT double A_CL = m_crossLayerNeighborCounts[0];
-    // IRRELEVANT double B_CL = m_crossLayerNeighborCounts[1];
-    // IRRELEVANT double C_CL = m_crossLayerNeighborCounts[2];
-
-
-    // A positive CL neighbor factor -> matching complement adds energy
-    ////double cLNearest_A = m_crossLayerNearestNeighborFactor*(m_matchingComplement[0]);// + (B_CL + C_CL));
-    ////double cLNearest_B = m_crossLayerNearestNeighborFactor*(m_matchingComplement[1]);// + (A_CL + C_CL));
-    ////double cLNearest_C = m_crossLayerNearestNeighborFactor*(m_matchingComplement[2]);// + (A_CL + B_CL));
-
-    //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
-
-    //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
-    ////int A_overlaps = m_prospectiveBoundaryOverlapCounts[0];
-    ////int B_overlaps = m_prospectiveBoundaryOverlapCounts[1];
-    ////int C_overlaps = m_prospectiveBoundaryOverlapCounts[2];
-
-    ////double cLBoundaryInterface_A = 100*m_crossLayerBoundaryFactor*A_overlaps;
-    ////double cLBoundaryInterface_B = 100*m_crossLayerBoundaryFactor*B_overlaps;
-    ////double cLBoundaryInterface_C = 100*m_crossLayerBoundaryFactor*C_overlaps;
-
-    //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
-
-    //m_energies[0] = (nearest_A + tension_A + cLNearest_A + cLBoundaryInterface_A);
-    //m_energies[1] = (nearest_B + tension_B + cLNearest_B + cLBoundaryInterface_B);
-    //m_energies[2] = (nearest_C + tension_C + cLNearest_C + cLBoundaryInterface_C);
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
     double boltzmann_B = std::exp(-(m_energies[1])/m_kT);
@@ -1350,74 +977,6 @@ void Simulation::updateProbabilities()
     m_probabilities[0] = boltzmann_A / Z;
     m_probabilities[1] = boltzmann_B / Z;
     m_probabilities[2] = boltzmann_C / Z;
-    /*
-    /////////////Energy Analysis ////////////////////////////////
-
-    double min = m_probabilities[0];
-    double max = m_probabilities[0];
-    int min_ind = 0;
-    int max_ind = 0;
-    for (int i = 1; i < 3; i++)
-    {
-        if (m_probabilities[i] < min)
-        {
-            min = m_probabilities[i];
-            min_ind = i;
-        }
-        if (m_probabilities[i] > max)
-        {
-            max = m_probabilities[i];
-            max_ind = i;
-        }
-    }
-    int middle_ind;
-    if(min_ind == (max_ind+1)%3)
-    {
-        middle_ind = (max_ind+2)%3;
-    } else
-    {
-        middle_ind = (max_ind+1)%3;
-    }
-    //ip1 = (min_ind+1)%3;
-    //ip2 = (min_ind+2)%3;
-    // If two domains share 90% of probability
-    //if(min < 0.1 && (m_prospectiveBoundaryLengths[ip1]!=6))
-    if(true)
-    {
-        if(true)
-        {
-            int dL12 = m_prospectiveBoundaryLengths[middle_ind]- m_prospectiveBoundaryLengths[max_ind];
-            double dN12 = (m_nearestEnergy[middle_ind] - m_nearestEnergy[max_ind])/m_nearestNeighborFactor;
-            int dL13 = m_prospectiveBoundaryLengths[min_ind]- m_prospectiveBoundaryLengths[max_ind];
-            double dTensionEnergy12  = m_tensionEnergy[middle_ind] - m_tensionEnergy[max_ind];
-            double dTensionEnergy13  = m_tensionEnergy[min_ind] - m_tensionEnergy[max_ind];
-            double dNeighborEnergy12 = m_nearestEnergy[middle_ind] - m_nearestEnergy[max_ind];
-            double dNeighborEnergy13 = m_nearestEnergy[min_ind] - m_nearestEnergy[max_ind];
-            double dTensionEnergy23  = m_tensionEnergy[min_ind] - m_tensionEnergy[middle_ind];
-            double dNeighborEnergy23 = m_nearestEnergy[min_ind] - m_nearestEnergy[middle_ind];
-
-            //double predDL12 = (1/m_tensionFactor)*(m_kT - dNeighborEnergy12);
-            //double predDL13 = (1/m_tensionFactor)*(m_kT - dNeighborEnergy13);
-            //double quantity = ((dTensionEnergy + dNeighborEnergy)/(m_kT));
-            //double logProbRatio12 = log(m_probabilities[max_ind]/m_probabilities[middle_ind]);
-            //double logProbRatio13 = log(m_probabilities[max_ind]/m_probabilities[min_ind]);
-            //std::cout << "X: " << dTensionEnergy  << std::endl;
-            //std::cout << "Y: " << dNeighborEnergy << std::endl;
-            //std::cout << dTensionEnergy  << "," << dNeighborEnergy << std::endl;
-            //std::cout << m_nearestNeighborFactor/m_tensionFactor  << "," << dL << std::endl;
-            //std::cout << quantity << "," << dL << std::endl;
-            //std::cout << "Quantity: " << quantity << " LPR: " << logProbRatio << std::endl;
-            //std::cout << "LPR12: " << logProbRatio12 << " LPR13: " << logProbRatio13 << std::endl;
-            //std::cout << "d12TN: " << dTensionEnergy12 << "," << dNeighborEnergy12 << std::endl;
-            //std::cout << "d13TN: " << dTensionEnergy13 << "," << dNeighborEnergy13 << std::endl;
-            //std::cout << "d23TN: " << dTensionEnergy23 << "," << dNeighborEnergy23 << std::endl;
-            //std::cout << "dL12,13: " << dL12 << "," << dL13 << std::endl;
-            std::cout << dL12 << "," << dN12 << std::endl;
-
-        }
-    }
-    //////////////////////////////// Energy Analysis ////////////////////////////////
-    */
     // Reset neighbor counts and boundary lengths
     for (int i=0;i<3;i++)
     {
@@ -1605,6 +1164,8 @@ char Simulation::roll()
 
 void Simulation::randomStep()
 {
+    // Logging / data keeping
+    /*
     // THIS SHOULD BE  % 100 == 0 FOR NORMAL FUNCTION
     if ( m_stepCounter % scanBoundsPeriodInSteps == 0 )
     {
@@ -1723,18 +1284,19 @@ void Simulation::randomStep()
     // for time keeping
     m_stepCounter ++;
     //auto tBegin = std::chrono::high_resolution_clock::now();
+    */
 
 
     // Carry out the update element by element, choosing a random one each time
     for (int subStep = 0; subStep < stepSizeInPixelUpdates; subStep++)
     {
         // Pick random indices
-        int iRand = uniform_int_i(rand_generator);
-        int jRand = uniform_int_j(rand_generator);
-        int topRand = 1;//uniform_2(rand_generator);
+        int iRand   = uniform_int_i(rand_generator);
+        int jRand   = uniform_int_j(rand_generator);
+        int topRand = uniform_2(rand_generator);
+        elementCoords randElement(iRand,jRand);
         // Update an element
-        char result = updateBoardElement(iRand,jRand,topRand, subStep);
-        // DEBUGprintBoard();
+        char result = updateBoardElement(randElement,topRand, subStep);
         pointModifyBoundaryBoard(result, iRand,jRand, topRand);
 
     } 
@@ -1762,8 +1324,6 @@ void Simulation::randomStep()
     //    //m_stepCounter = 0;
 
     //}
-    
-    //printBoardWithBoundary();
 }
 
 ///////////////////////////DEBUG FUNCTIONS/////////////////////////////////

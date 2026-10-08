@@ -12,7 +12,7 @@ inline constexpr size_t bBHeight = 2*bHeight-1;
 const std::string dir = "/home/b_lin/Documents/Coding/barnard-cobden-labs/ads_sim_proj/version0.1/out/";
 
 // Number of pixels to randomly update per step
-const int stepSizeInPixelUpdates = 2000;
+const int stepSizeInPixelUpdates = 15000;
 
 // Number of steps to do between boundary length scans / information gathering
 const int scanBoundsPeriodInSteps = 100;

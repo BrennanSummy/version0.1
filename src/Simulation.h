@@ -180,7 +180,7 @@ class Simulation: public QWidget
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates
            (i is the first index of the board array).*/
-        char updateBoardElement(int i,int j, bool top, int subStep);
+        char updateBoardElement(elementCoords element, bool top, int subStep);
 
         void setDebugBoardToBoundaryBoard();
         void setDebugBoardElement(int i, int j, bool top, char value);
@@ -226,11 +226,11 @@ class Simulation: public QWidget
         // Check if an edge position is valid
         bool elementPositionCheck(int i,int j);
         // Checks the neighboring indices and updates the neighborVals array accordingly
-        void updateNeighborVals(int i, int j, bool top);
+        void updateNeighborVals(elementCoords element, bool top);
         // Clears m_inLayerNeighborCounts
         void clearNeighborVals();
         // Checks the complement of the given value and updates m_matchingComplement accordingly (e.g. true in element 0 means that the complement matches A)
-        void updateMatchingComplement(int i, int j, bool top);
+        void updateMatchingComplement(elementCoords element, bool top);
         // Uses the neighborVals array to update the probabilities array
         void updateProbabilities();
         // Uses the boundary board to calculate the prospective lengths of boundaries

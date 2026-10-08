@@ -214,6 +214,30 @@ struct elementCoords
         }
         return surroundingEdges;
     }
+
+    std::vector<elementCoords> getValidSurroundingElements()
+    {
+        // Assemble all of the neighboring edge indices
+        int elementIndices[6][2] = {   
+            {j+1,i-1},
+            {j+1,i  },
+            {j  ,i+1},
+            {j-1,i+1},
+            {j-1,i  },
+            {j  ,i-1}
+        };
+        // Put all of the valid edge positions in a vector and return it
+        std::vector<elementCoords> surroundingElements;
+        for (int index=0; index<6; index++)
+        {
+            elementCoords element = elementCoords(elementIndices[index][1],elementIndices[index][0]);
+            if(element.isValid())
+            {
+                surroundingElements.push_back(element);
+            }
+        }
+        return surroundingElements;
+    }
     // Add an element if it is not already in a give element coord vector
     void addIfNotInVector(std::vector<elementCoords>& vec)
     {
