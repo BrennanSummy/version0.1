@@ -188,6 +188,11 @@ class Simulation
                                             int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr);
 
         void exploreLineOLD(int* startingEdgePosition, int* position, bool direction, char boundaryType, bool* looptr);
+
+        // This function gets the total change in local boundary lengths given the element coords and prospective domain value.
+        int getDeltaL(elementCoords coords, char prospValue);
+        // This gets the length of boundaries local to the given element coords, assuming that element has the given value
+        int sumLengthsOfLocalBoundaries(elementCoords coords, char value, bool isProspective);
         // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction. 0 means first two neighbors, 1 means last two
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
         // For a given edge position, returns the two adjacent board element positions

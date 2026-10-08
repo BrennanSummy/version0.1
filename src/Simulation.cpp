@@ -285,7 +285,10 @@ char Simulation::updateBoardElement(int i, int j, bool top)
     updateMatchingComplement(i,j,top);
     for (int x = 0; x<3;x++)
     {
-        updateProspectiveBoundaryLengths(m_X[x],element, top);
+        //updateProspectiveBoundaryLengths(m_X[x],element, top);
+        char prospValue = m_X[x];
+        int deltaL = getDeltaL(element,prospValue);
+        m_prospectiveBoundaryLengths[x] = deltaL;
     }
     updateProbabilities();
     char result = roll();
@@ -418,7 +421,8 @@ void Simulation::updateProspectiveBoundaryLengthsOLD(char prospectiveValue, int 
         int loopj = j;
         // Get the indices of the edges surrounding the board element ij
         getNeighborEdgeCoordsFromIndex(&loopi, &loopj, neighborIndex, top);
-        if(!edgePositionCheck((int[2]) {loopj, loopi})){allBounds=false; continue;}
+        int pos[2] = {loopj,loopi};
+        if(!edgePositionCheck(pos)){allBounds=false; continue;}
         char boundaryType = m_boundaryBoard[top][loopj][loopi];
         if ( boundaryType == domainToBoundaryMap.at(prospectiveValue)[0] || boundaryType == domainToBoundaryMap.at(prospectiveValue)[1] )
         {
@@ -523,6 +527,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, element
     pointModifyBoundaryBoard(currentValue,element.i,element.j, top);
 }
 
+// AS OF September 24 THIS IS KNOWN TO BE THE WRONG WAY TO GET TENSION
 void Simulation::exploreLine(std::vector<std::array<int,3>>& remainingInitEdges, int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr)
 {
     // Test to see if this edge is one of the remaining starting edges
@@ -1181,6 +1186,55 @@ void Simulation::getNeighborEdgeCoordsFromIndex(int* iptr, int* jptr, int neighb
         }
     }
 }
+int Simulation::getDeltaL(elementCoords coords, char prospValue)
+{
+    // Get the current value of the element
+    char currentValue;// = m_board[1][coords.j][coords.i];
+
+    // Check the total length of boundaries in the neighborhood of this element
+    int currentLength = sumLengthsOfLocalBoundaries(coords,currentValue,0);
+
+    // Use the prospective value to get the total length of boundaries in the neighborhood of this element
+    int prospLength = sumLengthsOfLocalBoundaries(coords,prospValue,1);
+
+    // Return the difference in lengths
+    return prospLength - currentLength;
+}
+
+int Simulation::sumLengthsOfLocalBoundaries(elementCoords coords, char value, bool isProspective)
+{
+    //UNNECESSARY bool noLikeNeighbors = true;
+    //UNNECESSARY bool onlyLikeNeighbors = true;
+    //UNNECESSARY for neighborCoord in neighborCoords:
+    //UNNECESSARY   char neighbor_i = m_board[1][coords.j][coords.i]
+    //UNNECESSARY   if (neighbor_i == value) {noLikeNeighbors = false;}
+    //UNNECESSARY   else {onlyLikeNeighbors = false;}
+    //UNNECESSARY if(noLikeNeighbors){return 12;}
+    //UNNECESSARY else if(onlyLikeNeighbors){return 0;}
+    // // COUNT IMMEDIATE BOUNDARIES AFTER POINT MODIFYING BOUNDARY BOARD
+    char currentVal;
+    if(isProspective)
+    {
+        currentVal = m_board[1][coords.j][coords.i];
+        pointModifyBoundaryBoard(value,coords.i,coords.j, 1);
+    }
+    
+    // // COUNT
+    int count = 0;
+    std::vector<edgeCoords> surroundingEdgeCoords = coords.getValidSurroundingEdges();
+    // Look at every edge once
+    for (int i = 0; i < surroundingEdgeCoords.size(); i++)
+    {
+        edgeCoords edgeCoord = surroundingEdgeCoords[i];
+        // If the edge is not empty, then add two (one for each side) to the count of edges
+        if(m_boundaryBoard[1][edgeCoord.j][edgeCoord.i] != '.')
+        {
+            count +=2;
+        }
+    }
+    if(isProspective){pointModifyBoundaryBoard(currentVal,coords.i,coords.j, 1);}
+    return count;
+}
 
 void Simulation::updateProbabilities()
 {
@@ -1207,6 +1261,7 @@ void Simulation::updateProbabilities()
         //////////////////////////////// Nearest Neighbor ////////////////////////////////
 
         ////////////////////////////////     Tension      ////////////////////////////////
+        // DELTA L IS CALCULATED HOW?
         m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
         ////////////////////////////////     Tension      ////////////////////////////////
 
@@ -1435,7 +1490,7 @@ char Simulation::roll()
     {
         //std::cout << m_energies[0] << ":" << m_energies[1] << ":" << m_energies[2] << std::endl;
         // Select the minimum energy, or do a 1/3 roll if they are equal
-        float smallestEnergy = std::min({m_energies[0],m_energies[1],m_energies[2]});
+        float smallestEnergy = std::min(m_energies[0],std::min(m_energies[1],m_energies[2]));
         //std::cout << "smallest: " << smallestEnergy << std::endl;
 
 
@@ -1525,6 +1580,7 @@ void Simulation::randomStep()
 {
     if ( m_stepCounter % 100 == 0 )
     {
+        printBoardWithBoundary();
         // Print energy
         std::cout << "______________________________________________________________________________" << std::endl;
         std::cout << "Energy: " << getConfigurationEnergy() << std::endl;

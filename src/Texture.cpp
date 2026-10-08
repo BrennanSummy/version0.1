@@ -7,7 +7,8 @@ Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixe
     std::cout << "Looking in: "<<std::filesystem::current_path().c_str()
     << " looking for " << path.c_str()<< std::endl;
     QImage img1(QString::fromStdString(path));
-    QImage img = img1.convertToFormat(QImage::Format_RGBA8888).flipped();
+    //QImage img = img1.convertToFormat(QImage::Format_RGBA8888).flipped();
+    QImage img = img1.convertToFormat(QImage::Format_RGBA8888).mirrored(false,true);
     qDebug() << img.size();
     qDebug() << img.format();
 

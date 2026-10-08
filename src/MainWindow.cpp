@@ -29,10 +29,10 @@ void MainWindow::setupWindow()
     // Add parameter sliders
     //////////////////////////////////////////////////////           Title               Min   Max  Default                    Steps
     ParameterSlider* kTSlider                 = new ParameterSlider("kT"               , 0.01,    5, default_kT                ,  100, parameterArea);
-    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   ,    -0.1,  0.1, default_tension        ,  100, parameterArea);
-    ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor",    0,   10, default_intraLayerNeighbor,  100, parameterArea);
+    ParameterSlider* tensionSlider            = new ParameterSlider("Tension factor"   , 0.00,  0.5, default_tension        ,  100, parameterArea);
+    ParameterSlider* neighborSlider           = new ParameterSlider("N-Neighbor factor", -1.0,    1, default_intraLayerNeighbor,  100, parameterArea);
     ParameterSlider* crossLayerNeighborSlider = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,   20, parameterArea);
-    ParameterSlider* crossLayerBoundarySlider = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,   20, parameterArea);
+    ParameterSlider* crossLayerBoundarySlider = new ParameterSlider("CL Boundary"      , -0.1,  0.1, default_crossLayerBoundary,   200, parameterArea);
     ParameterSlider* framerateSlider          = new ParameterSlider("Framerate"        ,  0.5,   60, default_framerate         ,  120, parameterArea);
     parameterLayout->setSpacing(30);
     // left, top, right, bottom margins
@@ -100,9 +100,12 @@ void MainWindow::setupWindow()
     // Connect the start/stop button to the QTimer
     connect(startStopButton,&PushButton::buttonPressed   ,updateTimer, &UpdateTimer::toggle);
 
-    connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT
-                                                                                                     
-    connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT
+    //connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT
+    //                                                                                                 
+    //connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT
+    connect(showTopCheckBox,&QCheckBox::stateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT//LAPTOP
+
+    connect(showBotCheckBox,&QCheckBox::stateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT//LAPTOP
 
     // Refresh all default values to make sure sliders match simulation, etc...
     //kTSlider->emitDefaultValue();
