@@ -192,6 +192,11 @@ void RenderWindow::sliderUpdateNearestNeighbor(float sliderVal)
     m_sim->updateNearestNeighbor(sliderVal);
 }
 
+void RenderWindow::sliderUpdateSecondNearestNeighbor(float sliderVal)
+{
+    m_sim->updateSecondNearestNeighbor(sliderVal);
+}
+
 void RenderWindow::sliderUpdateCrossLayerComplement(float sliderVal)
 {
     m_sim->updateCrossLayerComplement(sliderVal);

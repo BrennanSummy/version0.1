@@ -239,6 +239,36 @@ struct elementCoords
         }
         return surroundingElements;
     }
+    // Get the valid second nearest neighbors
+    std::vector<elementCoords> getValidSecondNearestElements()
+    {
+        // Assemble all of the second-neighboring element indices (starting from the top left and going clockwise)
+        int elementIndices[12][2] = {   
+            {j+2,i-2},
+            {j+2,i-1},
+            {j+2,i  },
+            {j+1,i+1},
+            {j  ,i+2},
+            {j-1,i+2},
+            {j-2,i+2},
+            {j-2,i+1},
+            {j-2,i  },
+            {j-1,i-1},
+            {j  ,i-2},
+            {j+1,i-1}
+        };
+        // Put all of the valid edge positions in a vector and return it
+        std::vector<elementCoords> surroundingElements;
+        for (int index=0; index<12; index++)
+        {
+            elementCoords element = elementCoords(elementIndices[index][1],elementIndices[index][0]);
+            if(element.isValid())
+            {
+                surroundingElements.push_back(element);
+            }
+        }
+        return surroundingElements;
+    }
     // Add an element if it is not already in a give element coord vector
     void addIfNotInVector(std::vector<elementCoords>& vec)
     {

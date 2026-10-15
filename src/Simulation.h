@@ -45,6 +45,9 @@ class Simulation: public QWidget
         // This updates the value of nearestNeighborFactor to the given value.
         void updateNearestNeighbor(float value);
 
+        // This updates the value of secondNearestNeighborFactor to the given value.
+        void updateSecondNearestNeighbor(float value);
+
         // This updates the value of m_crossLayerComplementFactor to the given value.
         void updateCrossLayerComplement(float value);
 
@@ -80,6 +83,9 @@ class Simulation: public QWidget
         // Intra-layer nearest neighbor factor for probability calculation
         double m_nearestNeighborFactor;
         
+        // Intra-layer second nearest neighbor factor for probability calculation
+        double m_secondNearestNeighborFactor;
+
         // Inter-layer immediate complement factor for probability calculation
         double m_crossLayerComplementFactor;
 
@@ -100,6 +106,8 @@ class Simulation: public QWidget
         /* static array that stores the number of A's B's and C's neighboring the current coordinate
             0 <-> A, 1 <-> B, 2 <-> C */
         short m_inLayerNeighborCounts[3];
+        // Second nearest neighbor counter
+        short m_inLayerSecondNeighborCounts[3];
 
         /* static array that stores the number of A's B's and C's neighboring the current coordinate's complement (on the other side of the board)
             0 <-> A, 1 <-> B, 2 <-> C */
@@ -132,6 +140,7 @@ class Simulation: public QWidget
         double m_probabilities[3];
         // Energy terms for A B and C
         double m_nearestEnergy[3];
+        double m_secondNearestEnergy[3];
         double m_tensionEnergy[3];
         double m_cLComplementEnergy[3];
         double m_cLNearestEnergy[3];

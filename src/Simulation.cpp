@@ -10,7 +10,7 @@ m_fileWriter("defaultFile")
     initBoard();
     updateBoundaryBoardViaScan();
     setDebugBoardToBoundaryBoard();
-    printBoardWithBoundary();
+    //printBoardWithBoundary();
     clearNeighborVals();
     
     //// First File Setup
@@ -426,6 +426,42 @@ void Simulation::updateNeighborVals(elementCoords element, bool top)
 
     }
 
+    std::vector<elementCoords> secondNearestElements = element.getValidSecondNearestElements();
+    for (int n = 0; n < surroundingElements.size(); n++)
+    {
+        // Check the state of the board to get the value of this element
+        char inLayerValue    = m_board[ top][surroundingElements[n].j][surroundingElements[n].i];
+        //char crossLayerValue = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        // Increment the appropriate counter in m_inLayerNeighborCounts
+        switch (inLayerValue)
+        {
+            case 'A':
+                m_inLayerSecondNeighborCounts[0]++;
+                //m_neighborVals[neighbor] = 0;
+                break;
+            case 'B':
+                m_inLayerSecondNeighborCounts[1]++;
+                //m_neighborVals[neighbor] = 1;
+                break;
+            case 'C':
+                m_inLayerSecondNeighborCounts[2]++;
+                //m_neighborVals[neighbor] = 2;
+                break;
+        }
+        // Cross Layer Second Neighbors switch (crossLayerValue)
+        // Cross Layer Second Neighbors {
+        // Cross Layer Second Neighbors     case 'A':
+        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[0]++;
+        // Cross Layer Second Neighbors         break;
+        // Cross Layer Second Neighbors     case 'B':
+        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[1]++;
+        // Cross Layer Second Neighbors         break;
+        // Cross Layer Second Neighbors     case 'C':
+        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[2]++;
+        // Cross Layer Second Neighbors         break;
+        // Cross Layer Second Neighbors }
+
+    }
 }
 
 void Simulation::clearNeighborVals()
@@ -956,6 +992,10 @@ void Simulation::updateProbabilities()
         m_nearestEnergy[i] = m_nearestNeighborFactor * (m_inLayerNeighborCounts[ip1] + m_inLayerNeighborCounts[ip2]);
         //////////////////////////////// Nearest Neighbor ////////////////////////////////
 
+        ///////////////////////////// Second Nearest Neighbor ////////////////////////////
+        m_secondNearestEnergy[i] = m_secondNearestNeighborFactor * (m_inLayerSecondNeighborCounts[ip1] + m_inLayerSecondNeighborCounts[ip2]);
+        ///////////////////////////// Second Nearest Neighbor ////////////////////////////
+
         ////////////////////////////////     Tension      ////////////////////////////////
         //T//m_tensionEnergy[i] = m_tensionFactor*m_prospectiveBoundaryLengths[i];
         ////////////////////////////////     Tension      ////////////////////////////////
@@ -975,7 +1015,7 @@ void Simulation::updateProbabilities()
 
         // Total Energy
         //T//m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
-        m_energies[i] = (m_nearestEnergy[i] + m_cLComplementEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+        m_energies[i] = (m_nearestEnergy[i] + m_secondNearestEnergy[i] + m_cLComplementEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
     }
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
@@ -990,9 +1030,10 @@ void Simulation::updateProbabilities()
     // Reset neighbor counts and boundary lengths
     for (int i=0;i<3;i++)
     {
-        m_inLayerNeighborCounts[i]=0;
-        m_crossLayerNeighborCounts[i]=0;
-        m_prospectiveBoundaryLengths[i]=0;
+        m_inLayerNeighborCounts[i]           =0;
+        m_inLayerSecondNeighborCounts[i]     =0;
+        m_crossLayerNeighborCounts[i]        =0;
+        m_prospectiveBoundaryLengths[i]      =0;
         m_prospectiveBoundaryOverlapCounts[i]=0;
     }
 }
@@ -1462,6 +1503,10 @@ void Simulation::updateTension(float value)
 void Simulation::updateNearestNeighbor(float value)
 {
     m_nearestNeighborFactor = value;
+}
+void Simulation::updateSecondNearestNeighbor(float value)
+{
+    m_secondNearestNeighborFactor = value;
 }
 void Simulation::updateCrossLayerComplement(float value)
 {

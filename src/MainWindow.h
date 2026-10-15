@@ -14,13 +14,14 @@ class MainWindow: public QMainWindow
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = nullptr);
-    double default_kT                   = 1;
-    double default_tension              = 0.00;
-    double default_intraLayerNeighbor   = 1;
-    double default_crossLayerComplement = 0;
-    double default_crossLayerNeighbor   = 0;
-    double default_crossLayerBoundary   = 0;
-    double default_framerate            = 30;
+    double default_kT                       = 1;
+    double default_tension                  = 0.00;
+    double default_intraLayerFirstNeighbor  = 1;
+    double default_intraLayerSecondNeighbor = 0;
+    double default_crossLayerComplement     = 0;
+    double default_crossLayerNeighbor       = 0;
+    double default_crossLayerBoundary       = 0;
+    int default_framerate                   = 30;
 private:
    void setupWindow(); 
 };

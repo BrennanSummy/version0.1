@@ -18,7 +18,7 @@ void MainWindow::setupWindow()
     // Create main splitter
     QSplitter*      splitter        = new QSplitter(Qt::Horizontal);
 
-    RenderWindow*   renderArea      = new RenderWindow(this, default_kT,default_tension,default_intraLayerNeighbor, default_crossLayerComplement,
+    RenderWindow*   renderArea      = new RenderWindow(this, default_kT,default_tension,default_intraLayerFirstNeighbor, default_crossLayerComplement,
                                                         default_crossLayerNeighbor,default_crossLayerBoundary);
     QWidget*        parameterArea   = new QWidget();
 
@@ -27,18 +27,20 @@ void MainWindow::setupWindow()
     parameterLayout->setContentsMargins(0, 0, 0, 0);
 
     // Add parameter sliders
-    //////////////////////////////////////////////////////           Title               Min   Max  Default                    Steps
-    ParameterSlider* kTSlider                   = new ParameterSlider("kT"               , 0.01,    1, default_kT                ,  100, parameterArea);
-    ParameterSlider* neighborSlider             = new ParameterSlider("N-Neighbor factor",  0.1,    2, default_intraLayerNeighbor,  100, parameterArea);
-    ParameterSlider* crossLayerComplementSlider = new ParameterSlider("CL Complement "   ,   -1,    1, default_tension           ,  100, parameterArea);
-    ParameterSlider* crossLayerNeighborSlider   = new ParameterSlider("CL N-Neighbor"    ,   -1,    1, default_crossLayerNeighbor,  100, parameterArea);
-    ParameterSlider* crossLayerBoundarySlider   = new ParameterSlider("CL Boundary"      ,   -1,    1, default_crossLayerBoundary,  100, parameterArea);
-    ParameterSlider* framerateSlider            = new ParameterSlider("Framerate"        ,  0.5,   60, default_framerate         ,  120, parameterArea);
+    //////////////////////////////////////////////////////                  Title               Min   Max  Default                          Steps
+    ParameterSlider* kTSlider                    = new ParameterSlider("kT"               ,     0.01,    1, default_kT                      ,  100, parameterArea);
+    ParameterSlider* nearestNeighborSlider       = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,  100, parameterArea);
+    ParameterSlider* secondNearestNeighborSlider = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,  100, parameterArea);
+    ParameterSlider* crossLayerComplementSlider  = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,  100, parameterArea);
+    ParameterSlider* crossLayerNeighborSlider    = new ParameterSlider("CL N-Neighbor"    ,       -1,    1, default_crossLayerNeighbor      ,  100, parameterArea);
+    ParameterSlider* crossLayerBoundarySlider    = new ParameterSlider("CL Boundary"      ,     -100,  100, default_crossLayerBoundary      ,  100, parameterArea);
+    ParameterSlider* framerateSlider             = new ParameterSlider("Framerate"        ,        1,   60, default_framerate               ,   60, parameterArea);
     parameterLayout->setSpacing(30);
     // left, top, right, bottom margins
     parameterLayout->setContentsMargins(0,20,0,20);
     parameterLayout->addWidget(kTSlider);
-    parameterLayout->addWidget(neighborSlider);
+    parameterLayout->addWidget(nearestNeighborSlider);
+    parameterLayout->addWidget(secondNearestNeighborSlider);
     parameterLayout->addWidget(crossLayerComplementSlider);
     parameterLayout->addWidget(crossLayerNeighborSlider);
     parameterLayout->addWidget(crossLayerBoundarySlider);
@@ -80,7 +82,10 @@ void MainWindow::setupWindow()
     connect(kTSlider     ,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateTemp);
 
     // Nearest neighbor slider
-    connect(neighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateNearestNeighbor);
+    connect(nearestNeighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateNearestNeighbor);
+
+    // Second nearest neighbor slider
+    connect(secondNearestNeighborSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateSecondNearestNeighbor);
 
     // Cross layer complement slider
     connect(crossLayerComplementSlider,&ParameterSlider::sliderHasChanged,renderArea,&RenderWindow::sliderUpdateCrossLayerComplement);

@@ -25,6 +25,7 @@ public slots:
     void sliderUpdateTemp(float sliderVal);
     void sliderUpdateTension(float sliderVal);
     void sliderUpdateNearestNeighbor(float sliderVal);
+    void sliderUpdateSecondNearestNeighbor(float sliderVal);
     void sliderUpdateCrossLayerComplement(float sliderVal);
     void sliderUpdateCrossLayerNearestNeighbor(float sliderVal);
     void sliderUpdateCrossLayerBoundary(float sliderVal);
