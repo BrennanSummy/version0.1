@@ -255,7 +255,7 @@ struct elementCoords
             {j-2,i  },
             {j-1,i-1},
             {j  ,i-2},
-            {j+1,i-1}
+            {j+1,i-2}
         };
         // Put all of the valid edge positions in a vector and return it
         std::vector<elementCoords> surroundingElements;

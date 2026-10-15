@@ -4,8 +4,8 @@
 
 /* The width and height of the board. The char matrix
     dimensions must be known at compile time. */
-inline constexpr size_t bWidth  = 60;
-inline constexpr size_t bHeight = 60;
+inline constexpr size_t bWidth  = 120;
+inline constexpr size_t bHeight = 120;
 inline constexpr size_t bBWidth  = 2*bWidth -1;
 inline constexpr size_t bBHeight = 2*bHeight-1;
 

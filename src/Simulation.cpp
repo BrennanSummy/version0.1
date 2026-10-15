@@ -12,6 +12,14 @@ m_fileWriter("defaultFile")
     setDebugBoardToBoundaryBoard();
     //printBoardWithBoundary();
     clearNeighborVals();
+    // debug
+    elementCoords meep(3,3);
+    std::vector<elementCoords> m2 = meep.getValidSecondNearestElements();
+    for (int i = 0; i < 12; i++)
+    {
+        std::cout << i << ": " << m2[i].i << "," << m2[i].j << std::endl;
+    }
+
     
     //// First File Setup
     //double newTemp    = temps            [0];

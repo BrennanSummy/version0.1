@@ -28,7 +28,7 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////                  Title               Min   Max  Default                          Steps
-    ParameterSlider* kTSlider                    = new ParameterSlider("kT"               ,     0.01,    1, default_kT                      ,  100, parameterArea);
+    ParameterSlider* kTSlider                    = new ParameterSlider("kT"               ,     0.01,    5, default_kT                      ,  100, parameterArea);
     ParameterSlider* nearestNeighborSlider       = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,  100, parameterArea);
     ParameterSlider* secondNearestNeighborSlider = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,  100, parameterArea);
     ParameterSlider* crossLayerComplementSlider  = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,  100, parameterArea);
