@@ -9,6 +9,11 @@ inline constexpr size_t bHeight = 100;
 inline constexpr size_t bBWidth  = 2*bWidth -1;
 inline constexpr size_t bBHeight = 2*bHeight-1;
 
+inline constexpr int min_updating_i = 2;
+inline constexpr int min_updating_j = 2;
+inline constexpr int max_updating_i = bWidth  - 3;
+inline constexpr int max_updating_j = bHeight - 3;
+
 const std::string dir = "/home/b_lin/Documents/Coding/barnard-cobden-labs/ads_sim_proj/version0.1/out/";
 
 // Number of pixels to randomly update per step

@@ -1,7 +1,7 @@
 #include "Simulation.h"
 
 Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
-:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(0,m_width-1),uniform_int_j(0,m_height-1),
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(min_updating_i,max_updating_i),uniform_int_j(min_updating_j,max_updating_j),
 m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerComplementFactor(crossLayerComplement),m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
 m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth)),
 m_fileWriter("defaultFile")
@@ -68,7 +68,13 @@ void Simulation::initBoard()
     {
         for (int j = 0; j < m_height; j++)
         {
-            if(j >= (int) (m_height / 2))
+            //if((j==0 || i==0) || (j==m_height-1 || i == m_width-1))
+            if(true)
+            {
+                m_board[0][j][i] = m_X[uniform_3(rand_generator)];
+                m_board[1][j][i] = m_X[uniform_3(rand_generator)];
+            }
+            else if(j >= (int) (m_height / 2))
             {
                 if(i>=(int) (m_width / 2))
                 {
