@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <chrono>
 struct elementCoords;
 struct edgeCoords
 {
@@ -295,12 +296,69 @@ struct elementCoords
         return false;
     }
 };
+
+struct ConsoleTimer
+{
+    std::chrono::time_point<std::chrono::high_resolution_clock> tBegin;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tEnd;
+    std::chrono::duration<float> Dt;
+    ConsoleTimer()
+    {
+        std::cout << "timer start" << std::endl;
+        tBegin = std::chrono::high_resolution_clock::now();
+    }
+    ~ConsoleTimer()
+    {
+        tEnd = std::chrono::high_resolution_clock::now();
+        Dt   = tEnd - tBegin;
+        std::cout << Dt.count() << " seconds" << std::endl;
+    }
+
+};
+
 struct ScreenPosition
 {
     const double x;
     const double y;
 };
 
+struct ParameterList
+{
+    std::string name;
+    std::vector<float> parameters;
+    ParameterList(std::string inputString, std::string inputName)
+    {
+        name = inputName;
+        int begin_index = 0; 
+        int end_index   = inputString.find_first_of(','); 
+        std::string substring;
+        while(end_index != std::string::npos)
+        {
+            substring = inputString.substr(begin_index, end_index-begin_index);
+            float number = getNumber(substring);
+            parameters.push_back(number);
+            begin_index = end_index+1;
+            end_index = inputString.find_first_of(',', begin_index);
+        }
+        substring = inputString.substr(begin_index);
+        float number = getNumber(substring);
+        parameters.push_back(number);
+    }
+    // Get the first number in a string, assuming the string does not start with a non-digit
+    float getNumber(std::string substring)
+    {
+        float number = strtof(substring.c_str(),nullptr);
+        return number;
+    }
+    void print()
+    {
+        std::cout << name << ":\n";
+        for (float elem: parameters)
+        {
+            std::cout << elem << "\n";
+        }
+    }
+};
 // Templates
 template<typename T>
 void p(T val)

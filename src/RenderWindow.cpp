@@ -51,7 +51,7 @@ void RenderWindow::initializeGL() {
 
     // Ensure simulation object is initialized
     //m_sim = new Simulation(default_kT,default_tension,default_intraLayerNeighbor,default_crossLayerNeighbor,default_crossLayerBoundary);
-    m_sim->printBoard();
+    //m_sim->printBoard();
 
     char* simTopData = &m_sim->m_board[1][0][0];
     char* simBotData = &m_sim->m_board[0][0][0];
@@ -69,7 +69,7 @@ void RenderWindow::initializeGL() {
     m_showBot = true;
 
     // Make texture objects
-    std::cout << "trying to init textures" << std::endl;
+    //std::cout << "trying to init textures" << std::endl;
     m_textureA = new Texture("textures/ATop.png");
     m_textureB = new Texture("textures/BTop.png");
     m_textureC = new Texture("textures/CTop.png");
@@ -90,11 +90,11 @@ void RenderWindow::initializeGL() {
     m_shader1->getShaderProgram()->setUniformValue(m_texCLoc,3);
     m_shader1->getShaderProgram()->setUniformValue(m_boardBotTexLoc,4);
 
-    std::cout<<"boardTopTex " << m_boardTopTexLoc << std::endl;
-    std::cout<<"texALoc " << m_texALoc << std::endl;
-    std::cout<<"texBLoc " << m_texBLoc << std::endl;
-    std::cout<<"texCLoc " << m_texCLoc << std::endl;
-    std::cout<<"boardBotTex " << m_boardBotTexLoc << std::endl;
+    //std::cout<<"boardTopTex " << m_boardTopTexLoc << std::endl;
+    //std::cout<<"texALoc " << m_texALoc << std::endl;
+    //std::cout<<"texBLoc " << m_texBLoc << std::endl;
+    //std::cout<<"texCLoc " << m_texCLoc << std::endl;
+    //std::cout<<"boardBotTex " << m_boardBotTexLoc << std::endl;
 
     m_shader1->release();
     // Set up vertex data with positions followed by texture coords
@@ -150,6 +150,83 @@ void RenderWindow::drawLastAndComputeNext()
     m_sim->randomStep();
 }
 
+void RenderWindow::drawCurrentBoards()
+{
+    // Load current textures
+    char* topTexData = &m_sim->m_board[1][0][0];
+    char* botTexData = &m_sim->m_board[0][0][0];
+    //char* texData = &m_sim->m_displayBoard[0][0];
+    m_boardTopTexture->updateData(topTexData);
+    m_boardBotTexture->updateData(botTexData);
+
+    // Draw
+    update();
+}
+
+void RenderWindow::computeNext()
+{
+    // Compute next simulation state
+    m_sim->randomStep();
+}
+
+void RenderWindow::oneKSteps()
+{
+    ConsoleTimer timer;
+    //drawCurrentBoards();
+    for(int stepIndex = 0; stepIndex < 1000; stepIndex++)
+    {
+        computeNext();
+        drawCurrentBoards();
+    }
+    //drawCurrentBoards();
+}
+
+void RenderWindow::recordFile(int steps, double start_kT , double end_kT, int kT_rampLength,
+                    float intraNNFactor    , float intraSecondNNFactor,
+                    float cComplementFactor, float cBoundaryFactor,
+                    float cNNFactor)
+{
+    ConsoleTimer timer;
+    // set all of the params
+    setSimParams(intraNNFactor,
+                 intraSecondNNFactor,
+                 cComplementFactor,
+                 cBoundaryFactor,
+                 cNNFactor);
+    drawCurrentBoards();
+    // ramp down temp
+    double kT_slope = (end_kT - start_kT) / kT_rampLength;
+    double kT = start_kT;
+    m_sim->updateTemp(kT);
+    for(int stepIndex = 1; stepIndex < kT_rampLength + 1; stepIndex++)
+    {
+        computeNext();
+        kT = start_kT + kT_slope*stepIndex;
+        // send to simulation
+        m_sim->updateTemp(kT);
+    }
+
+    drawCurrentBoards();
+    for(int stepIndex = 0; stepIndex < steps-kT_rampLength; stepIndex++)
+    {
+        computeNext();
+    }
+    drawCurrentBoards();
+}
+
+void RenderWindow::setSimParams(
+                    float intraNNFactor    , float intraSecondNNFactor,
+                    float cComplementFactor, float cBoundaryFactor,
+                    float cNNFactor
+)
+{
+    m_sim->updateNearestNeighbor(intraNNFactor);
+    m_sim->updateSecondNearestNeighbor(intraSecondNNFactor);
+    m_sim->updateCrossLayerComplement(cComplementFactor);
+    m_sim->updateCrossLayerBoundaryInterference(cBoundaryFactor);
+    m_sim->updateCrossLayerNearestNeighbor(cNNFactor);
+}
+
 void RenderWindow::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -162,17 +239,17 @@ void RenderWindow::paintGL()
 
     // Bind the textures
     m_boardTopTexture->m_texture->bind(0);
-    m_textureA->m_texture->bind(1);
-    m_textureB->bind(2);
-    m_textureC->bind(3);
+    //m_textureA->m_texture->bind(1);
+    //m_textureB->bind(2);
+    //m_textureC->bind(3);
     m_boardBotTexture->m_texture->bind(4);
 
     m_mesh1->draw(GL_TRIANGLES, m_indexCount);
 
     m_boardBotTexture->m_texture->release(4);
-    m_textureC->release(3);
-    m_textureB->release(2);
-    m_textureA->m_texture->release(1);
+    //m_textureC->release(3);
+    //m_textureB->release(2);
+    //m_textureA->m_texture->release(1);
     m_boardTopTexture->m_texture->release(0);
 }
 

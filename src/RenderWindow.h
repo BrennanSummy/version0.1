@@ -19,6 +19,18 @@ public:
                  double crossLayerBoundaryFactor);
     ~RenderWindow();
     void drawLastAndComputeNext();
+    void computeNext();
+    void drawCurrentBoards();
+    void oneKSteps();
+    void recordFile(int steps, double start_kT , double end_kT, int kT_rampLength,
+                    float intraNNFactor    , float intraSecondNNFactor,
+                    float cComplementFactor, float cBoundaryFactor,
+                    float cNNFactor);
+    void setSimParams(
+                      float intraNNFactor    , float intraSecondNNFactor,
+                      float cComplementFactor, float cBoundaryFactor,
+                      float cNNFactor
+                     );
     Simulation* m_sim;
 
 public slots:

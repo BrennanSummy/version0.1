@@ -13,12 +13,6 @@ m_fileWriter("defaultFile")
     //printBoardWithBoundary();
     clearNeighborVals();
     // debug
-    elementCoords meep(3,3);
-    std::vector<elementCoords> m2 = meep.getValidSecondNearestElements();
-    for (int i = 0; i < 12; i++)
-    {
-        std::cout << i << ": " << m2[i].i << "," << m2[i].j << std::endl;
-    }
 
     
     //// First File Setup
@@ -1135,7 +1129,7 @@ char Simulation::roll()
     {
         //std::cout << m_energies[0] << ":" << m_energies[1] << ":" << m_energies[2] << std::endl;
         // Select the minimum energy, or do a 1/3 roll if they are equal
-        float smallestEnergy = std::min({m_energies[0],m_energies[1],m_energies[2]});
+        float smallestEnergy = std::min(m_energies[0],std::min(m_energies[1],m_energies[2]));
         //std::cout << "smallest: " << smallestEnergy << std::endl;
 
 
@@ -1344,6 +1338,11 @@ void Simulation::randomStep()
     m_stepCounter ++;
     //auto tBegin = std::chrono::high_resolution_clock::now();
     */
+    if(m_reads%1000==1)
+    {
+        tBegin = std::chrono::high_resolution_clock::now();
+    }
+
 
 
     // Carry out the update element by element, choosing a random one each time
@@ -1360,6 +1359,13 @@ void Simulation::randomStep()
 
     } 
 
+    m_reads ++;
+    if(m_reads%1000==0)
+    {
+        tEnd = std::chrono::high_resolution_clock::now();
+        Dt   = tEnd - tBegin;
+        std::cout << Dt.count() << " seconds" << std::endl;
+    }
     // Record time taken for the step, and print average every 1000 steps
     //auto tDone = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;

@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QString>
 
+#include "constants.h"
 #include "external/stb_image.h"
 
 // The texture class handles image importing and texture sampling/scaling

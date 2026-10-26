@@ -28,13 +28,13 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////                  Title               Min   Max  Default                          Steps
-    ParameterSlider* kTSlider                    = new ParameterSlider("kT"               ,     0.01,    5, default_kT                      ,  100, parameterArea);
-    ParameterSlider* nearestNeighborSlider       = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,  100, parameterArea);
-    ParameterSlider* secondNearestNeighborSlider = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,  100, parameterArea);
-    ParameterSlider* crossLayerComplementSlider  = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,  100, parameterArea);
-    ParameterSlider* crossLayerNeighborSlider    = new ParameterSlider("CL N-Neighbor"    ,       -1,    1, default_crossLayerNeighbor      ,  100, parameterArea);
-    ParameterSlider* crossLayerBoundarySlider    = new ParameterSlider("CL Boundary"      ,     -100,  100, default_crossLayerBoundary      ,  100, parameterArea);
-    ParameterSlider* framerateSlider             = new ParameterSlider("Framerate"        ,        1,   60, default_framerate               ,   60, parameterArea);
+    kTSlider                    = new ParameterSlider("kT"               ,     0.01,    5, default_kT                      ,  100, parameterArea);
+    nearestNeighborSlider       = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,  100, parameterArea);
+    secondNearestNeighborSlider = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,  100, parameterArea);
+    crossLayerComplementSlider  = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,  100, parameterArea);
+    crossLayerNeighborSlider    = new ParameterSlider("CL N-Neighbor"    ,       -1,    1, default_crossLayerNeighbor      ,  100, parameterArea);
+    crossLayerBoundarySlider    = new ParameterSlider("CL Boundary"      ,     -100,  100, default_crossLayerBoundary      ,  100, parameterArea);
+    framerateSlider             = new ParameterSlider("Framerate"        ,        1,   60, default_framerate               ,   60, parameterArea);
     parameterLayout->setSpacing(30);
     // left, top, right, bottom margins
     parameterLayout->setContentsMargins(0,20,0,20);
@@ -47,9 +47,20 @@ void MainWindow::setupWindow()
     parameterLayout->addWidget(framerateSlider);
     //parameterLayout->addWidget(slider2);
 
+    // Add textbox for input
+    QLineEdit* paramInputBox = new QLineEdit(this);
+    paramInputBox->setPlaceholderText("Enter comma separated values to sample");
+    parameterLayout->addWidget(paramInputBox);
+
     // Add start/stop button
     PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
     parameterLayout->insertWidget(0,startStopButton);
+
+    // Add check box for recording vs free param adjustment
+    QCheckBox* recordingCheckBox = new QCheckBox(parameterArea);
+    recordingCheckBox->setText("Record");
+    recordingCheckBox->setChecked(false);
+    parameterLayout->addWidget(recordingCheckBox);
 
     // Add check boxes for layer showing
     QCheckBox* showTopCheckBox = new QCheckBox(parameterArea);
@@ -104,10 +115,21 @@ void MainWindow::setupWindow()
 
     // Connect the start/stop button to the QTimer
     connect(startStopButton,&PushButton::buttonPressed   ,updateTimer, &UpdateTimer::toggle);
+   // connect(startStopButton,&PushButton::buttonPressed   ,renderArea,&RenderWindow::oneKSteps);
 
-    connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT
-                                                                                                     
-    connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT
+    if(DEVICE)
+    {
+        // Laptop
+        connect(recordingCheckBox,&QCheckBox::stateChanged, this, &MainWindow::toggleParamSliders);//TOPBOTTOMSELECT//LAPTOP
+        connect(showTopCheckBox,&QCheckBox::stateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT//LAPTOP
+        connect(showBotCheckBox,&QCheckBox::stateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT//LAPTOP
+    } else
+    {
+        // Desktop
+        connect(recordingCheckBox,&QCheckBox::checkStateChanged, this, &MainWindow::toggleParamSliders);//TOPBOTTOMSELECT//LAPTOP
+        connect(showTopCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowTop);//TOPBOTTOMSELECT
+        connect(showBotCheckBox,&QCheckBox::checkStateChanged, renderArea, &RenderWindow::updateShowBot);//TOPBOTTOMSELECT
+    }
 
     // Connect the Simulation pause/play signal to the startStopButton
     connect(renderArea->m_sim,&Simulation::toggleStartStop, startStopButton, &PushButton::onPress);
@@ -124,4 +146,19 @@ void MainWindow::setupWindow()
     //framerateSlider->emitDefaultValue();
 
     //std::cout << "End of Main Window Setup" << std::endl;
+}
+
+void MainWindow::toggleParamSliders()
+{
+    bool state = kTSlider->isEnabled();
+
+    kTSlider->setDisabled(state);
+    nearestNeighborSlider->setDisabled(state);
+    secondNearestNeighborSlider->setDisabled(state);
+    crossLayerComplementSlider->setDisabled(state);
+    crossLayerNeighborSlider->setDisabled(state);
+    crossLayerBoundarySlider->setDisabled(state);
+    framerateSlider->setDisabled(state);
+
+    std::cout<<"Sliders toggled"<<std::endl;
 }

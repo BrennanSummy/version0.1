@@ -4,6 +4,7 @@
 #include <QSplitter>
 #include <QTimer>
 #include <QCheckBox>
+#include <QLineEdit>
 #include "ParameterSlider.h"
 #include "PushButton.h"
 #include "UpdateTimer.h"
@@ -21,7 +22,15 @@ public:
     double default_crossLayerComplement     = 0;
     double default_crossLayerNeighbor       = 0;
     double default_crossLayerBoundary       = 0;
-    int default_framerate                   = 30;
+    int default_framerate                   = 60;
 private:
-   void setupWindow(); 
+    void setupWindow(); 
+    void toggleParamSliders();
+    ParameterSlider* kTSlider                    ;
+    ParameterSlider* nearestNeighborSlider       ;
+    ParameterSlider* secondNearestNeighborSlider ;
+    ParameterSlider* crossLayerComplementSlider  ;
+    ParameterSlider* crossLayerNeighborSlider    ;
+    ParameterSlider* crossLayerBoundarySlider    ;
+    ParameterSlider* framerateSlider             ;
 };

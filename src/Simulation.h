@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <array>
 #include <iostream>
+#include <sstream>
 #include <cmath>
 #include <vector>
 #include <memory>
@@ -164,8 +165,13 @@ class Simulation: public QWidget
         // (Arbitrary once random updates were added) Number of elements updated per step.
         const int m_stepSize = 2000; //floor(width*height/10); // about 500 updates per frame seems to be realistic for 60fps
 
-        // Number of boundary scans to do before moving on to the next file (multiply this by 100 to get total steps)
+        // number of updates taken so far
         int m_reads = 0;
+        
+        std::chrono::time_point<std::chrono::high_resolution_clock> tBegin;
+        std::chrono::time_point<std::chrono::high_resolution_clock> tEnd;
+        std::chrono::duration<float> Dt;
+
 
         // File counter (for bulk data collection)
         int fileCount = 0;

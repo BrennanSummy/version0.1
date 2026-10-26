@@ -4,10 +4,21 @@
 // This is a C++ feature where you can define object values before even entering the constructor body
 Texture::Texture(const std::string& path): m_width(0),m_height(0),m_bytesPerPixel(0)
 {
+    /*
     std::cout << "Looking in: "<<std::filesystem::current_path().c_str()
     << " looking for " << path.c_str()<< std::endl;
+    */
     QImage img1(QString::fromStdString(path));
-    QImage img = img1.convertToFormat(QImage::Format_RGBA8888).flipped();
+    QImage img = img1.convertToFormat(QImage::Format_RGBA8888);
+    if(DEVICE)
+    {
+        // Laptop
+        img = img.mirrored(false,true);
+    } else
+    {
+        // Desktop
+        img = img.flipped();
+    }
     qDebug() << img.size();
     qDebug() << img.format();
 

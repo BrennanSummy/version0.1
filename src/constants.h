@@ -16,6 +16,8 @@ inline constexpr int max_updating_j = bHeight - 3;
 
 const std::string dir = "/home/b_lin/Documents/Coding/barnard-cobden-labs/ads_sim_proj/version0.1/out/";
 
+const bool DEVICE = 0; // 0 for DESKTOP, 1 for LAPTOP
+
 // Number of pixels to randomly update per step
 const int stepSizeInPixelUpdates = 7500;
 
