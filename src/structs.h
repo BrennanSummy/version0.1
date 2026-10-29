@@ -1,6 +1,7 @@
 #pragma once
 #include "constants.h"
 #include <iostream>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 #include <chrono>
@@ -357,6 +358,34 @@ struct ParameterList
         {
             std::cout << elem << "\n";
         }
+    }
+};
+
+struct ParameterDict
+{
+    std::unordered_map<std::string,float> dict;
+    ParameterDict(float iNN=0, float i2NN=0, float cNN=0, float c2NN=0, float cC=0)
+    {
+        dict.insert({"iNN"  , iNN   });
+        dict.insert({"i2NN" , i2NN  });
+        dict.insert({"cNN"  , cNN   });
+        dict.insert({"c2NN" , c2NN  });
+        dict.insert({"cC"   , cC    });
+    }
+    ParameterDict(std::unordered_map<std::string,float> inputDict)
+    {
+        dict = std::move(inputDict);
+    }
+    std::string toString()
+    {
+        std::ostringstream osStream;
+        for (auto iter = dict.begin(); iter != dict.end(); iter++)
+        {
+        osStream << iter->first << ":" << iter->second << ",";
+        }
+        std::string str = osStream.str();
+        str.pop_back();
+        return str;
     }
 };
 // Templates

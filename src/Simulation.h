@@ -55,8 +55,13 @@ class Simulation: public QWidget
         // This updates the value of m_crossLayerNearestNeighborFactor to the given value.
         void updateCrossLayerNearestNeighbor(float value);
 
+        void updateCrossLayerSecondNearestNeighbor(float value);
+
         // This updates the value of m_crossLayerBoundaryFactor to the given value.
         void updateCrossLayerBoundaryInterference(float value);
+
+        // Reset the boards
+        void reset();
         //////////////////// Update Functions ////////////////////
 
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
@@ -73,10 +78,15 @@ class Simulation: public QWidget
         int m_height  = (int)bHeight;
         int m_bBWidth = (int)bBWidth;
         int m_bBHeight= (int)bBHeight;
-    private:
 
         // Temperature for probability calculation
         double m_kT;
+
+        // Boundary Counter object
+        BoundaryCounter m_counter;
+
+    private:
+
 
         // Line tension factor for probability calculation
         double m_tensionFactor;
@@ -92,6 +102,9 @@ class Simulation: public QWidget
 
         // Inter-layer nearest neighbor factor for probability calculation
         double m_crossLayerNearestNeighborFactor;
+
+        // Inter-layer second nearest neighbor factor for probability calculation
+        double m_crossLayerSecondNearestNeighborFactor;
 
         // Inter-layer boundary interference factor for probability calculation
         double m_crossLayerBoundaryFactor;
@@ -113,6 +126,8 @@ class Simulation: public QWidget
         /* static array that stores the number of A's B's and C's neighboring the current coordinate's complement (on the other side of the board)
             0 <-> A, 1 <-> B, 2 <-> C */
         short m_crossLayerNeighborCounts[3];
+
+        short m_crossLayerSecondNeighborCounts[3];
 
         // A boolean that stores whether or not the proposed element value matches the complement or not
         bool m_matchingComplement[3];
@@ -145,6 +160,7 @@ class Simulation: public QWidget
         double m_tensionEnergy[3];
         double m_cLComplementEnergy[3];
         double m_cLNearestEnergy[3];
+        double m_cLSecondNearestEnergy[3];
         double m_cLBoundaryInterferenceEnergy[3];
         // plan b array which stores the energies (at low kT the probabilities can vanish)
         double m_energies[3];
@@ -170,10 +186,6 @@ class Simulation: public QWidget
         
         std::chrono::time_point<std::chrono::high_resolution_clock> tBegin;
         std::chrono::time_point<std::chrono::high_resolution_clock> tEnd;
-        std::chrono::duration<float> Dt;
-
-
-        // File counter (for bulk data collection)
         int fileCount = 0;
 
         // Parameter arrays indexed by fileCount
@@ -181,11 +193,7 @@ class Simulation: public QWidget
         const double nearestNeighborFs[1] = {0.75};
         const double tensionFs[8]         = {0.010, 0.015, 0.020, 0.025, 0.030, 0.035, 0.040, 0.045};
 
-        // Boundary Counter object
-        BoundaryCounter m_counter;
 
-        // File Writer object
-        FileWriter m_fileWriter;
 
         // Private methods
         // Creates new log file if new file name is given, and either way makes a header row that lays out data order
@@ -197,8 +205,6 @@ class Simulation: public QWidget
         void logAllCounts(int subStep);
         // Initialize the board to some arbitrary state
         void initBoard();
-        // Reset the board, then make a new log file
-        void resetWithNewName(std::string newName);
         // For initializing the boundary board by scanning the board
         void updateBoundaryBoardViaScan();
         /* Updates the state of the board element at the given coordinates

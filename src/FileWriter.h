@@ -10,10 +10,9 @@ class FileWriter
     std::string m_fileName;
     const std::string m_subdir = "logs/bulk/";
     public:
-    FileWriter(std::string fileName)
+    FileWriter(std::string fileName = "default")
     {
         m_fileName = fileName;
-        createFile();
     }
     void createFile()
     {
@@ -26,6 +25,19 @@ class FileWriter
     {
         std::ofstream f(dir + m_subdir + m_fileName + ".csv",std::ios::app);
         f << line << "\n";
+        f.close();
+    }
+
+    void vectorToLine(std::string preamble, std::vector<int> vec)
+    {
+        std::ofstream f(dir + m_subdir + m_fileName + ".csv",std::ios::app);
+        f << preamble;
+        for (auto iter = vec.begin(); iter != vec.end(); iter++)
+        {
+            f << *iter << ",";
+        }
+        f<<"\n";
+
         f.close();
     }
 

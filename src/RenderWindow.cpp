@@ -171,7 +171,6 @@ void RenderWindow::computeNext()
 
 void RenderWindow::oneKSteps()
 {
-    ConsoleTimer timer;
     //drawCurrentBoards();
     for(int stepIndex = 0; stepIndex < 1000; stepIndex++)
     {
@@ -186,7 +185,6 @@ void RenderWindow::recordFile(int steps, double start_kT , double end_kT, int kT
                     float cComplementFactor, float cBoundaryFactor,
                     float cNNFactor)
 {
-    ConsoleTimer timer;
     // set all of the params
     setSimParams(intraNNFactor,
                  intraSecondNNFactor,

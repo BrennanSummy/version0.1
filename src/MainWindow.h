@@ -5,8 +5,10 @@
 #include <QTimer>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <unordered_map>
 #include "ParameterSlider.h"
 #include "PushButton.h"
+#include "TextBox.h"
 #include "UpdateTimer.h"
 #include "RenderWindow.h"
 
@@ -23,14 +25,42 @@ public:
     double default_crossLayerNeighbor       = 0;
     double default_crossLayerBoundary       = 0;
     int default_framerate                   = 60;
+
+    // Recording? as opposed to free manipulation of sliders
+    bool m_recording;
+
+    int m_stepIndex = 0;
+    int m_fileIndex = -1;
+    std::string m_currentFileName;
+
+public slots:
+    void receiveParameterList(ParameterList paramList);
+signals:
+    void startStopFrameTimer();
+    void startRecording();
 private:
     void setupWindow(); 
-    void toggleParamSliders();
+    void toggleRecording();
+    void startFileRecord(ParameterDict paramDict);
+    void stepFileForward();
+    void initiateNextFile();
+    void parameterListsToParameterDictMap();
+    void startStop();
+    //std::vector<ParameterList> parameterLists;
+    std::unordered_map<std::string,ParameterList> parameterLists;
     ParameterSlider* kTSlider                    ;
     ParameterSlider* nearestNeighborSlider       ;
     ParameterSlider* secondNearestNeighborSlider ;
     ParameterSlider* crossLayerComplementSlider  ;
     ParameterSlider* crossLayerNeighborSlider    ;
+    ParameterSlider* crossLayerSecondNeighborSlider    ;
     ParameterSlider* crossLayerBoundarySlider    ;
     ParameterSlider* framerateSlider             ;
+    UpdateTimer*     updateTimer;
+    QCheckBox*       recordingCheckBox;
+    TextBox*         paramInputBox;
+    RenderWindow*    m_renderArea;
+    FileWriter       m_fileWriter;
+
+    std::unordered_map<int,ParameterDict> m_fileIndexToParamDict;
 };

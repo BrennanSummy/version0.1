@@ -3,9 +3,7 @@
 Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
 :rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(min_updating_i,max_updating_i),uniform_int_j(min_updating_j,max_updating_j),
 m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerComplementFactor(crossLayerComplement),m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
-m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth)),
-m_fileWriter("defaultFile")
-
+m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth))
 {
     initBoard();
     updateBoundaryBoardViaScan();
@@ -32,35 +30,6 @@ m_fileWriter("defaultFile")
 
 }
 
-void Simulation::initLogFile(std::string newFileName)
-{
-    if(newFileName!="none")
-    {
-        m_fileWriter.setNewFileName(newFileName);
-        m_fileWriter.createFile();
-    }
-
-    std::ostringstream osStream;
-    osStream << "width:" << bWidth << "\n"
-             << "height:"<< bHeight<< "\n"
-             << "temp:"  << m_kT   << "\n"
-             << "NNF:"   << m_nearestNeighborFactor << "\n"
-             << "TenF:"  << m_tensionFactor << "\n";
-    std::string metaData = osStream.str();
-    m_fileWriter.insertLine(metaData);
-    //std::string line = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
-    //m_fileWriter.insertLine(line);
-}
-
-void Simulation::writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median)
-{
-    std::string header = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
-    m_fileWriter.insertLine(header);
-    std::ostringstream osStream;
-    osStream << num << ","  << max << "," << avg << "," << stdDev << "," << median << "," << numOver6 << "," << avgWO6 << "," << stdDevWO6;
-    std::string line = osStream.str();
-    m_fileWriter.insertLine(line);
-}
 
 
 void Simulation::initBoard()
@@ -99,15 +68,11 @@ void Simulation::initBoard()
     
 }
 
-void Simulation::resetWithNewName(std::string newName)
+void Simulation::reset()
 {
     // Reset the board
     initBoard();
     updateBoundaryBoardViaScan();
-    
-    // Set a new file name
-    initLogFile(newName);
-
 }
 
 void Simulation::updateBoundaryBoardViaScan()
@@ -338,35 +303,11 @@ int Simulation::getConfigurationEnergy()
     // ONLY TOP LAYER FOR NOW (top=1)
     for (int top = 1; top <2; top++)
     {
-        energy += m_tensionFactor*countEdges(top);
         energy += m_nearestNeighborFactor*countDissimNeighbors(top);
     }
     return energy;
 }
 
-void Simulation::logAllCounts(int subStep)
-{
-    bool write = false;
-    std::ostringstream osStream;
-    osStream << subStep;
-    for (int i = 0; i<3; i++)
-    {
-        short neighborCount = m_inLayerNeighborCounts[i];
-        int prospBoundLength =  m_prospectiveBoundaryLengths[i];
-
-        if(prospBoundLength !=0 && prospBoundLength !=6 && prospBoundLength != 4)
-        {
-            write = true;
-        }
-
-        osStream << "," << neighborCount << "," << prospBoundLength;
-    }
-    std::string counts = osStream.str();
-    if(write)
-    {
-        m_fileWriter.insertLine(counts);
-    }
-}
 
 char Simulation::updateBoardElement(elementCoords element, bool top, int subStep)
 {
@@ -450,18 +391,19 @@ void Simulation::updateNeighborVals(elementCoords element, bool top)
                 //m_neighborVals[neighbor] = 2;
                 break;
         }
-        // Cross Layer Second Neighbors switch (crossLayerValue)
-        // Cross Layer Second Neighbors {
-        // Cross Layer Second Neighbors     case 'A':
-        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[0]++;
-        // Cross Layer Second Neighbors         break;
-        // Cross Layer Second Neighbors     case 'B':
-        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[1]++;
-        // Cross Layer Second Neighbors         break;
-        // Cross Layer Second Neighbors     case 'C':
-        // Cross Layer Second Neighbors         m_crossLayerNeighborCounts[2]++;
-        // Cross Layer Second Neighbors         break;
-        // Cross Layer Second Neighbors }
+        char crossLayerValue    = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        switch (crossLayerValue)
+        {
+            case 'A':
+                m_crossLayerSecondNeighborCounts[0]++;
+                break;
+            case 'B':
+                m_crossLayerSecondNeighborCounts[1]++;
+                break;
+            case 'C':
+                m_crossLayerSecondNeighborCounts[2]++;
+                break;
+        }
 
     }
 }
@@ -1007,8 +949,13 @@ void Simulation::updateProbabilities()
         //////////////////////////////// Cross Layer Immediate Complement ////////////////////////////////
 
         //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
-        m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * m_crossLayerNeighborCounts[i];
+        //m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * m_crossLayerNeighborCounts[i];
+        m_cLNearestEnergy[i] = m_crossLayerNearestNeighborFactor * (m_crossLayerNeighborCounts[ip1] + m_crossLayerNeighborCounts[ip2]);
         //////////////////////////////// Cross Layer Nearest Neighbor ////////////////////////////////
+
+        //////////////////////////////// Cross Layer Second Nearest Neighbor ////////////////////////////////
+        m_cLSecondNearestEnergy[i] = m_crossLayerSecondNearestNeighborFactor * (m_crossLayerSecondNeighborCounts[ip1]+m_crossLayerSecondNeighborCounts[ip2]);
+        //////////////////////////////// Cross Layer Second Nearest Neighbor ////////////////////////////////
 
         //////////////////////////////// Cross Layer Boundary Interference ////////////////////////////////
         m_cLBoundaryInterferenceEnergy[i] = m_crossLayerBoundaryFactor*m_prospectiveBoundaryOverlapCounts[i];
@@ -1017,7 +964,7 @@ void Simulation::updateProbabilities()
 
         // Total Energy
         //T//m_energies[i] = (m_nearestEnergy[i] + m_tensionEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
-        m_energies[i] = (m_nearestEnergy[i] + m_secondNearestEnergy[i] + m_cLComplementEnergy[i] + m_cLNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
+        m_energies[i] = (m_nearestEnergy[i] + m_secondNearestEnergy[i] + m_cLComplementEnergy[i] + m_cLNearestEnergy[i] + m_cLSecondNearestEnergy[i] + m_cLBoundaryInterferenceEnergy[i]);
     }
 
     double boltzmann_A = std::exp(-(m_energies[0])/m_kT);
@@ -1035,6 +982,7 @@ void Simulation::updateProbabilities()
         m_inLayerNeighborCounts[i]           =0;
         m_inLayerSecondNeighborCounts[i]     =0;
         m_crossLayerNeighborCounts[i]        =0;
+        m_crossLayerSecondNeighborCounts[i]  =0;
         m_prospectiveBoundaryLengths[i]      =0;
         m_prospectiveBoundaryOverlapCounts[i]=0;
     }
@@ -1240,7 +1188,6 @@ void Simulation::randomStep()
             int nSize =std::size(nearestNeighborFs);
 
             double newTemp    = temps            [fileCount/(tSize*nSize)];
-            double newNNF     = nearestNeighborFs[(fileCount/(tSize))%nSize];
             double newTension = tensionFs        [fileCount%tSize];
             // Update the relevant parameters
             updateTemp(newTemp);
@@ -1360,12 +1307,12 @@ void Simulation::randomStep()
     } 
 
     m_reads ++;
-    if(m_reads%1000==0)
-    {
-        tEnd = std::chrono::high_resolution_clock::now();
-        Dt   = tEnd - tBegin;
-        std::cout << Dt.count() << " seconds" << std::endl;
-    }
+    //if(m_reads%1000==0)
+    //{
+    //    tEnd = std::chrono::high_resolution_clock::now();
+    //    std::chrono::duration Dt   = tEnd - tBegin;
+    //    std::cout << Dt.count() << " seconds" << std::endl;
+    //}
     // Record time taken for the step, and print average every 1000 steps
     //auto tDone = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
@@ -1530,8 +1477,65 @@ void Simulation::updateCrossLayerNearestNeighbor(float value)
 {
     m_crossLayerNearestNeighborFactor = value;
 }
+void Simulation::updateCrossLayerSecondNearestNeighbor(float value)
+{
+    m_crossLayerSecondNearestNeighborFactor = value;
+}
 void Simulation::updateCrossLayerBoundaryInterference(float value)
 {
     m_crossLayerBoundaryFactor = value;
 }
 ///////////////////////////PARAM UPDATE FUNCTIONS/////////////////////////////////
+
+//void Simulation::logAllCounts(int subStep)
+//{
+//    bool write = false;
+//    std::ostringstream osStream;
+//    osStream << subStep;
+//    for (int i = 0; i<3; i++)
+//    {
+//        short neighborCount = m_inLayerNeighborCounts[i];
+//        int prospBoundLength =  m_prospectiveBoundaryLengths[i];
+//
+//        if(prospBoundLength !=0 && prospBoundLength !=6 && prospBoundLength != 4)
+//        {
+//            write = true;
+//        }
+//
+//        osStream << "," << neighborCount << "," << prospBoundLength;
+//    }
+//    std::string counts = osStream.str();
+//    if(write)
+//    {
+//        m_fileWriter.insertLine(counts);
+//    }
+//}
+//void Simulation::initLogFile(std::string newFileName)
+//{
+//    if(newFileName!="none")
+//    {
+//        m_fileWriter.setNewFileName(newFileName);
+//        m_fileWriter.createFile();
+//    }
+//
+//    std::ostringstream osStream;
+//    osStream << "width:" << bWidth << "\n"
+//             << "height:"<< bHeight<< "\n"
+//             << "temp:"  << m_kT   << "\n"
+//             << "NNF:"   << m_nearestNeighborFactor << "\n"
+//             << "TenF:"  << m_tensionFactor << "\n";
+//    std::string metaData = osStream.str();
+//    m_fileWriter.insertLine(metaData);
+//    //std::string line = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
+//    //m_fileWriter.insertLine(line);
+//}
+//
+//void Simulation::writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median)
+//{
+//    std::string header = "Number,Max,Average,Std_Dev,Median,Number_Over_6,AverageOver6,Std_Dev_Over6";
+//    m_fileWriter.insertLine(header);
+//    std::ostringstream osStream;
+//    osStream << num << ","  << max << "," << avg << "," << stdDev << "," << median << "," << numOver6 << "," << avgWO6 << "," << stdDevWO6;
+//    std::string line = osStream.str();
+//    m_fileWriter.insertLine(line);
+//}
