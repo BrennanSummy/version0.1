@@ -381,10 +381,11 @@ struct ParameterDict
         std::ostringstream osStream;
         for (auto iter = dict.begin(); iter != dict.end(); iter++)
         {
-        osStream << iter->first << ":" << iter->second << ",";
+        osStream << iter->first << "_" << iter->second << ",";
         }
         std::string str = osStream.str();
         str.pop_back();
+        // SHOULD REPLACE . WITH p
         return str;
     }
 };

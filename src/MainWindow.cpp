@@ -166,13 +166,14 @@ void MainWindow::toggleRecording()
 {
     bool state = recordingCheckBox->isChecked();
 
-    kTSlider                    ->setDisabled(state);
-    nearestNeighborSlider       ->setDisabled(state);
-    secondNearestNeighborSlider ->setDisabled(state);
-    crossLayerComplementSlider  ->setDisabled(state);
-    crossLayerNeighborSlider    ->setDisabled(state);
-    crossLayerBoundarySlider    ->setDisabled(state);
-    framerateSlider             ->setDisabled(state);
+    kTSlider                        ->setDisabled(state);
+    nearestNeighborSlider           ->setDisabled(state);
+    secondNearestNeighborSlider     ->setDisabled(state);
+    crossLayerComplementSlider      ->setDisabled(state);
+    crossLayerNeighborSlider        ->setDisabled(state);
+    crossLayerSecondNeighborSlider  ->setDisabled(state);
+    crossLayerBoundarySlider        ->setDisabled(state);
+    framerateSlider                 ->setDisabled(state);
 
     std::cout<<"Sliders toggled"<<std::endl;
 }
@@ -215,7 +216,6 @@ void MainWindow::startFileRecord(ParameterDict paramDict)
     m_renderArea->m_sim->updateCrossLayerSecondNearestNeighbor(paramDict.dict.at("c2NN"));
     m_renderArea->m_sim->updateCrossLayerComplement     (paramDict.dict.at("cC"  ));
 
-    p("entered method");
 
     // Construct a name that communicates params
     std::ostringstream osStream;
@@ -236,6 +236,13 @@ void MainWindow::stepFileForward()
         double kT = start_kT + (end_kT - start_kT) * (((float)m_stepIndex) / kT_rampLength);
         // send to simulation
         m_renderArea->m_sim->updateTemp(kT);
+        if(m_stepIndex%grabScreenPeriodInSteps == 0)
+        {
+            std::ostringstream osStream;
+            osStream << "logs/bulk/pics/" << m_fileWriter.getName() << "_" << m_stepIndex;
+            std::string name = osStream.str(); 
+            m_renderArea-> printToImageFile(name);
+        }
         m_renderArea->drawLastAndComputeNext();
     }
     else if(kT_rampLength < m_stepIndex && m_stepIndex < readsPerFile)
@@ -281,6 +288,10 @@ void MainWindow::initiateNextFile()
     p("startFileRecord finish");
     // Reset the simulation boards
     m_renderArea->m_sim->reset();
+    // BOARD SAVE std::string old_name = m_fileWriter.getName();
+    // BOARD SAVE m_fileWriter.setNewFileName("rand_board");
+    // BOARD SAVE m_fileWriter.saveBoardArray(m_renderArea->m_sim->m_board);
+    // BOARD SAVE m_fileWriter.setNewFileName(old_name);
 }
 
 void MainWindow::parameterListsToParameterDictMap()

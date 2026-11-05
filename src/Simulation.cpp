@@ -5,8 +5,9 @@ Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearest
 m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerComplementFactor(crossLayerComplement),m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
 m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth))
 {
-    initBoard();
-    updateBoundaryBoardViaScan();
+    //initBoard();
+    //updateBoundaryBoardViaScan();
+    reset();
     setDebugBoardToBoundaryBoard();
     //printBoardWithBoundary();
     clearNeighborVals();
@@ -71,7 +72,8 @@ void Simulation::initBoard()
 void Simulation::reset()
 {
     // Reset the board
-    initBoard();
+    //initBoard();
+    loadBoardFromFile(dir+"rand_board_1.csv");
     updateBoundaryBoardViaScan();
 }
 
@@ -1487,6 +1489,38 @@ void Simulation::updateCrossLayerBoundaryInterference(float value)
 }
 ///////////////////////////PARAM UPDATE FUNCTIONS/////////////////////////////////
 
+void Simulation::loadBoardFromFile(std::string filename)
+{
+    // init file
+    std::ifstream f(filename);
+    std::string line;
+    int i;
+    // read the file row by row (line by line)
+    for (int top = 0; top < 2; top++)
+    {
+        for (int j = 0; j < bHeight; j++)
+        {
+            i=0;
+            // load the line string
+            std::getline(f,line); 
+            if(line[0] == '-')
+            {
+                // this effectively skips the line between layers
+                j--;
+            }
+            for (char elem : line)
+            {
+                if(elem=='A' || elem=='B' || elem=='C')
+                {
+                    m_board[top][j][i] = elem;
+                    i++;
+                }
+            }
+
+
+        }
+    }
+}
 //void Simulation::logAllCounts(int subStep)
 //{
 //    bool write = false;

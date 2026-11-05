@@ -201,6 +201,9 @@ class Simulation: public QWidget
         // Writes a line of data to the current log file
         void writeToLog(int num, int numOver6, int max, double avg, double avgWO6, double stdDev, double stdDevWO6, double median);
 
+        // Sets the board array to that found in the given file, assuming a bottom/top, row, column hierarchical ordering 0,0,0 -> 0,1,0 -> ... -> 0,0,1 
+        void loadBoardFromFile(std::string filename);
+
         // Log the counts for a pixel's prospective state
         void logAllCounts(int subStep);
         // Initialize the board to some arbitrary state

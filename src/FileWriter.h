@@ -41,6 +41,25 @@ class FileWriter
         f.close();
     }
 
+    void saveBoardArray(const char (&board_ref)[2][bHeight][bWidth])
+    {
+        std::ofstream f(dir + m_subdir + m_fileName + ".csv",std::ios::app);
+
+        for (int top = 0; top < 2; top++)
+        {
+            for (int j = 0; j < bHeight; j++)
+            {
+                for (int i = 0; i < bWidth; i++)
+                {
+                    // Write this element to the file
+                    f << board_ref[top][j][i] << ",";
+                }
+                f << "\n";
+            }
+            f << "-\n";
+        }
+    }
+
     void setNewFileName(std::string fileName)
     {
         m_fileName = fileName;

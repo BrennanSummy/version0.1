@@ -25,10 +25,10 @@ const int stepSizeInPixelUpdates = 7500;
 const int scanBoundsPeriodInSteps = 1000;
 
 // Number of reads to do between screenshots
-const int grabScreenPeriodInSteps = 5000;
+const int grabScreenPeriodInSteps = 2000;
 
 // Number of reads to take per file/parameter set
-const int readsPerFile = 20001;
+const int readsPerFile = 30001;
 
 
 // Names of parameters to be looped through for data collection. This vector is referenced in the Textbox class
@@ -37,4 +37,4 @@ inline const std::vector<std::string> paramNames = {"iNN","i2NN","cNN","c2NN","c
 const double start_kT = 5;
 const double end_kT   = 0.1;
 
-const int kT_rampLength = 1000;
+const int kT_rampLength = 9000;
