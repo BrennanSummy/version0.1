@@ -1,9 +1,9 @@
 #include "Simulation.h"
 
 Simulation::Simulation(double kT, double tensionFactor, double intraLayerNearestNeighbor, double crossLayerComplement, double crossLayerNearestNeighbor, double crossLayerBoundaryFactor)
-:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_i(min_updating_i,max_updating_i),uniform_int_j(min_updating_j,max_updating_j),
+:rand_device(), rand_generator(rand_device()), uniform_real(0,1), uniform_3(0,2), uniform_2(0,1), uniform_int_checker(0,8), uniform_int_i(min_updating_i,max_updating_i),uniform_int_j(min_updating_j,max_updating_j),
 m_kT(kT), m_tensionFactor(tensionFactor), m_nearestNeighborFactor(intraLayerNearestNeighbor), m_crossLayerComplementFactor(crossLayerComplement),m_crossLayerNearestNeighborFactor(crossLayerNearestNeighbor),
-m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m_board,m_boundaryBoard,&bWidth,&bHeight,&bBWidth,&bBWidth))
+m_crossLayerBoundaryFactor(crossLayerBoundaryFactor)
 {
     //initBoard();
     //updateBoundaryBoardViaScan();
@@ -28,6 +28,14 @@ m_crossLayerBoundaryFactor(crossLayerBoundaryFactor),m_counter(BoundaryCounter(m
     //std::string newName = osStream.str();
     //// Create new file, reset board, and unpause
     //resetWithNewName(newName);
+    engines = sycl::malloc_device<oneapi::dpl::minstd_rand>((bWidth-noUpdateOffset)*(bHeight-noUpdateOffset),q);
+    auto* engs = engines;
+    q.submit([&](sycl::handler& cgh) {
+    cgh.parallel_for(sycl::range<1>((bWidth-noUpdateOffset)*(bHeight-noUpdateOffset)), [=](sycl::id<1> idx) {
+        // Initialize with a base seed plus a unique sequence offset per site
+        engs[idx] = oneapi::dpl::minstd_rand(42, idx[0] * 16);
+    });
+    }).wait();
 
 }
 
@@ -43,26 +51,10 @@ void Simulation::initBoard()
             //if((j==0 || i==0) || (j==m_height-1 || i == m_width-1))
             if(true)
             {
-                m_board[0][j][i] = m_X[uniform_3(rand_generator)];
-                m_board[1][j][i] = m_X[uniform_3(rand_generator)];
-            }
-            else if(j >= (int) (m_height / 2))
-            {
-                if(i>=(int) (m_width / 2))
-                {
-                m_board[0][j][i] = 'C';
-                m_board[1][j][i] = 'A';
-                }
-                else
-                {
-                m_board[0][j][i] = 'B';
-                m_board[1][j][i] = 'B';
-                }
-            }
-            else
-            {
-                m_board[0][j][i] = 'A';
-                m_board[1][j][i] = 'C';
+                set_m_board(i,j,0,m_X[uniform_3(rand_generator)]);
+                set_m_board(i,j,1,m_X[uniform_3(rand_generator)]);
+                //set_m_board(i,j,0,m_X[0]);
+                //set_m_board(i,j,1,m_X[1]);
             }
         }
     } 
@@ -72,8 +64,8 @@ void Simulation::initBoard()
 void Simulation::reset()
 {
     // Reset the board
-    //initBoard();
-    loadBoardFromFile(dir+"rand_board_1.csv");
+    initBoard();
+    //loadBoardFromFile(dir+"rand_board_1.csv");
     updateBoundaryBoardViaScan();
 }
 
@@ -86,7 +78,7 @@ void Simulation::updateBoundaryBoardViaScan()
             for (int j = 0; j < m_height; j++)
             {
                 // Check the state of the board
-                char ijValue   = m_board[top][j][i];
+                char ijValue   = get_m_board(i,j,top);
 
                 // Look to the upper left, upper right, and right for different domains
                 int indices[3][2];
@@ -112,7 +104,7 @@ void Simulation::updateBoundaryBoardViaScan()
                         // Check the state of the relevant neighbors
                         int neighbor_j = indices[neighbor][0];
                         int neighbor_i = indices[neighbor][1];
-                        char neighborValue = m_board[top][neighbor_j][neighbor_i];
+                        char neighborValue = get_m_board(neighbor_i,neighbor_j,top);
 
                         char boundaryType = '.';
                         if( (neighborValue=='A' && ijValue=='B') || (neighborValue=='B' && ijValue=='A') )
@@ -157,10 +149,12 @@ void Simulation::printBoard()
         std::cout << space;
         for (int i = 0; i < m_width; i++)
         {
-            std::cout <<m_board[1][j][i] <<  " ";
+            //std::cout <<m_board[1][j][i] <<  " ";
+            std::cout <<get_m_board(i,j,1) <<  " ";
         }
         std::cout << "\n";
     } 
+    std::cout << "\n";
     
     // BOTTOM
     //space.append(" ");
@@ -174,7 +168,7 @@ void Simulation::printBoard()
         std::cout << space;
         for (int i = m_width-1; i >= 0; i--)
         {
-            std::cout <<m_board[0][j][i] <<  " ";
+            std::cout <<get_m_board(i,j,0)<<  " ";
         }
         std::cout << "\n";
     } 
@@ -198,7 +192,7 @@ void Simulation::printBoardWithBoundary()
         {
             for (int i = 0; i < m_width; i++)
             {
-                std::cout <<m_board[1][doublej/2][i] <<  " ";
+                std::cout <<get_m_board(i,doublej/2,1)<<  " ";
 
                 if(i<(m_width - 1))
                 {
@@ -237,7 +231,7 @@ void Simulation::printBoardWithBoundary()
                 {
                     std::cout << m_boundaryBoard[0][doublej][2*i+1] <<  " ";
                 }
-                std::cout <<m_board[0][doublej/2][i] <<  " ";
+                std::cout <<get_m_board(i,doublej/2,0)<<  " ";
 
             }
             std::cout << "\n";
@@ -264,7 +258,7 @@ int Simulation::countDissimNeighbors(bool top)
             elementCoords element(i,j);
             // Count neighbors, then see how many are not similar
             updateNeighborVals(element, top);
-            char value = m_board[top][j][i];
+            char value = get_m_board(i,j,top);
 
             for (int valIndex = 0; valIndex < 3; valIndex++)
             {
@@ -321,7 +315,8 @@ char Simulation::updateBoardElement(elementCoords element, bool top, int subStep
     //T//}
     updateProbabilities();
     char result = roll();
-    m_board[top][element.j][element.i] = result;
+    //m_board[top][element.j][element.i] = result;
+    set_m_board(element.i,element.j,top,result);
     return result;
 }
 
@@ -338,8 +333,10 @@ void Simulation::updateNeighborVals(elementCoords element, bool top)
     for (int n = 0; n < surroundingElements.size(); n++)
     {
         // Check the state of the board to get the value of this element
-        char inLayerValue    = m_board[ top][surroundingElements[n].j][surroundingElements[n].i];
-        char crossLayerValue = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        //char inLayerValue    = m_board[ top][surroundingElements[n].j][surroundingElements[n].i];
+        //char crossLayerValue = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        char inLayerValue    = get_m_board(surroundingElements[n].i,surroundingElements[n].j,top);
+        char crossLayerValue = get_m_board(surroundingElements[n].i,surroundingElements[n].j,!top);
         // Increment the appropriate counter in m_inLayerNeighborCounts
         switch (inLayerValue)
         {
@@ -375,7 +372,7 @@ void Simulation::updateNeighborVals(elementCoords element, bool top)
     for (int n = 0; n < surroundingElements.size(); n++)
     {
         // Check the state of the board to get the value of this element
-        char inLayerValue    = m_board[ top][surroundingElements[n].j][surroundingElements[n].i];
+        char inLayerValue    = get_m_board(surroundingElements[n].i,surroundingElements[n].j,top);
         //char crossLayerValue = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
         // Increment the appropriate counter in m_inLayerNeighborCounts
         switch (inLayerValue)
@@ -393,7 +390,7 @@ void Simulation::updateNeighborVals(elementCoords element, bool top)
                 //m_neighborVals[neighbor] = 2;
                 break;
         }
-        char crossLayerValue    = m_board[!top][surroundingElements[n].j][surroundingElements[n].i];
+        char crossLayerValue    = get_m_board(surroundingElements[n].i,surroundingElements[n].j,!top);
         switch (crossLayerValue)
         {
             case 'A':
@@ -420,7 +417,7 @@ void Simulation::clearNeighborVals()
 
 void Simulation::updateMatchingComplement(elementCoords element, bool top)
 {
-    char complement = m_board[!top][element.j][element.i];
+    char complement = get_m_board(element.i,element.j,!top);
     for(int prospValIndex = 0; prospValIndex < 3; prospValIndex++)
     {
         m_matchingComplement[prospValIndex] = (complement==m_X[prospValIndex]);
@@ -438,7 +435,7 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, element
     //DEBUGstd::cout << "Top? " << top << std::endl;
     //DEBUGstd::cout << "Prospective Value: " << prospectiveValue << std::endl;
 
-    char currentValue = m_board[top][element.j][element.i];
+    //char currentValue = get_m_board[top][element.j][element.i];
 
     pointModifyBoundaryBoard(prospectiveValue,element.i,element.j, top);
     // DEBUG
@@ -449,14 +446,14 @@ void Simulation::updateProspectiveBoundaryLengths(char prospectiveValue, element
 
     int boundaryOverlaps;
 
-    int length = m_counter.countProspectiveBoundaryLength(prospectiveValue,element,top,&boundaryOverlaps);
+    //int length = m_counter.countProspectiveBoundaryLength(prospectiveValue,element,top,&boundaryOverlaps);
     
-    m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] = length;
+    //m_prospectiveBoundaryLengths[domainToIntMap.at(prospectiveValue)] = length;
 
-    m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] = boundaryOverlaps;
+    //m_prospectiveBoundaryOverlapCounts[domainToIntMap.at(prospectiveValue)] = boundaryOverlaps;
 
     // Revert point modification
-    pointModifyBoundaryBoard(currentValue,element.i,element.j, top);
+    //pointModifyBoundaryBoard(currentValue,element.i,element.j, top);
 }
 
 void Simulation::exploreLine(std::vector<std::array<int,3>>& remainingInitEdges, int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr)
@@ -818,7 +815,7 @@ void Simulation::pointModifyBoundaryBoard(char prospectiveValue, int i, int j, b
         if(coordIsValid)
         {
             // Check the state of the board for the neighbor
-            char neighborValue = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
+            char neighborValue = get_m_board(indices[neighbor][1],indices[neighbor][0],top);
 
             char boundaryType = '.';
             if( (neighborValue=='A' && prospectiveValue=='B') || (neighborValue=='B' && prospectiveValue=='A') )
@@ -990,72 +987,7 @@ void Simulation::updateProbabilities()
     }
 }
 
-void Simulation::updateBoundaryBoardElements(int boardi, int boardj, bool top)
-{
-    int indices[6][2] = {   {boardj+1,boardi-1},
-                            {boardj+1,boardi},
-                            {boardj  ,boardi+1},
-                            {boardj-1,boardi+1},
-                            {boardj-1,boardi},
-                            {boardj  ,boardi-1}
-    };
 
-    char ijValue = m_board[top][boardj][boardi];
-
-    for (int neighbor = 0; neighbor < 6; neighbor++)
-    {
-        // UPDATE BOUNDARY BOARD
-
-        // Note that this neighbor indexing is the same as boardNeighborIndex
-        // Test the validity of the neighbor indices (this deals with edges and corners)
-        bool coordIsValid = (indices[neighbor][0] >= 0)        && (indices[neighbor][1] >= 0)         &&
-                            (indices[neighbor][0] < m_height)  && (indices[neighbor][1] < m_width);
-        if(coordIsValid)
-        {
-            // Check the state of the board to see what the boundary should be
-            char value = m_board[top][indices[neighbor][0]][indices[neighbor][1]];
-            char boundaryType = '.';
-            if( (value=='A' && ijValue=='B') || (value=='B' && ijValue=='A') )
-            {
-                boundaryType = 'D';
-            }
-            else if( (value=='A' && ijValue=='C') || (value=='C' && ijValue=='A') )
-            {
-                boundaryType = 'E';
-            }
-            else if( (value=='B' && ijValue=='C') || (value=='C' && ijValue=='B') )
-            {
-                boundaryType = 'F';
-            }
-            int boundi = 2*boardi;
-            int boundj = 2*boardj;
-            switch(neighbor)
-            {
-                case 0:
-                boundi += -1;
-                boundj +=  1;
-                break;
-                case 1:
-                boundj +=  1;
-                break;
-                case 2:
-                boundi +=  1;
-                break;
-                case 3:
-                boundi += +1;
-                boundj += -1;
-                break;
-                case 4:
-                boundj += -1;
-                break;
-                case 5:
-                boundi += -1;
-                break;
-            }
-            m_boundaryBoard[top][boundj][boundi] = boundaryType;
-        } 
-    }
-}
 
 char Simulation::roll()
 {
@@ -1167,126 +1099,6 @@ char Simulation::roll()
 
 void Simulation::randomStep()
 {
-    // Logging / data keeping
-    /*
-    // THIS SHOULD BE  % 100 == 0 FOR NORMAL FUNCTION
-    if ( m_stepCounter % scanBoundsPeriodInSteps == 0 )
-    {
-        // save snapshot every 10 reads
-        if ( m_reads%grabScreenPeriodInReads == 0)
-        {
-            emit saveSnapshot("logs/bulk/pics/" + m_fileWriter.getName() + "_" + std::to_string(m_reads));
-        }
-        // Should a new file be started?
-        if( m_reads == readsPerFile )
-        {
-            // Pause the simulation
-            emit toggleStartStop();
-
-
-            // Get the parameters for this upcoming file
-            fileCount++;
-            int tSize =std::size(tensionFs);
-            int nSize =std::size(nearestNeighborFs);
-
-            double newTemp    = temps            [fileCount/(tSize*nSize)];
-            double newTension = tensionFs        [fileCount%tSize];
-            // Update the relevant parameters
-            updateTemp(newTemp);
-            updateNearestNeighbor(newNNF);
-            //updateTension(newTension);
-
-            std::ostringstream osStream;
-            osStream << newTemp << "," << newNNF << "," << newTension;
-            std::string newName = osStream.str();
-            // Create new file, reset board, and unpause
-            resetWithNewName(newName);
-
-            // Play
-            emit toggleStartStop();
-
-            // Reset counter
-            m_reads = 0;
-            m_stepCounter = 0;
-        }
-        // Print energy
-        //std::cout << "______________________________________________________________________________" << std::endl;
-        //std::cout << "Energy: " << getConfigurationEnergy() << std::endl;
-        std::cout << "Read Count: " << m_reads << std::endl;
-
-
-        std::vector<int> lengths = m_counter.boundaryScan(1);
-        int boundCount = lengths.size();
-        int boundsOver6 = 0;
-        //std::cout<< "All boundaries found in top layer: " << boundCount << std::endl;
-        // True average boundary length
-        double avg=0;
-        // Average excluding all thermal blips (6 long boundaries)
-        double avgWO6=0;
-        int maxBound=0;
-        for (int n = 0; n < boundCount; n++)
-        {
-            int length = lengths[n];
-            avg += length;
-            if(length>maxBound){maxBound=length;}
-            if(length>6)
-            {
-                avgWO6 += length;
-                boundsOver6++;
-            }
-        }
-        avgWO6 = avgWO6/boundsOver6;
-        avg = avg/boundCount;
-        double stdDev   =0;
-        double stdDevWO6=0;
-        for (int n = 0; n < boundCount; n++)
-        {
-            double length = lengths[n];
-            stdDev+=std::pow((length - avg),2);
-            if(length>6)
-            {
-                stdDevWO6+=std::pow((length - avgWO6),2);
-            }
-        }
-        stdDev = (stdDev/((double)boundCount));
-        stdDev = std::pow(stdDev,0.5);
-        stdDevWO6 = (stdDevWO6/((double)boundsOver6));
-        stdDevWO6 = std::pow(stdDevWO6,0.5);
-        // Sort the lengths vector
-        std::sort(lengths.begin(),lengths.end());
-        double median;
-        if(boundCount==0)
-        {
-            median = 0;
-        }
-        else if(boundCount%2==0)
-        {
-            median = ((double)(lengths[boundCount/2-1]+lengths[boundCount/2]))/2;
-        }
-        else{median = lengths[boundCount/2];}
-
-        // Predict the avg boundary length:
-        double predBoundLength = (1*m_kT + m_nearestNeighborFactor*1.0)/m_tensionFactor;
-
-        writeToLog(boundCount,boundsOver6,maxBound,avg,avgWO6,stdDev,stdDevWO6,median);
-
-        //std::string header = "subStep,ANeighbor,ALength,BNeighbor,BLength,CNeighbor,CLength";
-
-        //m_fileWriter.insertLine(header);
-        //std::cout<<"Max boundary length " << maxBound << std::endl;
-        //std::cout<<"Average boundary length: " << avg << std::endl;
-        //std::cout<<"Average boundary length excluding 6s: " << avgWO6 << std::endl;
-        //std::cout<<"Predicted boundary length: " << predBoundLength << std::endl;
-        //std::cout<<"Std Dev boundary length: " << stdDev << std::endl;
-        //std::cout<<"Median boundary length " << median << std::endl;
-        //std::cout << "______________________________________________________________________________" << std::endl;
-        // Increment reads
-        m_reads++;
-    }
-    // for time keeping
-    m_stepCounter ++;
-    //auto tBegin = std::chrono::high_resolution_clock::now();
-    */
     if(m_reads%1000==1)
     {
         tBegin = std::chrono::high_resolution_clock::now();
@@ -1309,35 +1121,165 @@ void Simulation::randomStep()
     } 
 
     m_reads ++;
-    //if(m_reads%1000==0)
+}
+
+void Simulation::randomStepGPU()
+{
+    if(m_reads%1000==1)
+    {
+        tBegin = std::chrono::high_resolution_clock::now();
+    }
+
+
+
+    // Carry out the update checkerboard by checkerboard, choosing a random one each time
+    //for (int subStep = 0; subStep < stepSizeInCheckerboardUpdates; subStep++)
+    for (int subStep = 0; subStep < 2560; subStep++)
+    {
+        // Pick random checkerboard
+        int cRand = uniform_int_checker(rand_generator);
+        int topRand = uniform_2(rand_generator);
+        // Update that checkerboard
+        updateCheckerboard(cRand,topRand);
+    } 
+    m_reads ++;
+}
+
+void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
+{
+    // Any checkerboard will need all of the board data to update. Read only is good.
+    // But each individual worker only needs the intra and inter layer 1st and 2nd nearest neighbors.
+
+
+    {
+        //DEBUG
+        //top = false;
+    // Indexing vars
+    const int offset = top * bArea + checkerBoardIndex%3 + (checkerBoardIndex/3)*bWidth+noUpdateOffset*(bWidth+1);
+    const int numPerRow = (((bWidth-(1+checkerBoardIndex%3+2*noUpdateOffset)) / 3) + 1);
+    const int numRows = (bHeight - (1+checkerBoardIndex/3 +2*noUpdateOffset))/3 + 1;
+    const int div = 3*numPerRow;
+    const int vertSpace = 3*bWidth;
+
+    //std::uint32_t rand_seed = 666;
+    //std::uint32_t rand_seed = gpu_update_seed(rand_generator);
+    // Print the device being used
+    //std::cout << q.get_device().get_info<sycl::info::device::name>() << "\n";
+    // Make a range to iterate over
+    //auto rg = sycl::range<1>{2*bArea};
+    auto rg = sycl::range<1>{(size_t)numPerRow*numRows};
+    // copy the board into buffer
+    //sycl::buffer<char,1> buf{m_board,2*bArea};
+
+    char* m_board_ptr = m_board;
+
+    auto* engs = engines;
+    // Submit work to queue
+    q.submit
+    (
+        [&](sycl::handler& h)
+        {
+            //sycl::accessor out{buf,h};
+            h.parallel_for
+            (
+                rg, [=](sycl::item<1> idx)
+                {
+                    int baseIdx = (3*idx)%(div) + (3*idx / div)*(vertSpace) + offset;
+                    //out[baseIdx] = 'C';
+                    // NEAREST-NEIGHBOR
+                    int nId[6]={baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth};
+                    //int nId[2]={baseIdx-1,baseIdx+1};
+                    int iNN_A_Count = 0;
+                    int iNN_B_Count = 0;
+                    int iNN_C_Count = 0;
+                    for (int i = 0; i<6; i++)
+                    //for (int i = 0; i<2; i++)
+                    {
+                        //if(out[nId[i]]!='A')
+                        if(m_board_ptr[nId[i]]!='A')
+                        {
+                            iNN_A_Count++;
+                        }
+                        if(m_board_ptr[nId[i]]!='B')
+                        {
+                            //out[nId[i]] = 'C';
+                            iNN_B_Count++;
+                        }
+                        if(m_board_ptr[nId[i]]!='C')
+                        {
+                            iNN_C_Count++;
+                        }
+                    }
+                    float E_iNN_A = 1*iNN_A_Count;
+                    float E_iNN_B = 1*iNN_B_Count;
+                    float E_iNN_C = 1*iNN_C_Count;
+
+                    // 2nd NEAREST-NEIGHBOR
+                    // CROSS LAYER NEAREST-NEIGHBOR
+                    // CROSS LAYER 2nd NEAREST-NEIGHBOR
+                    // PROBABILITY CALCULATION
+                    float E_A = E_iNN_A;
+                    float E_B = E_iNN_B;
+                    float E_C = E_iNN_C;
+                    // kT = 1
+                    float kT = 0.5;
+                    float B_A = sycl::exp(-E_A/kT);
+                    float B_B = sycl::exp(-E_B/kT);
+                    float B_C = sycl::exp(-E_C/kT);
+                    float Z = B_A + B_B + B_C;
+                    float P_A = B_A/Z;
+                    float P_B = B_B/Z;
+                    float P_C = B_C/Z;
+                    // ROLL
+                    // Random number offset
+                    std::uint64_t offset = idx.get_linear_id();
+
+                    // Random number engine
+                    //oneapi::dpl::minstd_rand engine(rand_seed, offset);
+                    oneapi::dpl::minstd_rand& engine = engs[idx];
+                    // Uniform real distribution from 0 to 1
+                    oneapi::dpl::uniform_real_distribution<float> unif;
+
+                    float r = unif(engine);
+                    ///*
+                    if(r < P_A)
+                    {
+                        m_board_ptr[baseIdx] = 'A';
+                    }
+                    else if(P_A <= r && r < P_A + P_B)
+                    {
+                        m_board_ptr[baseIdx] = 'B';
+                    }
+                    else if(P_A + P_B <= r)
+                    {
+                        m_board_ptr[baseIdx] = 'C';
+                    }
+                    //*/
+                }
+            );
+        }
+    );
+    }
+    
+    //sycl::host_accessor result{buf};
+
+    //for (int i = 0; i < bArea; i++)
     //{
-    //    tEnd = std::chrono::high_resolution_clock::now();
-    //    std::chrono::duration Dt   = tEnd - tBegin;
-    //    std::cout << Dt.count() << " seconds" << std::endl;
+        //m_board[i] = result[i];
     //}
-    // Record time taken for the step, and print average every 1000 steps
-    //auto tDone = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double,std::milli> tDiff =  tDone-tBegin;
-    //double tDiffDouble = tDiff.count();
-    //m_stepDurations[m_stepCounter % scanBoundsPeriodInSteps] = tDiffDouble;
 
-    //if ( m_stepCounter % scanBoundsPeriodInSteps == 0 )
-    //{
-    //    // get average calculation time
-    //    double avgStepTime;
-    //    for (int i = 0; i < m_stepCounter%scanBoundsPeriodInSteps; i++)
-    //    {
-    //        avgStepTime += m_stepDurations[i];
-    //    }
-    //    avgStepTime = avgStepTime / scanBoundsPeriodInSteps;
-    //    //std::cout << "Calculated average over " << m_stepCounter << " steps:" << std::endl;
+    //printBoard();
+}
 
-    //    std::cout << "Average step took " << avgStepTime << " milliseconds to calculate." << std::endl;
-
-    //    //std::cout << "Average update time per triplet/pixel: " << avgStepTime/(m_stepSize) << " ms" << std::endl;
-    //    //m_stepCounter = 0;
-
-    //}
+char Simulation::get_m_board(int i, int j, bool top)
+{
+    int idx = j*bWidth + i + bArea*top;
+    return m_board[idx];
+}
+void Simulation::set_m_board(int i, int j, bool top, char val)
+{
+    int idx = j*bWidth + i + bArea*top;
+    m_board[idx] = val;
 }
 
 ///////////////////////////DEBUG FUNCTIONS/////////////////////////////////
@@ -1367,7 +1309,7 @@ void Simulation::printDebugBoard()
                 }
                 else
                 {
-                    std::cout <<m_board[1][doublej/2][i] <<  " ";
+                    std::cout << get_m_board(i,doublej/2,1) <<  " ";
                 }
 
                 if(i<(m_width - 1))
@@ -1413,7 +1355,7 @@ void Simulation::printDebugBoard()
                 }
                 else
                 {
-                    std::cout <<m_board[0][doublej/2][i] <<  " ";
+                    std::cout << get_m_board(i,doublej/2,0) <<  " ";
                 }
                 //std::cout <<m_board[0][doublej/2][i] <<  " ";
 
@@ -1512,7 +1454,7 @@ void Simulation::loadBoardFromFile(std::string filename)
             {
                 if(elem=='A' || elem=='B' || elem=='C')
                 {
-                    m_board[top][j][i] = elem;
+                    set_m_board(i,j,top,elem);
                     i++;
                 }
             }

@@ -4,22 +4,27 @@
 
 /* The width and height of the board. The char matrix
     dimensions must be known at compile time. */
-inline constexpr size_t bWidth  = 120;
-inline constexpr size_t bHeight = 120;
+//inline constexpr size_t bWidth  = 23;
+//inline constexpr size_t bHeight = 21;
+inline constexpr int bWidth  = 1020;
+inline constexpr int bHeight = 1020;
+inline constexpr size_t bArea = bWidth * bHeight;
 inline constexpr size_t bBWidth  = 2*bWidth -1;
 inline constexpr size_t bBHeight = 2*bHeight-1;
 
-inline constexpr int min_updating_i = 2;
-inline constexpr int min_updating_j = 2;
-inline constexpr int max_updating_i = bWidth  - 3;
-inline constexpr int max_updating_j = bHeight - 3;
+inline constexpr int noUpdateOffset = 2;
+inline constexpr int min_updating_i = noUpdateOffset;
+inline constexpr int min_updating_j = noUpdateOffset;
+inline constexpr int max_updating_i = bWidth  - 1 - noUpdateOffset;
+inline constexpr int max_updating_j = bHeight - 1 - noUpdateOffset;
 
 const std::string dir = "/home/b_lin/Documents/Coding/barnard-cobden-labs/ads_sim_proj/version0.1/out/";
 
 const bool DEVICE = 0; // 0 for DESKTOP, 1 for LAPTOP
 
 // Number of pixels to randomly update per step
-const int stepSizeInPixelUpdates = 7500;
+const int stepSizeInPixelUpdates = 8*7500;
+const int stepSizeInCheckerboardUpdates = 9;
 
 // Number of steps to do between boundary length scans / information gathering
 const int scanBoundsPeriodInSteps = 1000;

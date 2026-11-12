@@ -53,8 +53,8 @@ void RenderWindow::initializeGL() {
     //m_sim = new Simulation(default_kT,default_tension,default_intraLayerNeighbor,default_crossLayerNeighbor,default_crossLayerBoundary);
     //m_sim->printBoard();
 
-    char* simTopData = &m_sim->m_board[1][0][0];
-    char* simBotData = &m_sim->m_board[0][0][0];
+    char* simTopData = &m_sim->m_board[1*bArea];
+    char* simBotData = &m_sim->m_board[0];
 
     m_shader1->bind();
 
@@ -138,8 +138,8 @@ void RenderWindow::resizeGL(int w, int h)
 void RenderWindow::drawLastAndComputeNext()
 {
     // Load current textures
-    char* topTexData = &m_sim->m_board[1][0][0];
-    char* botTexData = &m_sim->m_board[0][0][0];
+    char* topTexData = &m_sim->m_board[1*bArea];
+    char* botTexData = &m_sim->m_board[0];
     //char* texData = &m_sim->m_displayBoard[0][0];
     m_boardTopTexture->updateData(topTexData);
     m_boardBotTexture->updateData(botTexData);
@@ -147,14 +147,15 @@ void RenderWindow::drawLastAndComputeNext()
     // Draw
     update();
     // Compute next simulation state
-    m_sim->randomStep();
+    //m_sim->randomStep();
+    m_sim->randomStepGPU();
 }
 
 void RenderWindow::drawCurrentBoards()
 {
     // Load current textures
-    char* topTexData = &m_sim->m_board[1][0][0];
-    char* botTexData = &m_sim->m_board[0][0][0];
+    char* topTexData = &m_sim->m_board[1*bArea];
+    char* botTexData = &m_sim->m_board[0];
     //char* texData = &m_sim->m_displayBoard[0][0];
     m_boardTopTexture->updateData(topTexData);
     m_boardBotTexture->updateData(botTexData);

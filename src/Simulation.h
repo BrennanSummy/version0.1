@@ -16,6 +16,10 @@
 #include "constants.h"
 #include "structs.h"
 #include "FileWriter.h"
+#ifndef Q_MOC_RUN
+#include <sycl/sycl.hpp>
+#include <oneapi/dpl/random>
+#endif
 
 
 class Simulation: public QWidget
@@ -35,6 +39,7 @@ class Simulation: public QWidget
         void printBoardWithBoundary();
         // The step function calculates the board state for the next timestep.
         void randomStep();
+        void randomStepGPU();
 
         //////////////////// Update Functions ////////////////////
         // This updates the value of kT to the given value.
@@ -64,9 +69,13 @@ class Simulation: public QWidget
         void reset();
         //////////////////// Update Functions ////////////////////
 
+        // Make a queue
+        sycl::queue q;
+
         /* char matrix used for 'A' vs 'B' vs 'C' domains. chars use 1 byte, which is the minimum
             possible per element. */
-        char m_board[2][bHeight][bWidth];
+        //char* m_board = new char[2*bArea];
+        char* m_board = sycl::malloc_shared<char>(2*bArea,q);
 
         /* char matrix used for keeping track of boundaries*/
         char m_boundaryBoard[2][bBHeight][bBWidth];
@@ -83,7 +92,7 @@ class Simulation: public QWidget
         double m_kT;
 
         // Boundary Counter object
-        BoundaryCounter m_counter;
+        //BoundaryCounter m_counter;
 
     private:
 
@@ -169,10 +178,16 @@ class Simulation: public QWidget
         std::random_device rand_device;
         std::mt19937 rand_generator;
         std::uniform_real_distribution<double> uniform_real;
+        std::uniform_int_distribution<int> uniform_int_checker;
+        std::uniform_int_distribution<std::uint32_t> gpu_update_seed;
         std::uniform_int_distribution<int> uniform_3;
         std::uniform_int_distribution<int> uniform_2;
         std::uniform_int_distribution<int> uniform_int_i;
         std::uniform_int_distribution<int> uniform_int_j;
+
+        // Make random engines for each lattice site
+        oneapi::dpl::minstd_rand* engines;
+
 
         // time keeping variables to help with development
         int m_stepCounter = 0;
@@ -242,7 +257,6 @@ class Simulation: public QWidget
         void exploreLineWithElementTracking(int* length, std::vector<std::array<int,2>>& passedElements, std::vector<std::array<int,3>>& remainingInitEdges,
                                             int* startingEdgePosition, int* position, bool direction, char prospectiveValue, bool* looptr);
 
-        void exploreLineOLD(int* startingEdgePosition, int* position, bool direction, char boundaryType, bool* looptr);
         // Function that takes edge position and the neighbor chosen from that position, and outputs a boolean for direction. 0 means first two neighbors, 1 means last two
         bool getEdgeFindingDirection(int* position, int chosenNeighborIndex);
         // For a given edge position, returns the two adjacent board element positions
@@ -268,6 +282,13 @@ class Simulation: public QWidget
         // Uses the boundary board to calculate the prospective lengths of boundaries
         void updateProspectiveBoundaryLengthsOLD(char prospectiveValue, int i, int j, bool top);
         void updateProspectiveBoundaryLengths(char prospectiveValue, elementCoords element, bool top);
+
+        // Update 1/18th of the board by using the GPU to update a sparse checkerboard
+        void updateCheckerboard(int checkerBoardIndex, bool top);
         // Uses the probabilties array and the uniform distribution to pick a domain for the current element
         char roll();
+
+        // Get or set a board value
+        char get_m_board(int i, int j, bool top);
+        void set_m_board(int i, int j, bool top, char val);
 };

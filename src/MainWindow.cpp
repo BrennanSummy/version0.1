@@ -4,6 +4,7 @@
 // Constructor
 MainWindow::MainWindow(QWidget *parent):
 QMainWindow(parent),m_recording(false),m_fileWriter(){
+    std::cout << "hello?" << std::endl;
     // Basic settings
     setWindowTitle("Simulation Window");
     // Window size
@@ -28,13 +29,13 @@ void MainWindow::setupWindow()
 
     // Add parameter sliders
     //////////////////////////////////////////////////////                  Title               Min   Max  Default                          Steps
-    kTSlider                        = new ParameterSlider("kT"               ,     0.01,    5, default_kT                      ,   10, parameterArea);
-    nearestNeighborSlider           = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,   10, parameterArea);
-    secondNearestNeighborSlider     = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,   10, parameterArea);
-    crossLayerComplementSlider      = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,   10, parameterArea);
-    crossLayerNeighborSlider        = new ParameterSlider("CL N-Neighbor"    ,       -1,    1, default_crossLayerNeighbor      ,   10, parameterArea);
-    crossLayerSecondNeighborSlider  = new ParameterSlider("CL 2nd-N-Neighbor",       -1,    1, default_crossLayerNeighbor      ,   10, parameterArea);
-    crossLayerBoundarySlider        = new ParameterSlider("CL Boundary"      ,     -100,  100, default_crossLayerBoundary      ,   10, parameterArea);
+    kTSlider                        = new ParameterSlider("kT"               ,     0.01,    5, default_kT                      ,   100, parameterArea);
+    nearestNeighborSlider           = new ParameterSlider("N-Neighbor factor",      0.1,    2, default_intraLayerFirstNeighbor ,   100, parameterArea);
+    secondNearestNeighborSlider     = new ParameterSlider("2nd-N-Neighbor factor",  0.1,    2, default_intraLayerSecondNeighbor,   100, parameterArea);
+    crossLayerComplementSlider      = new ParameterSlider("CL Complement "   ,       -1,    1, default_tension                 ,   100, parameterArea);
+    crossLayerNeighborSlider        = new ParameterSlider("CL N-Neighbor"    ,       -1,    1, default_crossLayerNeighbor      ,   100, parameterArea);
+    crossLayerSecondNeighborSlider  = new ParameterSlider("CL 2nd-N-Neighbor",       -1,    1, default_crossLayerNeighbor      ,   100, parameterArea);
+    crossLayerBoundarySlider        = new ParameterSlider("CL Boundary"      ,     -100,  100, default_crossLayerBoundary      ,   100, parameterArea);
     framerateSlider                 = new ParameterSlider("Framerate"        ,        1,   60, default_framerate               ,   60, parameterArea);
     parameterLayout->setSpacing(20);
     // left, top, right, bottom margins
@@ -52,6 +53,10 @@ void MainWindow::setupWindow()
     // Add textbox for input
     paramInputBox = new TextBox("Goofy box","Enter comma separated values to sample", this);
     parameterLayout->addWidget(paramInputBox);
+
+    // Test button
+    PushButton* testButton = new PushButton("Test Function", parameterArea);
+    parameterLayout->insertWidget(1,testButton);
 
     // Add start/stop button
     PushButton* startStopButton = new PushButton("Start/Stop", parameterArea);
@@ -86,6 +91,7 @@ void MainWindow::setupWindow()
     // Set central widget
     setCentralWidget(splitter);
 
+
     // Make a custom timer object
     updateTimer = new UpdateTimer(this,1000/60);
 
@@ -119,6 +125,9 @@ void MainWindow::setupWindow()
     //connect(startStopButton,&PushButton::buttonPressed   ,updateTimer, &UpdateTimer::toggle);
     // Connect the start/stop button to the main window method which decides to start recording or free playing
     connect(startStopButton,&PushButton::buttonPressed   ,this, &MainWindow::startStop);
+
+    // Connect test button to test function
+    connect(testButton,&PushButton::buttonPressed   ,m_renderArea->m_sim, &Simulation::randomStepGPU);
 
     // Connect the MainWindow start signal to the QTimer
     connect(this,&MainWindow::startStopFrameTimer   ,updateTimer, &UpdateTimer::toggle);
@@ -252,11 +261,11 @@ void MainWindow::stepFileForward()
         if(m_stepIndex%scanBoundsPeriodInSteps == 0)
         {
             // SCAN BOUNDARY LENGTHS
-            std::vector<int> bLengths = m_renderArea->m_sim->m_counter.boundaryScan(0);
-            std::vector<int> tLengths = m_renderArea->m_sim->m_counter.boundaryScan(1);
+            //std::vector<int> bLengths = m_renderArea->m_sim->m_counter.boundaryScan(0);
+            //std::vector<int> tLengths = m_renderArea->m_sim->m_counter.boundaryScan(1);
             // RECORD TO FILE
-            m_fileWriter.vectorToLine("b_"+std::to_string(m_stepIndex)+":",bLengths);
-            m_fileWriter.vectorToLine("t_"+std::to_string(m_stepIndex)+":",tLengths);
+            //m_fileWriter.vectorToLine("b_"+std::to_string(m_stepIndex)+":",bLengths);
+            //m_fileWriter.vectorToLine("t_"+std::to_string(m_stepIndex)+":",tLengths);
         }
         if(m_stepIndex%grabScreenPeriodInSteps == 0)
         {

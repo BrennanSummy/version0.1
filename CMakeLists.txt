@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 4.3.0)
 
+# Tell cmake to use icpx compiler (for GPU acceleration using sycl)
+set(CMAKE_CXX_COMPILER "icpx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsycl")
+
 project(Adsorption_Simulation
     VERSION 0.1
 	DESCRIPTION "A simulation project with a great CMake file"
 	LANGUAGES CXX)
 
 # Flags to turn on Undefined Behavior Sanitizer
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=all")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize-recover=all")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
 
 # Turn on Auto Meta-Object-Compiler for Qt. This searches for macros like Q_OBJECT and flags files accordingly for MOC processing
 set(CMAKE_AUTOMOC ON)
@@ -49,12 +53,14 @@ set(SOURCE_HEADERS
 
 
 # Put the non-main source code into a static library
-set(STATIC_LIB_NAME my_code)
+set(STATIC_LIB_NAME "my_code")
+
 
 add_library(${STATIC_LIB_NAME} STATIC
 	${SOURCE_CODE}
 	${SOURCE_HEADERS}
 )
+
 
 # Link the Qt6 libraries to the static library. The access should be public so that the executable can see them as well.
 target_link_libraries(${STATIC_LIB_NAME}
@@ -64,6 +70,8 @@ target_link_libraries(${STATIC_LIB_NAME}
 set(EXECUTABLE_NAME "simProgram")
 
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
+
+target_include_directories(${STATIC_LIB_NAME} PUBLIC /opt/intel/oneapi/compiler/latest/include/)
 
 ## Link the executable to the static library
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${STATIC_LIB_NAME})
