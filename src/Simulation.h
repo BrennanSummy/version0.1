@@ -33,6 +33,8 @@ class Simulation: public QWidget
         // Constructor
         Simulation(double kT, double tensionFactor, double intraLayerNearestNeighborFactor, double crossLayerComplementFactor,
                     double crossLayerNearestNeighborFactor, double crossLayerBoundaryFactor);
+        // Destructor
+        ~Simulation();
         // Prints the board to the console.
         void printBoard();
         // Prints the board with the boundary to the console.

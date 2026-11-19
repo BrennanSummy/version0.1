@@ -1134,7 +1134,7 @@ void Simulation::randomStepGPU()
 
     // Carry out the update checkerboard by checkerboard, choosing a random one each time
     //for (int subStep = 0; subStep < stepSizeInCheckerboardUpdates; subStep++)
-    for (int subStep = 0; subStep < 2560; subStep++)
+    for (int subStep = 0; subStep < 2000; subStep++)
     {
         // Pick random checkerboard
         int cRand = uniform_int_checker(rand_generator);
@@ -1185,44 +1185,145 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                 rg, [=](sycl::item<1> idx)
                 {
                     int baseIdx = (3*idx)%(div) + (3*idx / div)*(vertSpace) + offset;
-                    //out[baseIdx] = 'C';
+                    float f_iNN = 1;
+                    float f_cNN = -0.8;
+                    float f_i2NN = 0.4;
+                    float f_c2NN = -0.3;
+                    float kT = 0.2;
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // NEAREST-NEIGHBOR
-                    int nId[6]={baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth};
-                    //int nId[2]={baseIdx-1,baseIdx+1};
+                    // CROSS LAYER NEAREST-NEIGHBOR
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
                     int iNN_A_Count = 0;
                     int iNN_B_Count = 0;
                     int iNN_C_Count = 0;
+                    // CL
+                    int cNN_A_Count = 0;
+                    int cNN_B_Count = 0;
+                    int cNN_C_Count = 0;
+                    // Initialize first nearest neighbor indices to check (these work for both sides with little modification)
+                    int nId[6]={baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth};
+
+                    // Initialize second nearest neighbor indices to check (these work for both sides with little modification)
+                    int n2Id[12]={
+                        baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth,
+                        baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth,
+                    };
                     for (int i = 0; i<6; i++)
-                    //for (int i = 0; i<2; i++)
                     {
-                        //if(out[nId[i]]!='A')
+                        // in-layer 1
                         if(m_board_ptr[nId[i]]!='A')
                         {
                             iNN_A_Count++;
                         }
+                        // cross-layer 1
+                        if(m_board_ptr[(nId[i]+bArea)%bTotal]!='A')
+                        {
+                            cNN_A_Count++;
+                        }
+                        // in-layer 1
                         if(m_board_ptr[nId[i]]!='B')
                         {
-                            //out[nId[i]] = 'C';
                             iNN_B_Count++;
                         }
+                        // cross-layer 1
+                        if(m_board_ptr[(nId[i]+bArea)%bTotal]!='B')
+                        {
+                            cNN_B_Count++;
+                        }
+                        // in-layer 1
                         if(m_board_ptr[nId[i]]!='C')
                         {
                             iNN_C_Count++;
                         }
+                        // cross-layer 1
+                        if(m_board_ptr[(nId[i]+bArea)%bTotal]!='C')
+                        {
+                            cNN_C_Count++;
+                        }
+                        //// in-layer 2
+                        //if(m_board_ptr[n2Id[i]]!='A')
+                        //{
+                        //    iNN_A_Count++;
+                        //}
+                        //// cross-layer 2
+                        //if(m_board_ptr[n2Id[i]+bArea]!='A')
+                        //{
+                        //    cNN_A_Count++;
+                        //}
+                        //// in-layer 2
+                        //if(m_board_ptr[n2Id[i]]!='B')
+                        //{
+                        //    iNN_B_Count++;
+                        //}
+                        //// cross-layer 2
+                        //if(m_board_ptr[n2Id[i]+bArea]!='B')
+                        //{
+                        //    cNN_B_Count++;
+                        //}
+                        //// in-layer 2
+                        //if(m_board_ptr[n2Id[i]]!='C')
+                        //{
+                        //    iNN_C_Count++;
+                        //}
+                        //// cross-layer 2
+                        //if(m_board_ptr[n2Id[i]+bArea]!='C')
+                        //{
+                        //    cNN_C_Count++;
+                        //}
                     }
-                    float E_iNN_A = 1*iNN_A_Count;
-                    float E_iNN_B = 1*iNN_B_Count;
-                    float E_iNN_C = 1*iNN_C_Count;
+                    // Finish the second nearest neighbor loop
+                    for (int i = 6; i<12; i++)
+                    {
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='A')
+                        {
+                            iNN_A_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[n2Id[i]+bArea]!='A')
+                        {
+                            cNN_A_Count++;
+                        }
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='B')
+                        {
+                            iNN_B_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[n2Id[i]+bArea]!='B')
+                        {
+                            cNN_B_Count++;
+                        }
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='C')
+                        {
+                            iNN_C_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[n2Id[i]+bArea]!='C')
+                        {
+                            cNN_C_Count++;
+                        }
+                    }
+                    float E_iNN_A = f_iNN*iNN_A_Count;
+                    float E_iNN_B = f_iNN*iNN_B_Count;
+                    float E_iNN_C = f_iNN*iNN_C_Count;
+                    float E_cNN_A = f_cNN*cNN_A_Count;
+                    float E_cNN_B = f_cNN*cNN_B_Count;
+                    float E_cNN_C = f_cNN*cNN_C_Count;
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // 2nd NEAREST-NEIGHBOR
-                    // CROSS LAYER NEAREST-NEIGHBOR
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // CROSS LAYER 2nd NEAREST-NEIGHBOR
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // PROBABILITY CALCULATION
-                    float E_A = E_iNN_A;
-                    float E_B = E_iNN_B;
-                    float E_C = E_iNN_C;
-                    // kT = 1
-                    float kT = 0.5;
+                    float E_A = E_iNN_A + E_cNN_A;
+                    float E_B = E_iNN_B + E_cNN_B;
+                    float E_C = E_iNN_C + E_cNN_C;
                     float B_A = sycl::exp(-E_A/kT);
                     float B_B = sycl::exp(-E_B/kT);
                     float B_C = sycl::exp(-E_C/kT);
@@ -1258,7 +1359,7 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                 }
             );
         }
-    );
+    ).wait();
     }
     
     //sycl::host_accessor result{buf};
@@ -1282,6 +1383,10 @@ void Simulation::set_m_board(int i, int j, bool top, char val)
     m_board[idx] = val;
 }
 
+Simulation::~Simulation()
+{
+    q.wait_and_throw();
+}
 ///////////////////////////DEBUG FUNCTIONS/////////////////////////////////
 
 void Simulation::printDebugBoard()

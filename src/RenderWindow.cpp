@@ -13,6 +13,7 @@ double crossLayerBoundaryFactor)
 
 RenderWindow::~RenderWindow()
 {
+    m_sim->~Simulation();
     makeCurrent();
     delete m_shader1;
     delete m_mesh1;
