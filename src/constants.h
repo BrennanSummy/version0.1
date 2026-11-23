@@ -6,12 +6,14 @@
     dimensions must be known at compile time. */
 //inline constexpr size_t bWidth  = 23;
 //inline constexpr size_t bHeight = 21;
-inline constexpr int bWidth  = 120;
-inline constexpr int bHeight = 120;
+inline constexpr int bWidth  = 512;
+inline constexpr int bHeight = 512;
 inline constexpr size_t bArea = bWidth * bHeight;
 inline constexpr size_t bTotal = 2*bArea;
 inline constexpr size_t bBWidth  = 2*bWidth -1;
 inline constexpr size_t bBHeight = 2*bHeight-1;
+// It saves a bit of computation time to precompute 2*bWidth (used a lot when indexing the board for 2nd nearest neighbor updating)
+inline constexpr int dbbWidth = 2*bWidth;
 
 inline constexpr int noUpdateOffset = 2;
 inline constexpr int min_updating_i = noUpdateOffset;

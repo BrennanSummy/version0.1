@@ -48,8 +48,28 @@ void Simulation::initBoard()
     {
         for (int j = 0; j < m_height; j++)
         {
-            //if((j==0 || i==0) || (j==m_height-1 || i == m_width-1))
-            if(true)
+            if((j<=noUpdateOffset || i<=noUpdateOffset) || (j>m_height-1-noUpdateOffset || i > m_width-1-noUpdateOffset))
+            {
+                if(i>bWidth/2)
+                {
+                    if(j>bHeight/2)
+                    {
+                        set_m_board(i,j,0,'B');
+                        set_m_board(i,j,1,'C');
+                    }
+                    else
+                    {
+                        set_m_board(i,j,0,'A');
+                        set_m_board(i,j,1,'B');
+                    }
+                }
+                else
+                {
+                    set_m_board(i,j,0,'C');
+                    set_m_board(i,j,1,'A');
+                }
+            }
+            else if(true)
             {
                 set_m_board(i,j,0,m_X[uniform_3(rand_generator)]);
                 set_m_board(i,j,1,m_X[uniform_3(rand_generator)]);
@@ -1184,12 +1204,13 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
             (
                 rg, [=](sycl::item<1> idx)
                 {
+                    // Calculate the board index based on the sparse 1-in-9 checkerboard
                     int baseIdx = (3*idx)%(div) + (3*idx / div)*(vertSpace) + offset;
                     float f_iNN = 1;
                     float f_cNN = -0.8;
                     float f_i2NN = 0.4;
                     float f_c2NN = -0.3;
-                    float kT = 0.2;
+                    float kT = 0.3;
                     ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // NEAREST-NEIGHBOR
                     // CROSS LAYER NEAREST-NEIGHBOR
@@ -1201,13 +1222,24 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                     int cNN_A_Count = 0;
                     int cNN_B_Count = 0;
                     int cNN_C_Count = 0;
+                    // NEXT-NEAREST-NEIGHBOR
+                    // CROSS LAYER NEXT-NEAREST-NEIGHBOR
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+                    int i2NN_A_Count = 0;
+                    int i2NN_B_Count = 0;
+                    int i2NN_C_Count = 0;
+                    // CL
+                    int c2NN_A_Count = 0;
+                    int c2NN_B_Count = 0;
+                    int c2NN_C_Count = 0;
                     // Initialize first nearest neighbor indices to check (these work for both sides with little modification)
                     int nId[6]={baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth};
 
                     // Initialize second nearest neighbor indices to check (these work for both sides with little modification)
+                    // Starting on the left and going clockwise
                     int n2Id[12]={
-                        baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth,
-                        baseIdx-1,baseIdx+bWidth-1,baseIdx+bWidth,baseIdx+1,baseIdx-bWidth+1, baseIdx-bWidth,
+                        baseIdx-2,baseIdx+bWidth-2,baseIdx+dbbWidth-2,baseIdx+dbbWidth-1,baseIdx+dbbWidth, baseIdx+bWidth+1,
+                        baseIdx+2,baseIdx-bWidth+2,baseIdx-dbbWidth+2,baseIdx-dbbWidth+1,baseIdx-dbbWidth, baseIdx-bWidth-1
                     };
                     for (int i = 0; i<6; i++)
                     {
@@ -1241,36 +1273,36 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                         {
                             cNN_C_Count++;
                         }
-                        //// in-layer 2
-                        //if(m_board_ptr[n2Id[i]]!='A')
-                        //{
-                        //    iNN_A_Count++;
-                        //}
-                        //// cross-layer 2
-                        //if(m_board_ptr[n2Id[i]+bArea]!='A')
-                        //{
-                        //    cNN_A_Count++;
-                        //}
-                        //// in-layer 2
-                        //if(m_board_ptr[n2Id[i]]!='B')
-                        //{
-                        //    iNN_B_Count++;
-                        //}
-                        //// cross-layer 2
-                        //if(m_board_ptr[n2Id[i]+bArea]!='B')
-                        //{
-                        //    cNN_B_Count++;
-                        //}
-                        //// in-layer 2
-                        //if(m_board_ptr[n2Id[i]]!='C')
-                        //{
-                        //    iNN_C_Count++;
-                        //}
-                        //// cross-layer 2
-                        //if(m_board_ptr[n2Id[i]+bArea]!='C')
-                        //{
-                        //    cNN_C_Count++;
-                        //}
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='A')
+                        {
+                            i2NN_A_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='A')
+                        {
+                            c2NN_A_Count++;
+                        }
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='B')
+                        {
+                            i2NN_B_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='B')
+                        {
+                            c2NN_B_Count++;
+                        }
+                        // in-layer 2
+                        if(m_board_ptr[n2Id[i]]!='C')
+                        {
+                            i2NN_C_Count++;
+                        }
+                        // cross-layer 2
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='C')
+                        {
+                            c2NN_C_Count++;
+                        }
                     }
                     // Finish the second nearest neighbor loop
                     for (int i = 6; i<12; i++)
@@ -1278,40 +1310,48 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                         // in-layer 2
                         if(m_board_ptr[n2Id[i]]!='A')
                         {
-                            iNN_A_Count++;
+                            i2NN_A_Count++;
                         }
                         // cross-layer 2
-                        if(m_board_ptr[n2Id[i]+bArea]!='A')
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='A')
                         {
-                            cNN_A_Count++;
+                            c2NN_A_Count++;
                         }
                         // in-layer 2
                         if(m_board_ptr[n2Id[i]]!='B')
                         {
-                            iNN_B_Count++;
+                            i2NN_B_Count++;
                         }
                         // cross-layer 2
-                        if(m_board_ptr[n2Id[i]+bArea]!='B')
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='B')
                         {
-                            cNN_B_Count++;
+                            c2NN_B_Count++;
                         }
                         // in-layer 2
                         if(m_board_ptr[n2Id[i]]!='C')
                         {
-                            iNN_C_Count++;
+                            i2NN_C_Count++;
                         }
                         // cross-layer 2
-                        if(m_board_ptr[n2Id[i]+bArea]!='C')
+                        if(m_board_ptr[(n2Id[i]+bArea)%bTotal]!='C')
                         {
-                            cNN_C_Count++;
+                            c2NN_C_Count++;
                         }
                     }
+                    // NEAREST-NEIGHBOR
                     float E_iNN_A = f_iNN*iNN_A_Count;
                     float E_iNN_B = f_iNN*iNN_B_Count;
                     float E_iNN_C = f_iNN*iNN_C_Count;
                     float E_cNN_A = f_cNN*cNN_A_Count;
                     float E_cNN_B = f_cNN*cNN_B_Count;
                     float E_cNN_C = f_cNN*cNN_C_Count;
+                    // 2nd-NEAREST-NEIGHBOR
+                    float E_i2NN_A = f_i2NN*i2NN_A_Count;
+                    float E_i2NN_B = f_i2NN*i2NN_B_Count;
+                    float E_i2NN_C = f_i2NN*i2NN_C_Count;
+                    float E_c2NN_A = f_c2NN*c2NN_A_Count;
+                    float E_c2NN_B = f_c2NN*c2NN_B_Count;
+                    float E_c2NN_C = f_c2NN*c2NN_C_Count;
                     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
                     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1321,9 +1361,9 @@ void Simulation::updateCheckerboard(int checkerBoardIndex, bool top)
                     // CROSS LAYER 2nd NEAREST-NEIGHBOR
                     ////////////////////////////////////////////////////////////////////////////////////////////////////
                     // PROBABILITY CALCULATION
-                    float E_A = E_iNN_A + E_cNN_A;
-                    float E_B = E_iNN_B + E_cNN_B;
-                    float E_C = E_iNN_C + E_cNN_C;
+                    float E_A = E_iNN_A + E_cNN_A + E_i2NN_A + E_c2NN_A;
+                    float E_B = E_iNN_B + E_cNN_B + E_i2NN_B + E_c2NN_B;
+                    float E_C = E_iNN_C + E_cNN_C + E_i2NN_C + E_c2NN_C;
                     float B_A = sycl::exp(-E_A/kT);
                     float B_B = sycl::exp(-E_B/kT);
                     float B_C = sycl::exp(-E_C/kT);
